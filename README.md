@@ -9,17 +9,18 @@
 #### Core
 `core` 对数据中心作业调度问题中的各个实体（*entity*）进行了抽象和建模，`core` 包中含有以下模块：
 
-+ `config` 中 `TaskInstanceConfig`、`TaskConfig`、`JobConfig` 分别给出任务实例、任务、作业的配置（资源需求，持续时间等）。
++ `config` 中 `TaskInstanceConfig`、`TaskConfig`、`JobConfig` 分别给出任务实例、任务、作业的配置（资源需求，持续时间等）
 + `job` 中 `TaskInstance`、`Task`、`Job` 分别是对于任务实例、任务、作业的建模
 + `machine` 是对机器的建模
 + `cluster` 是对于计算集群的建模，类 `Cluster` 维护着集群的机器列表
 + `alogrithm` 中定义了调度算法的接口，用户自定义的调度算法必须实现这一接口，是实现**策略模式**的关键
-+ `scheduler` 是对于调度器的建模，通过策略模式这一设计模式，不同的 `Scheduler` 实例可以使用不同的调度算法进行调度。
-+ `broker` 实现了类 `Broker`，`Broker` 代替用户对计算集群提交作业。
-+ `monitor` 实现了类 `Monitor`，`Monitor` 用于在仿真过程中对仿真的状态进行监测和记录。
++ `scheduler` 是对于调度器的建模，通过策略模式这一设计模式，不同的 `Scheduler` 实例可以使用不同的调度算法进行调度
++ `broker` 实现了类 `Broker`，`Broker` 代替用户对计算集群提交作业
++ `monitor` 实现了类 `Monitor`，`Monitor` 用于在仿真过程中对仿真的状态进行监测和记录
 + `simulation` 是对一次仿真的建模，一次仿真必须构造一个集群 `Cluster` 实例；构造一系列作业配置 `JobConfig` 实例，利用这些作业配置实例构造一个 `Broker` 实例；
-构造一个调度器 `Scheduler` 实例。在一次仿真可以选择开是否使用一个 `Monitor` 实例进行仿真过程的监测。
+构造一个调度器 `Scheduler` 实例。在一次仿真可以选择开是否使用一个 `Monitor` 实例进行仿真过程的监测
 ![CloudSimPy](./images/cloudsimpy.png)
+
 #### Playground
 `playground` 包设计用于方便软件包用户进行试验，主要包含 `algorithm` 包，`utils` 包。
 其中 `algorithm` 包中预先实现了一下作业调度算法：
@@ -43,7 +44,10 @@
 ## 高性能仿真
 由于在数据中心中任务实例 `TaskInstance` 是实际的资源消耗者也是实际业务逻辑的执行者，因此在概念上将 `core` 包 `job` 模块中的 `TaskInstance` 设计为一个 *SimPy* 中的进程（`Process`），
 而类 `Task` 设计为 `TaskInstance` 的集合，类 `Job` 设计为 `Task` 的集合。`Job`，`Task` 的运行状态利用 *Python* 下的 `property` 特性实现，
-并采用如图 \ref{msg} 所示的信息传递机制实现 `Task`，`Job` 状态的合成。
+并采用如下图所示的信息传递机制实现 `Task`，`Job` 状态的合成。
+
+![msg_pass](./images/msg.png)
+
 当我们询问一个 `Job` 的状态是，`Job` 实例会询问它的 `Task` 实例们的状态，`Task` 实例则会去询问它们各自的 `TaskInstance` 实例们的状态，
 `Task` 实例根据各自的 `TaskInstance` 实例们的状态合成自己的状态，然后 `Job` 实例根据它的 `Task` 实例们的状态合成自己的状态，即状态信息反向传播最终回到 `Job` 实例。
 这样的设计不仅可以保证 `Job` 和 `Task` 状态信息的准确性和一致性，更重要的是没有在每个仿真时间步主动维护 `Job` 和 `Task` 的状态信息，
@@ -64,7 +68,9 @@
 
 通过使用策略设计模式，在 *CloudSimPy* 中将 `Scheduler` 的实现和 `Scheduler` 所使用的调度算法的实现独立开来，
 并分别放在了 `core` 包中和 `playground/algorithm` 包中，策略模式的类图如下图所示。
+
 ![UML](./images/UML.png)
+
 在`playground/algorithms/smart/reward_giver.py` 中也使用了策略模式为具有不同优化目标的基于深度强化学习的作业调度模型提供不同的奖励计算方法：
 + MakespanRewardGiver 给出用于优化完工时间（Makespan）的奖励
 + AverageSlowDownRewardGiver 给出用于优化平均 SlowDown 的奖励 
