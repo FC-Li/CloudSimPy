@@ -19,7 +19,7 @@
 + `monitor` 实现了类 `Monitor`，`Monitor` 用于在仿真过程中对仿真的状态进行监测和记录
 + `simulation` 是对一次仿真的建模，一次仿真必须构造一个集群 `Cluster` 实例；构造一系列作业配置 `JobConfig` 实例，利用这些作业配置实例构造一个 `Broker` 实例；
 构造一个调度器 `Scheduler` 实例。在一次仿真可以选择开是否使用一个 `Monitor` 实例进行仿真过程的监测
-![CloudSimPy](./images/cloudsimpy.png)
+![CloudSimPy](images/cloudsimpy-arch.png)
 
 #### Playground
 `playground` 包设计用于方便软件包用户进行试验，主要包含 `algorithm` 包，`utils` 包。
