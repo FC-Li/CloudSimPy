@@ -46,7 +46,7 @@
 而类 `Task` 设计为 `TaskInstance` 的集合，类 `Job` 设计为 `Task` 的集合。`Job`，`Task` 的运行状态利用 *Python* 下的 `property` 特性实现，
 并采用如下图所示的信息传递机制实现 `Task`，`Job` 状态的合成。
 
-![msg_pass](images/msg-pass.png)
+![msg_pass](images/msg.png)
 
 当我们询问一个 `Job` 的状态是，`Job` 实例会询问它的 `Task` 实例们的状态，`Task` 实例则会去询问它们各自的 `TaskInstance` 实例们的状态，
 `Task` 实例根据各自的 `TaskInstance` 实例们的状态合成自己的状态，然后 `Job` 实例根据它的 `Task` 实例们的状态合成自己的状态，即状态信息反向传播最终回到 `Job` 实例。
