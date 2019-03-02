@@ -1,4 +1,5 @@
 #CloudSimPy 数据中心作业调度仿真框架
+
 *CloudSimPy* 基于离散事件仿真框架 [SimPy](https://simpy.readthedocs.io/en/latest/contents.html)，利用 *Python* 语言进行实现；
 *Python* 语言的科学计算、深度学习、机器学习生态相较于其他编程语言更加完善，*CloudSimPy* 可以与具有 *Python* 支持的深度学习框架（比如 *TensoFlow*，*PyTorch*）很好的结合，有助于研究基于机器学习或者深度学习的资源管理方法。
 在 `CloudSimPy/playground/algorithms/smart/DRL.py` 中的基于深度强化学习的数据中心作业调度算法由 *TensorFlow* 进行实现，并在其 *eager* 模式下进行推断和训练。
@@ -28,10 +29,10 @@
 + Tetris 调度算法， 包含在 `tetris` 模块中
 + DRF 调度算法，包含在 `DRF` 模块中
 + 基于深度强化学习的数据中心作业调度算法，包含在 `smart` 包中
-    + agent
-    + brain
-    + DRL
-    + reward_giver
+    + agent 智能体，实现了强化学习中的*策略梯度*
+    + brain *TensorFlow* 实现的神经网络结构
+    + DRL 基于深度强化学习的数据中心作业调度算法
+    + reward_giver 强化学习奖励函数
 
 `utils` 包中含有以下模块：
 + `csv_reader` 中的 `CSVReader` 类从 CSV 文件中读取作业配置并生成作业配置列表
