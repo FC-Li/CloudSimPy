@@ -1,0 +1,6 @@
+.idea/
+playground/.ipynb_checkpoints
+playground/new-logs
+playground/notebooks
+playground/tensorboard
+.DS_Store
