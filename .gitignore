@@ -4,3 +4,4 @@ playground/new-logs
 playground/notebooks
 playground/tensorboard
 .DS_Store
+*.pyc

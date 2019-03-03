@@ -9,9 +9,9 @@ class Tetris(Algorithm):
         task_features = []
         for index, pair in enumerate(valid_pairs):
             machine = pair[0]
-            task = pair[0]
+            task = pair[1]
             machine_features.append(machine.feature[:2])
-            task_features.append(task.feature[:2])
+            task_features.append([task.task_config.cpu, task.task_config.memory])
         return np.argmax(np.sum(np.array(machine_features) * np.array(task_features), axis=1), axis=0)
 
     def __call__(self, cluster, clock):
