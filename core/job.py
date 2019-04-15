@@ -51,12 +51,16 @@ class Task(object):
         return self.task_config.instances_number - self.next_instance_pointer
 
     @property
-    def has_waiting_task_instance(self):
+    def has_waiting_task_instances(self):
         return self.task_config.instances_number > self.next_instance_pointer
 
     @property
     def finished(self):
-        if self.has_waiting_task_instance:
+        """
+        A task is finished only if it has no waiting task instances and no running task instances.
+        :return: bool
+        """
+        if self.has_waiting_task_instances:
             return False
         if len(self.running_task_instances) != 0:
             return False
@@ -103,7 +107,7 @@ class Job(object):
     def tasks_which_has_waiting_instance(self):
         ls = []
         for task in self.tasks:
-            if task.has_waiting_task_instance:
+            if task.has_waiting_task_instances:
                 ls.append(task)
         return ls
 
