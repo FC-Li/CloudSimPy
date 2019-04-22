@@ -73,5 +73,8 @@
 
 在`playground/algorithms/smart/reward_giver.py` 中也使用了策略模式为具有不同优化目标的基于深度强化学习的作业调度模型提供不同的奖励计算方法：
 + MakespanRewardGiver 给出用于优化完工时间（Makespan）的奖励
-+ AverageSlowDownRewardGiver 给出用于优化平均 SlowDown 的奖励 
++ AverageSlowDownRewardGiver 给出用于优化平均 SlowDown 的奖励
 + AverageCompletionRewardGiver 给出用于优化平均完成时间的奖励
+
+## Papers using CloudSimPy
+1. [DeepJS: Job Scheduling Based on Deep Reinforcement Learning in Cloud Data Center](./playground/paper/F0049-4.19.pdf)
