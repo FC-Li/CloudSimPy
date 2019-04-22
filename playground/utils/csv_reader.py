@@ -20,7 +20,7 @@ class CSVReader(object):
             series = df.iloc[i]
             job_id = series.job_id
             task_id = series.task_id
-
+            print("jello")
             cpu = series.cpu
             memory = series.memory
             disk = series.disk
