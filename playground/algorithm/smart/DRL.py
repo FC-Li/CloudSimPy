@@ -24,12 +24,12 @@ class RLAlgorithm(object):
         features = []
         for machine, task in valid_pairs:
             features.append([machine.cpu, machine.memory] + self.features_extract_func(task))
-        features = self.features_normalize_func(features)
+        # features = self.features_normalize_func(features)
         return features
 
     def __call__(self, cluster, clock):
         machines = cluster.machines
-        tasks = cluster.tasks_which_has_waiting_instance
+        tasks = cluster.ready_tasks_which_has_waiting_instance
         all_candidates = []
 
         for machine in machines:
@@ -42,6 +42,7 @@ class RLAlgorithm(object):
         else:
             features = self.extract_features(all_candidates)
             features = tf.convert_to_tensor(features, dtype=np.float32)
+            
             logits = self.agent.brain(features)
             pair_index = tf.squeeze(tf.multinomial(logits, num_samples=1), axis=1).numpy()[0]
 

@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 
 from core.job import JobConfig, TaskConfig
+from playground.utils.feature_synthesize import father_task_indexs
 
 
 class CSVReader(object):
@@ -10,7 +11,7 @@ class CSVReader(object):
         self.filename = filename
         df = pd.read_csv(self.filename)
 
-        df.task_id = df.task_id.astype(dtype=int)
+        #df.task_id = df.task_id.astype(dtype=int)
         df.job_id = df.job_id.astype(dtype=int)
         df.instances_num = df.instances_num.astype(dtype=int)
 
@@ -19,8 +20,8 @@ class CSVReader(object):
         for i in range(len(df)):
             series = df.iloc[i]
             job_id = series.job_id
-            task_id = series.task_id
-            print("jello")
+            task_id, parent_indices = father_task_indexs(series.task_id, series.task_type)
+
             cpu = series.cpu
             memory = series.memory
             disk = series.disk
@@ -29,7 +30,7 @@ class CSVReader(object):
             instances_num = series.instances_num
 
             task_configs = job_task_map.setdefault(job_id, [])
-            task_configs.append(TaskConfig(task_id, instances_num, cpu, memory, disk, duration))
+            task_configs.append(TaskConfig(task_id, instances_num, cpu, memory, disk, duration, parent_indices))
             job_submit_time_map[job_id] = submit_time
 
         job_configs = []

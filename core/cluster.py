@@ -29,6 +29,13 @@ class Cluster(object):
         return ls
 
     @property
+    def ready_tasks_which_has_waiting_instance(self):
+        ls = []
+        for job in self.jobs:
+            ls.extend(job.ready_tasks_which_has_waiting_instance)
+        return ls
+
+    @property
     def finished_jobs(self):
         ls = []
         for job in self.jobs:

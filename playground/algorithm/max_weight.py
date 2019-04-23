@@ -1,10 +1,10 @@
+from playground.utils.feature_synthesize import weights_calculate
 from core.alogrithm import Algorithm
 
-
-class FirstFitAlgorithm(Algorithm):
+class MaxWeightAlgorithm(Algorithm):
     def __call__(self, cluster, clock):
         machines = cluster.machines
-        tasks = cluster.ready_tasks_which_has_waiting_instance
+        tasks = weights_calculate(cluster.ready_tasks_which_has_waiting_instance)
         candidate_task = None
         candidate_machine = None
 
