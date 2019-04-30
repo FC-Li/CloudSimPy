@@ -24,7 +24,7 @@ class RLAlgorithm(object):
         features = []
         for machine, task in valid_pairs:
             features.append([machine.cpu, machine.memory] + self.features_extract_func(task))
-        # features = self.features_normalize_func(features)
+        features = self.features_normalize_func(features)
         return features
 
     def __call__(self, cluster, clock):
@@ -44,7 +44,8 @@ class RLAlgorithm(object):
             features = tf.convert_to_tensor(features, dtype=np.float32)
             
             logits = self.agent.brain(features)
-            pair_index = tf.squeeze(tf.multinomial(logits, num_samples=1), axis=1).numpy()[0]
+            pair_index = tf.squeeze(tf.random.categorical(logits, num_samples=1), axis=1).numpy()[0]
+
 
             node = Node(features, pair_index, 0, clock)
             self.current_trajectory.append(node)

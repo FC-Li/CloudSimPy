@@ -4,7 +4,7 @@ from core.alogrithm import Algorithm
 class DRF(Algorithm):
     def __call__(self, cluster, clock):
         machines = cluster.machines
-        unfinished_tasks = cluster.unfinished_tasks
+        unfinished_tasks = cluster.ready_unfinished_tasks
         candidate_task = None
         candidate_machine = None
 

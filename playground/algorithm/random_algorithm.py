@@ -8,7 +8,7 @@ class RandomAlgorithm(Algorithm):
 
     def __call__(self, cluster, clock):
         machines = cluster.machines
-        tasks = cluster.tasks_which_has_waiting_instance
+        tasks = cluster.ready_tasks_which_has_waiting_instance
         candidate_task = None
         candidate_machine = None
         all_candidates = []

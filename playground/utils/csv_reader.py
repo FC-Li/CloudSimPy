@@ -11,7 +11,6 @@ class CSVReader(object):
         self.filename = filename
         df = pd.read_csv(self.filename)
 
-        #df.task_id = df.task_id.astype(dtype=int)
         df.job_id = df.job_id.astype(dtype=int)
         df.instances_num = df.instances_num.astype(dtype=int)
 

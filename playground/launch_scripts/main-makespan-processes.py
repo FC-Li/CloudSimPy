@@ -14,9 +14,9 @@ from playground.algorithm.first_fit import FirstFitAlgorithm
 from playground.algorithm.max_weight import MaxWeightAlgorithm
 from playground.algorithm.smart.DRL import RLAlgorithm
 from playground.algorithm.smart.agent import Agent
-from playground.algorithm.smart.brain import Brain
+from playground.algorithm.smart.brain import BrainSmall
 
-from playground.algorithm.smart.reward_giver import AverageCompletionRewardGiver
+from playground.algorithm.smart.reward_giver import MakespanRewardGiver
 
 from playground.utils.csv_reader import CSVReader
 from playground.utils.feature_functions import features_extract_func_ac, features_normalize_func_ac
@@ -30,12 +30,12 @@ tf.random.set_random_seed(41)
 # ************************ Parameters Setting Start ************************
 machines_number = 1
 jobs_len = 1
-n_iter = 3
+n_iter = 100
 n_episode = 12
-jobs_csv = './job.csv'
+jobs_csv = './jobs_files/job.csv'
 
-brain = Brain(9)
-reward_giver = AverageCompletionRewardGiver()
+brain = BrainSmall(14)
+reward_giver = MakespanRewardGiver(-1)
 features_extract_func = features_extract_func_ac
 features_normalize_func = features_normalize_func_ac
 
@@ -54,19 +54,49 @@ machine_configs = [MachineConfig(2, 1, 1) for i in range(machines_number)]
 csv_reader = CSVReader(jobs_csv)
 jobs_configs = csv_reader.generate(0, jobs_len)
 
-# tic = time.time()
-# algorithm = FirstFitAlgorithm()
-# episode = Episode(machine_configs, jobs_configs, algorithm, None)
-# episode.run()
-# print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode), total_completion(episode))
+tic = time.time()
+algorithm = RandomAlgorithm()
+episode = Episode(machine_configs, jobs_configs, algorithm, None)
+episode.run()
+print('RandomAlgorithm')
+print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))
 
-# tic = time.time()
-# algorithm = MaxWeightAlgorithm()
-# episode = Episode(machine_configs, jobs_configs, algorithm, None)
-# episode.run()
-# print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode), total_completion(episode))
+tic = time.time()
+algorithm = RandomAlgorithm()
+episode = Episode(machine_configs, jobs_configs, algorithm, None)
+episode.run()
+print('RandomAlgorithm')
+print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))
 
+tic = time.time()
+algorithm = RandomAlgorithm()
+episode = Episode(machine_configs, jobs_configs, algorithm, None)
+episode.run()
+print('RandomAlgorithm')
+print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))
 
+tic = time.time()
+algorithm = Tetris()
+episode = Episode(machine_configs, jobs_configs, algorithm, None)
+episode.run()
+print('Tetris')
+print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))
+
+tic = time.time()
+algorithm = FirstFitAlgorithm()
+episode = Episode(machine_configs, jobs_configs, algorithm, None)
+episode.run()
+print('FirstFitAlgorithm')
+print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode), total_completion(episode))
+
+tic = time.time()
+algorithm = MaxWeightAlgorithm()
+episode = Episode(machine_configs, jobs_configs, algorithm, None)
+episode.run()
+print('MaxWeightAlgorithm')
+print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode), total_completion(episode))
+
+ls = []
 for itr in range(n_iter):
     tic = time.time()
     print("********** Iteration %i ************" % itr)
@@ -98,6 +128,7 @@ for itr in range(n_iter):
     agent.log('average_slowdowns', np.mean(average_slowdowns), agent.global_step)
 
     toc = time.time()
+    ls.append(np.mean(makespans))
 
     print(np.mean(makespans), toc - tic, np.mean(average_completions), np.mean(average_slowdowns))
 
@@ -122,3 +153,41 @@ for itr in range(n_iter):
     agent.update_parameters(all_observations, all_actions, all_advantages)
 
 agent.save()
+print("**********************************************")
+
+for itr in range(5):
+    tic = time.time()
+    print("!!!!!!!!!!!!!!!! Iteration %i !!!!!!!!!!!!!!!!" % itr)
+    processes = []
+
+    manager = Manager()
+    trajectories = manager.list([])
+    makespans = manager.list([])
+    average_completions = manager.list([])
+    average_slowdowns = manager.list([])
+    for i in range(n_episode):
+        algorithm = RLAlgorithm(agent, reward_giver, features_extract_func=features_extract_func,
+                                features_normalize_func=features_normalize_func)
+        episode = Episode(machine_configs, jobs_configs, algorithm, None)
+        algorithm.reward_giver.attach(episode.simulation)
+        p = Process(target=multiprocessing_run,
+                    args=(episode, trajectories, makespans, average_completions, average_slowdowns))
+
+        processes.append(p)
+
+    for p in processes:
+        p.start()
+
+    for p in processes:
+        p.join()
+
+    agent.log('makespan', np.mean(makespans), agent.global_step)
+    agent.log('average_completions', np.mean(average_completions), agent.global_step)
+    agent.log('average_slowdowns', np.mean(average_slowdowns), agent.global_step)
+
+    toc = time.time()
+
+    print(np.mean(makespans), toc - tic, np.mean(average_completions), np.mean(average_slowdowns))
+
+print(ls)
+

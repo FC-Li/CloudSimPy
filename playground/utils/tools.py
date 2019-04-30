@@ -2,17 +2,6 @@ import time
 import numpy as np
 import tensorflow as tf
 
-def total_completion(exp):
-    min_start_time = 1000000000000
-    max_finish_time = -1
-    for job in exp.simulation.cluster.jobs:
-        for task in job.tasks:
-            if task.started_timestamp < min_start_time:
-                min_start_time = task.started_timestamp
-            if task.finished_timestamp > max_finish_time:
-                max_finish_time = task.finished_timestamp
-    return (max_finish_time - min_start_time)
-
 def average_completion(exp):
     completion_time = 0
     number_task = 0
