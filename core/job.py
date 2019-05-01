@@ -7,6 +7,8 @@ class Task(object):
         self.job = job
         self.task_index = task_config.task_index
         self.task_config = task_config
+        self._ready = False
+        self._parents = None
 
         self.task_instances = []
         task_instance_config = TaskInstanceConfig(task_config)
@@ -17,6 +19,23 @@ class Task(object):
     @property
     def id(self):
         return str(self.job.id) + '-' + str(self.task_index)
+
+    @property
+    def parents(self):
+        if self._parents is None:
+            self._parents = []
+            for parent_index in self.task_config.parent_indices:
+                self._parents.append(self.job.tasks_map[parent_index])
+        return self._parents
+
+    @property
+    def ready(self):
+        if not self._ready:
+            for p in self.parents:
+                if not p.finished:
+                    return False
+            self._ready = True
+        return self._ready
 
     @property
     def running_task_instances(self):
@@ -91,9 +110,15 @@ class Job(object):
         self.env = env
         self.job_config = job_config
         self.id = job_config.id
-        self.tasks = []
-        for task_index, task_config in enumerate(job_config.task_configs):
-            self.tasks.append(Task(env, self, task_config))
+
+        self.tasks_map = {}
+        for task_config in job_config.task_configs:
+            task_index = task_config.task_index
+            self.tasks_map[task_index] = Task(env, self, task_config)
+
+    @property
+    def tasks(self):
+        return self.tasks_map.values()
 
     @property
     def unfinished_tasks(self):
@@ -104,10 +129,26 @@ class Job(object):
         return ls
 
     @property
+    def ready_unfinished_tasks(self):
+        ls = []
+        for task in self.tasks:
+            if not task.finished and task.ready:
+                ls.append(task)
+        return ls
+
+    @property
     def tasks_which_has_waiting_instance(self):
         ls = []
         for task in self.tasks:
             if task.has_waiting_task_instances:
+                ls.append(task)
+        return ls
+
+    @property
+    def ready_tasks_which_has_waiting_instance(self):
+        ls = []
+        for task in self.tasks:
+            if task.has_waiting_task_instances and task.ready:
                 ls.append(task)
         return ls
 
