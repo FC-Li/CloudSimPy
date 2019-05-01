@@ -1,8 +1,8 @@
 # CloudSimPy 数据中心作业调度仿真框架
 
 *CloudSimPy* 基于离散事件仿真框架 [SimPy](https://simpy.readthedocs.io/en/latest/contents.html)，利用 *Python* 语言进行实现；
-*Python* 语言的科学计算、深度学习、机器学习生态相较于其他编程语言更加完善，*CloudSimPy* 可以与具有 *Python* 支持的深度学习框架（比如 *TensoFlow*，*PyTorch*）很好的结合，有助于研究基于机器学习或者深度学习的资源管理方法。
-在 `CloudSimPy/playground/algorithms/smart/DRL.py` 中的基于深度强化学习的数据中心作业调度算法由 *TensorFlow* 进行实现，并在其 *eager* 模式下进行推断和训练。
+*Python* 语言的科学计算、深度学习、机器学习生态相较于其他编程语言更加完善，*CloudSimPy* 可以与具有 *Python* 支持的深度学习框架（比如 *TensorFlow*，*PyTorch*）很好的结合，有助于研究基于机器学习或者深度学习的资源管理方法。
+在 `CloudSimPy/playground/Non_DAG/algorithm/DeepJS/DRL.py` 中的基于深度强化学习的数据中心作业调度算法由 *TensorFlow* 进行实现，并在其 *eager* 模式下进行推断和训练。
 
 ## CloudSimPy
 作为数据中心作业调度仿真框架 *CloudSimPy* 包含两个 *Python* 包 `core` 和 `playground`。
@@ -22,23 +22,17 @@
 ![CloudSimPy](images/cloudsimpy-arch.png)
 
 #### Playground
-`playground` 包设计用于方便软件包用户进行试验，主要包含 `algorithm` 包，`utils` 包。
-其中 `algorithm` 包中预先实现了一下作业调度算法：
+`playground` 包设计用于方便软件包用户进行试验，主要包含 `DAG` 包、`Non_DAG` 包（分别支持考虑任务间依赖关系和不考虑任务间依赖关系情况下
+的仿真实验）、`auxiliary` 包。
+`DAG` 与 `Non_DAG` 均分别预先实现了一些启发式作业调度算法及基于深度强化学习的作业调度算法。
+例如在 `Non_DAG/algorithm/DeepJS` 中实现的基于深度强化学习的数据中心作业调度算法：
++ agent 智能体，实现了强化学习中的*策略梯度*
++ brain *TensorFlow* 实现的神经网络结构
++ DRL 基于深度强化学习的数据中心作业调度算法
++ reward_giver 强化学习奖励函数
 
-+ Random 调度算法，包含在 `random_alogorithm` 模块中
-+ First-fit 调度算法，包含在 `first-fit` 模块中
-+ Tetris 调度算法， 包含在 `tetris` 模块中
-+ DRF 调度算法，包含在 `DRF` 模块中
-+ 基于深度强化学习的数据中心作业调度算法，包含在 `smart` 包中
-    + agent 智能体，实现了强化学习中的*策略梯度*
-    + brain *TensorFlow* 实现的神经网络结构
-    + DRL 基于深度强化学习的数据中心作业调度算法
-    + reward_giver 强化学习奖励函数
-
-`utils` 包中含有以下模块：
-+ `csv_reader` 中的 `CSVReader` 类从 CSV 文件中读取作业配置并生成作业配置列表
+`auxiliary` 包提供了一些辅助类和函数： 
 + `episode` 中的 `Episode` 类用于 **episodic** 方式的仿真实验
-+ `feature_functions` 提供了在训练强化学习模型时，用于特征提取和特征归一化的函数
 + `tools` 中的 `multiprocessing_run` 用于**多进程模式**的训练；`average_slowdown` 和 `average_completion` 用于从一个 `Episode` 类的对象中抽取计算统计信息
 
 ## 高性能仿真
@@ -67,11 +61,9 @@
 这样，上下文就变得独立于具体策略，我们可以添加新算法或修改现有算法，而无需更改原始类或其他策略的代码。
 
 通过使用策略设计模式，在 *CloudSimPy* 中将 `Scheduler` 的实现和 `Scheduler` 所使用的调度算法的实现独立开来，
-并分别放在了 `core` 包中和 `playground/algorithm` 包中，策略模式的类图如下图所示。
+并分别放在了 `core` 包中和 `playground/DAG/algorithm`、`playground/Non_DAG/algorithm` 包中。
 
-![UML](./images/UML.png)
-
-在`playground/algorithms/smart/reward_giver.py` 中也使用了策略模式为具有不同优化目标的基于深度强化学习的作业调度模型提供不同的奖励计算方法：
+在`layground/DAG/algorithm/DeepJS/reward_giver.py` 中也使用了策略模式为具有不同优化目标的基于深度强化学习的作业调度模型提供不同的奖励计算方法：
 + MakespanRewardGiver 给出用于优化完工时间（Makespan）的奖励
 + AverageSlowDownRewardGiver 给出用于优化平均 SlowDown 的奖励
 + AverageCompletionRewardGiver 给出用于优化平均完成时间的奖励
