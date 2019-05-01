@@ -22,10 +22,24 @@ class Cluster(object):
         return ls
 
     @property
+    def ready_unfinished_tasks(self):
+        ls = []
+        for job in self.jobs:
+            ls.extend(job.ready_unfinished_tasks)
+        return ls
+
+    @property
     def tasks_which_has_waiting_instance(self):
         ls = []
         for job in self.jobs:
             ls.extend(job.tasks_which_has_waiting_instance)
+        return ls
+
+    @property
+    def ready_tasks_which_has_waiting_instance(self):
+        ls = []
+        for job in self.jobs:
+            ls.extend(job.ready_tasks_which_has_waiting_instance)
         return ls
 
     @property
