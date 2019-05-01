@@ -106,6 +106,8 @@ class Task(object):
 
 
 class Job(object):
+    task_cls = Task
+
     def __init__(self, env, job_config):
         self.env = env
         self.job_config = job_config
@@ -114,7 +116,7 @@ class Job(object):
         self.tasks_map = {}
         for task_config in job_config.task_configs:
             task_index = task_config.task_index
-            self.tasks_map[task_index] = Task(env, self, task_config)
+            self.tasks_map[task_index] = Job.task_cls(env, self, task_config)
 
     @property
     def tasks(self):
