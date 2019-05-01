@@ -2,6 +2,7 @@
 
 *CloudSimPy* 基于离散事件仿真框架 [SimPy](https://simpy.readthedocs.io/en/latest/contents.html)，利用 *Python* 语言进行实现；
 *Python* 语言的科学计算、深度学习、机器学习生态相较于其他编程语言更加完善，*CloudSimPy* 可以与具有 *Python* 支持的深度学习框架（比如 *TensorFlow*，*PyTorch*）很好的结合，有助于研究基于机器学习或者深度学习的资源管理方法。
+
 在 `CloudSimPy/playground/Non_DAG/algorithm/DeepJS/DRL.py` 中的基于深度强化学习的数据中心作业调度算法由 *TensorFlow* 进行实现，并在其 *eager* 模式下进行推断和训练。
 
 ## CloudSimPy
@@ -22,8 +23,7 @@
 ![CloudSimPy](images/cloudsimpy-arch.png)
 
 #### Playground
-`playground` 包设计用于方便软件包用户进行试验，主要包含 `DAG` 包、`Non_DAG` 包（分别支持考虑任务间依赖关系和不考虑任务间依赖关系情况下
-的仿真实验）、`auxiliary` 包。
+`playground` 包设计用于方便软件包用户进行试验，主要包含 `DAG` 包、`Non_DAG` 包（分别支持考虑任务间依赖关系和不考虑任务间依赖关系情况下的仿真实验）、`auxiliary` 包。
 `DAG` 与 `Non_DAG` 均分别预先实现了一些启发式作业调度算法及基于深度强化学习的作业调度算法。
 例如在 `Non_DAG/algorithm/DeepJS` 中实现的基于深度强化学习的数据中心作业调度算法：
 + agent 智能体，实现了强化学习中的*策略梯度*
@@ -70,3 +70,16 @@
 
 ## Papers using CloudSimPy
 1. [DeepJS: Job Scheduling Based on Deep Reinforcement Learning in Cloud Data Center](./playground/paper/F0049-4.19.pdf)
+
+## Run examples
+#### Requirements
+1. Python 3.6
+2. SimPy 3.0.11
+3. TensorFlow 1.12.0
+4. Numpy 1.15.3
+5. Pandas 0.23.4
+#### Install and run
+1. `git clone git@github.com:RobertLexis/CloudSimPy.git`
+2. Add the path to directory cloudsimpy to system environment **PYTHONPATH**
+3. `cd cloudsimpy/playground/Non_DAG/launch_scripts`
+4. `python main-makespan.py`
