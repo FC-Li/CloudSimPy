@@ -23,6 +23,8 @@ class Task(object):
     @property
     def parents(self):
         if self._parents is None:
+            if self.task_config.parent_indices is None:
+                raise ValueError("Task_config's parent_indices should not be None.")
             self._parents = []
             for parent_index in self.task_config.parent_indices:
                 self._parents.append(self.job.tasks_map[parent_index])

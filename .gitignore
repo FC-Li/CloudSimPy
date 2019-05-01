@@ -1,9 +1,12 @@
 .idea/
 playground/.ipynb_checkpoints
-playground/new-logs
 playground/notebooks
-playground/agents
-playground/tensorboard
+playground/DAG/launch_scripts/agents/
+playground/DAG/launch_scripts/tensorboard/
+playground/Non_DAG/launch_scripts/agents/
+playground/Non_DAG/launch_scripts/tensorboard/
+
+
 .DS_Store
 
 # Byte-compiled / optimized / DLL files

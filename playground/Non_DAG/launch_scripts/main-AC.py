@@ -8,19 +8,19 @@ import sys
 sys.path.append('..')
 
 from core.machine import MachineConfig
-from playground.algorithm.random_algorithm import RandomAlgorithm
-from playground.algorithm.tetris import Tetris
-from playground.algorithm.first_fit import FirstFitAlgorithm
-from playground.algorithm.smart.DRL import RLAlgorithm
-from playground.algorithm.smart.agent import Agent
-from playground.algorithm.smart.brain import Brain
+from playground.Non_DAG.algorithm.random_algorithm import RandomAlgorithm
+from playground.Non_DAG.algorithm.tetris import Tetris
+from playground.Non_DAG.algorithm.first_fit import FirstFitAlgorithm
+from playground.Non_DAG.algorithm.DeepJS.DRL import RLAlgorithm
+from playground.Non_DAG.algorithm.DeepJS.agent import Agent
+from playground.Non_DAG.algorithm.DeepJS.brain import Brain
 
-from playground.algorithm.smart.reward_giver import AverageCompletionRewardGiver
+from playground.Non_DAG.algorithm.DeepJS.reward_giver import AverageCompletionRewardGiver
 
-from playground.utils.csv_reader import CSVReader
-from playground.utils.feature_functions import features_extract_func_ac, features_normalize_func_ac
-from playground.utils.tools import multiprocessing_run, average_completion, average_slowdown
-from playground.utils.episode import Episode
+from playground.Non_DAG.utils.csv_reader import CSVReader
+from playground.Non_DAG.utils.feature_functions import features_extract_func_ac, features_normalize_func_ac
+from playground.Non_DAG.utils.tools import multiprocessing_run, average_completion, average_slowdown
+from playground.Non_DAG.utils.episode import Episode
 
 os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
@@ -31,7 +31,7 @@ machines_number = 5
 jobs_len = 10
 n_iter = 100
 n_episode = 12
-jobs_csv = './jobs.csv'
+jobs_csv = '../jobs_files/jobs.csv'
 
 brain = Brain(9)
 reward_giver = AverageCompletionRewardGiver()
