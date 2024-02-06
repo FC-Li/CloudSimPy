@@ -26,27 +26,27 @@ from playground.DAG.adapter.episode import Episode
 os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
 np.random.seed(41)
-tf.random.set_random_seed(41)
+tf.random.set_seed(41)
 # ************************ Parameters Setting Start ************************
 machines_number = 1
-jobs_len = 1
+jobs_len = 2000
 n_iter = 30
-jobs_csv = '../jobs_files/job.csv'
+jobs_csv = os.path.join("DAG", "jobs_files", "jobs.csv")
 
-brain = BrainSmall(14)
-reward_giver = MakespanRewardGiver(-1)
-features_extract_func = features_extract_func_ac
-features_normalize_func = features_normalize_func_ac
+# brain = BrainSmall(14)
+# reward_giver = MakespanRewardGiver(-1)
+# features_extract_func = features_extract_func_ac
+# features_normalize_func = features_normalize_func_ac
 
-name = '%s-%s-m%d' % (reward_giver.name, brain.name, machines_number)
-model_dir = './agents/%s' % name
+# name = '%s-%s-m%d' % (reward_giver.name, brain.name, machines_number)
+# model_dir = './agents/%s' % name
 # ************************ Parameters Setting End ************************
 
-if not os.path.isdir(model_dir):
-    os.makedirs(model_dir)
+# if not os.path.isdir(model_dir):
+#     os.makedirs(model_dir)
 
-agent = Agent(name, brain, 1, reward_to_go=True, nn_baseline=True, normalize_advantages=True,
-              model_save_path='%s/model.ckpt' % model_dir)
+# agent = Agent(name, brain, 1, reward_to_go=True, nn_baseline=True, normalize_advantages=True,
+#               model_save_path='%s/model.ckpt' % model_dir)
 
 machine_configs = [MachineConfig(2, 1, 1) for i in range(machines_number)]
 csv_reader = CSVReader(jobs_csv)
@@ -80,50 +80,50 @@ episode.run()
 print('MaxWeightAlgorithm')
 print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))
 
-for itr in range(n_iter):
-    print("********** Iteration %i ************" % itr)
-    all_observations = []
-    all_actions = []
-    all_rewards = []
+# for itr in range(n_iter):
+#     print("********** Iteration %i ************" % itr)
+#     all_observations = []
+#     all_actions = []
+#     all_rewards = []
 
-    makespans = []
-    average_completions = []
-    average_slowdowns = []
-    trajectories = []
+#     makespans = []
+#     average_completions = []
+#     average_slowdowns = []
+#     trajectories = []
 
-    tic = time.time()
-    for i in range(12):
-        algorithm = RLAlgorithm(agent, reward_giver, features_extract_func=features_extract_func,
-                                features_normalize_func=features_normalize_func)
-        episode = Episode(machine_configs, jobs_configs, algorithm, None)
-        algorithm.reward_giver.attach(episode.simulation)
-        episode.run()
-        trajectories.append(episode.simulation.scheduler.algorithm.current_trajectory)
-        makespans.append(episode.simulation.env.now)
-        average_completions.append(average_completion(episode))
-        average_slowdowns.append(average_slowdown(episode))
+#     tic = time.time()
+#     for i in range(12):
+#         algorithm = RLAlgorithm(agent, reward_giver, features_extract_func=features_extract_func,
+#                                 features_normalize_func=features_normalize_func)
+#         episode = Episode(machine_configs, jobs_configs, algorithm, None)
+#         algorithm.reward_giver.attach(episode.simulation)
+#         episode.run()
+#         trajectories.append(episode.simulation.scheduler.algorithm.current_trajectory)
+#         makespans.append(episode.simulation.env.now)
+#         average_completions.append(average_completion(episode))
+#         average_slowdowns.append(average_slowdown(episode))
 
-    agent.log('makespan', np.mean(makespans), agent.global_step)
-    agent.log('average_completions', np.mean(average_completions), agent.global_step)
-    agent.log('average_slowdowns', np.mean(average_slowdowns), agent.global_step)
+#     agent.log('makespan', np.mean(makespans), agent.global_step)
+#     agent.log('average_completions', np.mean(average_completions), agent.global_step)
+#     agent.log('average_slowdowns', np.mean(average_slowdowns), agent.global_step)
 
-    toc = time.time()
-    print(np.mean(makespans), (toc - tic) / 12, np.mean(average_completions), np.mean(average_slowdowns))
+#     toc = time.time()
+#     print(np.mean(makespans), (toc - tic) / 12, np.mean(average_completions), np.mean(average_slowdowns))
 
-    for trajectory in trajectories:
-        observations = []
-        actions = []
-        rewards = []
-        for node in trajectory:
-            observations.append(node.observation)
-            actions.append(node.action)
-            rewards.append(node.reward)
+#     for trajectory in trajectories:
+#         observations = []
+#         actions = []
+#         rewards = []
+#         for node in trajectory:
+#             observations.append(node.observation)
+#             actions.append(node.action)
+#             rewards.append(node.reward)
 
-        all_observations.append(observations)
-        all_actions.append(actions)
-        all_rewards.append(rewards)
+#         all_observations.append(observations)
+#         all_actions.append(actions)
+#         all_rewards.append(rewards)
 
-    all_q_s, all_advantages = agent.estimate_return(all_rewards)
-    agent.update_parameters(all_observations, all_actions, all_advantages)
+#     all_q_s, all_advantages = agent.estimate_return(all_rewards)
+#     agent.update_parameters(all_observations, all_actions, all_advantages)
 
-agent.save()
+# agent.save()

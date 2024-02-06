@@ -1,24 +1,27 @@
 # 父节点信息提取
-def father_task_indices(task_id, task_type):
+# def father_task_indices(task_id, task_type):
+def father_task_indices(task_id):
     father_indices = []
 
-    if task_id.find('task_') != -1:
-        task_index = task_type + '_' + 'task_id'
+    if str(task_id).find('task_') != -1:
+        # task_index = task_type + '_' + 'task_id'
+        task_index = 'task_id'
         return task_index, father_indices
 
     num_list = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     start_index = -1
 
-    for i, char_s in enumerate(task_id):
+    for i, char_s in enumerate(str(task_id)):
         if (char_s in num_list) and (start_index == -1):
             start_index = i
         if (char_s not in num_list) and (start_index != -1):
-            father_index = task_type + '_' + task_id[start_index: i]
+            # father_index = task_type + '_' + task_id[start_index: i]
+            father_index = task_id[start_index: i]
             father_indices.append(father_index)
             start_index = -1
 
     if start_index != -1:
-        father_index = task_type + '_' + task_id[start_index:]
+        father_index = task_id[start_index:]
         father_indices.append(father_index)
 
     task_index = father_indices[0]

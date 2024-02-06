@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
-tf.enable_eager_execution()
+# tf.enable_eager_execution()
 
 
 class Node(object):
