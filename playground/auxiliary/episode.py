@@ -30,9 +30,17 @@ class Episode(object):
         self.env.run()
 
     def trigger_pause_event_after_rl_actions(self,delay):
+        tasks_list = []
         print("Performing actions before pausing...")
         yield self.env.timeout(delay)  # Wait for the specific time interval
+        unfinished_tasks = self.simulation.cluster.unfinished_tasks
+        for task in unfinished_tasks:
+            tasks_list.append(task.task_index)
+        print(f"Unfinished tasks: {tasks_list}")
         # Perform required actions here...
+        '''
+        Here i will call funcs to perform the rl model actions based on the system state!!
+        '''
         print("Finished with the actions")
         yield self.env.timeout(100)
         self.env.pause_event.succeed()  # Trigger the pause

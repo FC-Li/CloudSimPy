@@ -23,5 +23,5 @@ class FirstFitAlgorithm(Algorithm):
                     unmatched_tasks.append(task)
                     break
 
-                    
+        print("run the first fit")
         return matched_items, unmatched_tasks
