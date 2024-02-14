@@ -1,6 +1,5 @@
 from core.config import *
 
-
 class Task(object):
     def __init__(self, env, job, task_config):
         self.env = env
@@ -24,7 +23,7 @@ class Task(object):
     def parents(self):
         if self._parents is None:
             if self.task_config.parent_indices is None:
-                raise ValueError("Task_config's parent_indices should not be None.")
+                self._parents = []
             self._parents = []
             for parent_index in self.task_config.parent_indices:
                 self._parents.append(self.job.tasks_map[parent_index])
@@ -234,17 +233,27 @@ class TaskInstance(object):
         # self.cluster.waiting_tasks.remove(self)
         # self.cluster.running_tasks.append(self)
         # self.machine.run(self)
-        yield self.env.timeout(self.duration)
+        print('Task instance %f of task %f of job %f is executing' %(self.task_instance_index, self.task.task_index, self.task.job.id))
+        steps = int(self.duration / 0.001)  # Convert execution time to number of steps
+        time_threshold = 100
+        for step in range(steps):
+            if (self.env.now / time_threshold >= 1 and self.env.now != 0):
+                time_threshold += 100
+                yield self.env.pause_event
+                # yield self.env.timeout(0.001)  # Wait here while the system is paused
+            # yield self.env.timeout(self.duration)
+            yield self.env.timeout(0.001)  # Wait here while the system is paused
+
 
         self.finished = True
         self.finished_timestamp = self.env.now
+        print('Task instance %f of task %f of job %f has finished in %s time' %(self.task_instance_index, self.task.task_index, self.task.job.id, self.env.now))
 
         self.machine.stop_task_instance(self)
 
     def schedule(self, machine):
         self.started = True
         self.started_timestamp = self.env.now
-
         self.machine = machine
         self.machine.run_task_instance(self)
         self.process = self.env.process(self.do_work())

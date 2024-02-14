@@ -20,7 +20,6 @@ class CSVReader(object):
             series = df.iloc[i]
             job_id = series.job_id
             task_id, parent_indices = father_task_indices(series.task_id)
-
             cpu = series.cpu
             memory = series.memory
             disk = series.disk

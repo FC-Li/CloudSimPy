@@ -69,10 +69,10 @@ class Machine(object):
     def attach(self, cluster):
         self.cluster = cluster
 
-    def accommodate(self, task):
-        return self.cpu >= task.task_config.cpu and \
-               self.memory >= task.task_config.memory and \
-               self.disk >= task.task_config.disk
+    def accommodate(self, task_instance):
+        return self.cpu >= task_instance.cpu and \
+               self.memory >= task_instance.memory and \
+               self.disk >= task_instance.disk
 
     @property
     def feature(self):

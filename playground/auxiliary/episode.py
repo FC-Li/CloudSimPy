@@ -8,12 +8,18 @@ from core.simulation import Simulation
 class Episode(object):
     broker_cls = Broker
 
-    def __init__(self, machine_configs, task_configs, algorithm, event_file):
+    def __init__(self, machine_configs, jobs_configs, algorithm, event_file):
         self.env = simpy.Environment()
+        
+        self.env.pause_event = simpy.Event(self.env)  # Corrected to use self.env
+        self.env.process(self.trigger_pause_event_after_rl_actions(301))  # Schedule the pause trigger
+        
+        # Your setup continues here...
+        # cluster, task_broker, scheduler initialization...
         cluster = Cluster()
         cluster.add_machines(machine_configs)
 
-        task_broker = Episode.broker_cls(self.env, task_configs)
+        task_broker = Episode.broker_cls(self.env, jobs_configs)
 
         scheduler = Scheduler(self.env, algorithm)
 
@@ -22,3 +28,14 @@ class Episode(object):
     def run(self):
         self.simulation.run()
         self.env.run()
+
+    def trigger_pause_event_after_rl_actions(self,delay):
+        print("Performing actions before pausing...")
+        yield self.env.timeout(delay)  # Wait for the specific time interval
+        # Perform required actions here...
+        print("Finished with the actions")
+        yield self.env.timeout(100)
+        self.env.pause_event.succeed()  # Trigger the pause
+        print("Pause event triggered")
+        # Reset the pause event for future use if needed
+        self.pause_event = simpy.Event(self.env)

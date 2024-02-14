@@ -14,6 +14,7 @@ class Monitor(object):
                 'timestamp': self.env.now,
                 'cluster_state': self.simulation.cluster.state
             }
+            print("yes")
             self.events.append(state)
             yield self.env.timeout(1)
 

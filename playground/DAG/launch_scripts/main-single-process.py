@@ -28,10 +28,26 @@ os.environ['CUDA_VISIBLE_DEVICES'] = ''
 np.random.seed(41)
 tf.random.set_seed(41)
 # ************************ Parameters Setting Start ************************
-machines_number = 1
-jobs_len = 2000
+machines_number = 100
+jobs_len = 200
 n_iter = 30
-jobs_csv = os.path.join("DAG", "jobs_files", "jobs.csv")
+jobs_csv = os.path.join("DAG", "jobs_files", "job.csv")
+
+machine_configs = [MachineConfig(2, 1, 1) for i in range(machines_number)]
+csv_reader = CSVReader(jobs_csv)
+jobs_configs = csv_reader.generate(0, 9)
+
+
+# Start the control process as a background thread
+# control_thread = threading.Thread(target=control_process)
+# control_thread.start()
+
+tic = time.time()
+algorithm = FirstFitAlgorithm()
+episode = Episode(machine_configs, jobs_configs, algorithm, None)
+episode.run()
+print('FirstFitAlgorithm')
+print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))
 
 # brain = BrainSmall(14)
 # reward_giver = MakespanRewardGiver(-1)
@@ -48,37 +64,25 @@ jobs_csv = os.path.join("DAG", "jobs_files", "jobs.csv")
 # agent = Agent(name, brain, 1, reward_to_go=True, nn_baseline=True, normalize_advantages=True,
 #               model_save_path='%s/model.ckpt' % model_dir)
 
-machine_configs = [MachineConfig(2, 1, 1) for i in range(machines_number)]
-csv_reader = CSVReader(jobs_csv)
-jobs_configs = csv_reader.generate(0, jobs_len)
+# tic = time.time()
+# algorithm = RandomAlgorithm()
+# episode = Episode(machine_configs, jobs_configs, algorithm, None)
+# episode.run()
+# print('RandomAlgorithm')
+# print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))
 
-tic = time.time()
-algorithm = RandomAlgorithm()
-episode = Episode(machine_configs, jobs_configs, algorithm, None)
-episode.run()
-print('RandomAlgorithm')
-print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))
-
-tic = time.time()
-algorithm = Tetris()
-episode = Episode(machine_configs, jobs_configs, algorithm, None)
-episode.run()
-print('Tetris')
-print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))
-
-tic = time.time()
-algorithm = FirstFitAlgorithm()
-episode = Episode(machine_configs, jobs_configs, algorithm, None)
-episode.run()
-print('FirstFitAlgorithm')
-print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))
-
-tic = time.time()
-algorithm = MaxWeightAlgorithm()
-episode = Episode(machine_configs, jobs_configs, algorithm, None)
-episode.run()
-print('MaxWeightAlgorithm')
-print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))
+# tic = time.time()
+# algorithm = Tetris()
+# episode = Episode(machine_configs, jobs_configs, algorithm, None)
+# episode.run()
+# print('Tetris')
+# print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))
+# tic = time.time()
+# algorithm = MaxWeightAlgorithm()
+# episode = Episode(machine_configs, jobs_configs, algorithm, None)
+# episode.run()
+# print('MaxWeightAlgorithm')
+# print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))
 
 # for itr in range(n_iter):
 #     print("********** Iteration %i ************" % itr)
