@@ -3,6 +3,9 @@ from core.cluster import Cluster
 from core.scheduler import Scheduler
 from core.broker import Broker
 from core.simulation import Simulation
+from core.runbroker import RunBroker
+from playground.auxiliary.rl_actions import RLactions
+
 
 
 class Episode(object):
@@ -31,13 +34,17 @@ class Episode(object):
 
     def trigger_pause_event_after_rl_actions(self,delay):
         tasks_list = []
-        print("Performing actions before pausing...")
         yield self.env.timeout(delay)  # Wait for the specific time interval
+        print("Performing actions after pausing...")
         unfinished_tasks = self.simulation.cluster.unfinished_tasks
         for task in unfinished_tasks:
             tasks_list.append(task.task_index)
         print(f"Unfinished tasks: {tasks_list}")
         # Perform required actions here...
+        jobs_configs2 = RLactions()
+        task_broker2 = Episode.broker_cls(self.env, jobs_configs2)
+        self.new_task_broker = RunBroker(self.env, self.simulation, task_broker2)
+        self.new_task_broker.run()
         '''
         Here i will call funcs to perform the rl model actions based on the system state!!
         '''

@@ -37,7 +37,6 @@ machine_configs = [MachineConfig(2, 1, 1) for i in range(machines_number)]
 csv_reader = CSVReader(jobs_csv)
 jobs_configs = csv_reader.generate(0, 9)
 
-
 # Start the control process as a background thread
 # control_thread = threading.Thread(target=control_process)
 # control_thread.start()

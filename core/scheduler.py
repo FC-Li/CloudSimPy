@@ -15,9 +15,10 @@ class Scheduler(object):
         matched_items, unmatched_tasks = self.algorithm(self.cluster, self.env.now)
         # yield self.env.timeout(100)
         yield self.env.pause_event
-        print("come on")
-        for unmatched in unmatched_tasks:
+        # print("come on")
+        for unmatched_task in unmatched_tasks:
             print(unmached.task_index)
+            
         #SOS edw exw ta unmatched tasks na ta dwsw sto rl 
         # print(unmatched_tasks)
 

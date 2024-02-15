@@ -6,6 +6,7 @@ class Task(object):
         self.job = job
         self.task_index = task_config.task_index
         self.task_config = task_config
+        self.response_time = task_config.response_time
         self._ready = False
         self._parents = None
 
@@ -58,6 +59,16 @@ class Task(object):
     def start_task_instance(self, machine):
         self.task_instances[self.next_instance_pointer].schedule(machine)
         self.next_instance_pointer += 1
+
+    def reset_task_instance(self):
+        task_instance_config = TaskInstanceConfig(task_config)
+        self.task_config.instances_number = str(int(self.task_config.instances_number) + 1)
+        self.task_instances.append(TaskInstance(self.env, self, task_instance_index, task_instance_config))
+
+    def refresh_response_time(self, response_time):
+        self.response_time = response_time
+        for i in range(int(self.next_instance_pointer+1), int(self.task_config.instances_number)):
+            self.task_instances[i].passive_refresh_response_time(response_time)
 
     @property
     def started(self):
@@ -113,6 +124,7 @@ class Job(object):
         self.env = env
         self.job_config = job_config
         self.id = job_config.id
+        self.response_time = job_config.response_time
 
         self.tasks_map = {}
         for task_config in job_config.task_configs:
@@ -215,6 +227,7 @@ class TaskInstance(object):
         self.memory = task_instance_config.memory
         self.disk = task_instance_config.disk
         self.duration = task_instance_config.duration
+        self.response_time = task_instance_config.response_time
 
         self.machine = None
         self.process = None
@@ -247,9 +260,17 @@ class TaskInstance(object):
 
         self.finished = True
         self.finished_timestamp = self.env.now
-        print('Task instance %f of task %f of job %f has finished in %s time' %(self.task_instance_index, self.task.task_index, self.task.job.id, self.env.now))
+        print('Task instance %f of task %f of job %f has finished in %s time with response_time %s' \
+        %(self.task_instance_index, self.task.task_index, self.task.job.id, self.env.now, self.response_time))
 
         self.machine.stop_task_instance(self)
+
+    def refresh_response_time(self, response_time):
+        self.response_time = response_time
+        self.task.refresh_response_time(self.response_time)
+
+    def passive_refresh_response_time(self, response_time):
+        self.response_time = response_time
 
     def schedule(self, machine):
         self.started = True
