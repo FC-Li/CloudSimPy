@@ -4,10 +4,11 @@ from enum import Enum
 class MachineConfig(object):
     idx = 0
 
-    def __init__(self, cpu_capacity, memory_capacity, disk_capacity, cpu=None, memory=None, disk=None):
+    def __init__(self, cpu_capacity, memory_capacity, disk_capacity, topology, cpu=None, memory=None, disk=None):
         self.cpu_capacity = cpu_capacity
         self.memory_capacity = memory_capacity
         self.disk_capacity = disk_capacity
+        self.topology = topology
 
         self.cpu = cpu_capacity if cpu is None else cpu
         self.memory = memory_capacity if memory is None else memory
@@ -32,6 +33,7 @@ class Machine(object):
         self.cpu = machine_config.cpu
         self.memory = machine_config.memory
         self.disk = machine_config.disk
+        self.topology = machine_config.topology
 
         self.cluster = None
         self.task_instances = []

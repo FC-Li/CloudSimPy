@@ -62,6 +62,7 @@ class Task(object):
 
     def reset_task_instance(self):
         task_instance_config = TaskInstanceConfig(task_config)
+        task_instance_config.response_time = self.env.now
         self.task_config.instances_number = str(int(self.task_config.instances_number) + 1)
         self.task_instances.append(TaskInstance(self.env, self, task_instance_index, task_instance_config))
 
@@ -249,9 +250,14 @@ class TaskInstance(object):
         print('Task instance %f of task %f of job %f is executing' %(self.task_instance_index, self.task.task_index, self.task.job.id))
         steps = int(self.duration / 0.001)  # Convert execution time to number of steps
         time_threshold = 100
+        div = self.env.now / time_threshold
+        if ((self.env.now % time_threshold) == 0 and self.env.now != 0):
+            time_threshold = (div) * time_threshold # ama einai akrivws 100,200 klp tote paw sto pause
+        else:
+            time_threshold = (div+1) * time_threshold # ama einai estw kai 0.1 over tote pausarei sto epomeno checkpoint
         for step in range(steps):
             if (self.env.now / time_threshold >= 1 and self.env.now != 0):
-                time_threshold += 100
+                time_threshold += 100 # perimenei mono thn prwth fora
                 yield self.env.pause_event
                 # yield self.env.timeout(0.001)  # Wait here while the system is paused
             # yield self.env.timeout(self.duration)

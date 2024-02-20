@@ -7,7 +7,7 @@ from playground.DAG.utils.feature_synthesize import father_task_indices
 
 
 class CSVReader(object):
-    def __init__(self, filename):
+    def __init__(self, filename, clock):
         self.filename = filename
         df = pd.read_csv(self.filename)
 
@@ -25,7 +25,7 @@ class CSVReader(object):
             memory = series.memory
             disk = series.disk
             duration = series.duration
-            submit_time = series.submit_time
+            submit_time = series.submit_time + clock
             response_time = series.response_time
             instances_num = series.instances_num
 

@@ -1,5 +1,6 @@
-from core.job import Job
+import random
 
+from core.job import Job
 
 class Broker(object):
     job_cls = Job
@@ -26,5 +27,5 @@ class Broker(object):
             # yield self.env.timeout(0)
             job = Broker.job_cls(self.env, job_config)
             print('a job arrived at time %f' % self.env.now)
-            self.cluster.add_job(job)
+            random.choice(self.cluster.child_clusters).add_job(job)
         self.destroyed = True
