@@ -6,6 +6,7 @@ from core.machine import Machine
 class Cluster(object):
     def __init__(self, level=None):
         self.machines = []
+        self.nodes = []
         self.jobs = []
         self.level = level  # Optional: Identify the cluster level or type
         self.child_clusters = [] if level is None else None  # Central cluster has child clusters
@@ -73,6 +74,20 @@ class Cluster(object):
         for machine in self.machines:
             task_instances.extend(machine.running_task_instances)
         return task_instances
+
+    def add_nodes(self, nodes):
+        if self.child_clusters is not None:
+            for node in nodes:
+                target_cluster = node.topology
+                self.child_clusters[target_cluster].add_node(machine)
+        else:
+            for node in nodes:
+                self.nodes.append(node)
+                node.attach_cluster(self)
+    
+    def add_node(self, node):
+        self.node.append(node)
+        node.attach_cluster(self)
 
     def add_machines(self, machine_configs):
         if self.child_clusters is not None:

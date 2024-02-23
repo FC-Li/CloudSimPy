@@ -60,6 +60,7 @@ class Task(object):
         self.task_instances[self.next_instance_pointer].schedule(machine)
         self.next_instance_pointer += 1
 
+    # when the task instance remains in the same cluster // when it is a batch job
     def reset_task_instance(self):
         task_instance_config = TaskInstanceConfig(task_config)
         task_instance_config.response_time = self.env.now
@@ -68,8 +69,14 @@ class Task(object):
 
     def refresh_response_time(self, response_time):
         self.response_time = response_time
-        for i in range(int(self.next_instance_pointer+1), int(self.task_config.instances_number)):
+        for i in range(int(self.next_instance_pointer), int(self.task_config.instances_number)):
             self.task_instances[i].passive_refresh_response_time(response_time)
+
+ 
+    @property
+    def running_time(self):
+        max_inst = int(self.task_config.instances_number)
+        return self.response_time + self.task_instances[max_inst].running_time
 
     @property
     def started(self):
@@ -119,27 +126,47 @@ class Task(object):
 
 
 class Job(object):
-    task_cls = Task
+    # task_cls = Task
 
     def __init__(self, env, job_config):
         self.env = env
         self.job_config = job_config
         self.id = job_config.id
-        self.response_time = job_config.response_time
 
         self.tasks_map = {}
         for task_config in job_config.task_configs:
             task_index = task_config.task_index
-            self.tasks_map[task_index] = Job.task_cls(env, self, task_config)
+            self.tasks_map[task_index] = Task(env, self, task_config)
+
+    def reset_job(self):
+        self.env = env
+        self.job_config = job_config
+        self.id = job_config.id
+        response_time = self.running_time
+
+        self.tasks_map = {}
+        for task_config in job_config.task_configs:
+            task_index = task_config.task_index
+            task_config.response_time = response_time
+            self.tasks_map[task_index] = Task(env, self, task_config)
 
     @property
     def tasks(self):
         return self.tasks_map.values()
 
     @property
+    def running_time(self):
+        max_running_time = 0.0
+        ls = unfinished_tasks(self)
+        for task in ls:
+            if running_time(task) > max_running_time:
+                max_running_time = running_time(task)
+        return running_time
+
+    @property
     def unfinished_tasks(self):
         ls = []
-        for task in self.tasks:
+        for task in self.tasks_map.values():
             if not task.finished:
                 ls.append(task)
         return ls
@@ -230,10 +257,13 @@ class TaskInstance(object):
         self.duration = task_instance_config.duration
         self.response_time = task_instance_config.response_time
 
+        self.running_time = 0.0
+
         self.machine = None
         self.process = None
         self.new = True
 
+        self.waiting = False
         self.started = False
         self.finished = False
         self.started_timestamp = None
@@ -248,28 +278,57 @@ class TaskInstance(object):
         # self.cluster.running_tasks.append(self)
         # self.machine.run(self)
         print('Task instance %f of task %f of job %f is executing' %(self.task_instance_index, self.task.task_index, self.task.job.id))
-        steps = int(self.duration / 0.001)  # Convert execution time to number of steps
         time_threshold = 100
         div = self.env.now / time_threshold
         if ((self.env.now % time_threshold) == 0 and self.env.now != 0):
             time_threshold = (div) * time_threshold # ama einai akrivws 100,200 klp tote paw sto pause
         else:
             time_threshold = (div+1) * time_threshold # ama einai estw kai 0.1 over tote pausarei sto epomeno checkpoint
-        for step in range(steps):
-            if (self.env.now / time_threshold >= 1 and self.env.now != 0):
+        while(!self.finished):
+            if (self.env.now % time_threshold < 0.001 and self.env.now != 0):
                 time_threshold += 100 # perimenei mono thn prwth fora
                 yield self.env.pause_event
                 # yield self.env.timeout(0.001)  # Wait here while the system is paused
             # yield self.env.timeout(self.duration)
-            yield self.env.timeout(0.001)  # Wait here while the system is paused
+            if (self.finished == False and self.waiting == False):
+                self.running_time += 0.00001
+                yield self.env.timeout(0.00001)  # Wait here while the system is paused
+                if self.running_time >= self.duration:
+                    self.finsihed = True
+            elif self.waiting == True:
+                starting_wait_time = self.env.now
+                total_rl_time = 0.0
+                while(!self.machine.accommodate(self)):
+                    if (self.env.now % time_threshold < 0.001 and self.env.now != 0):
+                        start_rl_time = self.env.now 
+                        time_threshold += 100 # perimenei mono thn prwth fora
+                        yield self.env.pause_event
+                        total_rl_time = total_rl_time + self.env.now - start_rl_time 
+                self.machine.num_waiting_instances -= 1
+                self.waiting = False
+                self.response_time = self.response_time + self.env.now - starting_wait_time - total_rl_time
+                self.machine.restart_task_instance(self)
+            # else:
+            #     self.machine.stop_task_instance(self)
+            #     break
 
-
-        self.finished = True
         self.finished_timestamp = self.env.now
+        self.machine.stop_task_instance(self)
         print('Task instance %f of task %f of job %f has finished in %s time with response_time %s' \
         %(self.task_instance_index, self.task.task_index, self.task.job.id, self.env.now, self.response_time))
-
+    
+    def recalc_metrics(self, new_task_instance_config):
         self.machine.stop_task_instance(self)
+        self.cpu = new_task_instance_config.cpu
+        self.memory = new_task_instance_config.memory
+        self.disk = new_task_instance_config.disk
+        new_task_instance_config.response_time = self.response_time
+        self.task_instance_config = new_task_instance_config
+        if self.machine.accommodate(self):
+            self.machine.restart_task_instance(self)
+        else: 
+            self.machine.num_waiting_instances += 1
+            self.waiting = True
 
     def refresh_response_time(self, response_time):
         self.response_time = response_time

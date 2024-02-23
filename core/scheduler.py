@@ -8,7 +8,6 @@ class Scheduler(object):
         self.valid_pairs = {}
         self.level = level  
         
-
     def attach(self, simulation):
         self.simulation = simulation
     #     self.cluster = cluster

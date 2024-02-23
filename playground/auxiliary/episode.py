@@ -12,7 +12,7 @@ from playground.auxiliary.add_job_config import add_job_config
 class Episode(object):
     broker_cls = Broker
 
-    def __init__(self, machine_configs, jobs_csv, algorithm, event_file):
+    def __init__(self, machine_configs, node_configs, jobs_csv, algorithm, event_file):
         self.env = simpy.Environment()
 
         csv_reader = CSVReader(jobs_csv, self.env.now)
@@ -25,7 +25,9 @@ class Episode(object):
         # cluster, task_broker, scheduler initialization...
         cluster = Cluster()
         cluster.child_clusters = [Cluster(level=i) for i in range(3)]  # Create 3 child clusters
+        cluster.add_nodes(node_configs)
         cluster.add_machines(machine_configs)
+
         # cluster = Cluster()
         # cluster.add_machines(machine_configs)
 
@@ -61,8 +63,8 @@ class Episode(object):
         print("Pause event triggered")
         # Reset the pause event for future use if needed
         self.env.pause_event = simpy.Event(self.env)
-        while not self.simulation.finished:
-            print('The time at the start of the next pause is', self.env.now)
+        if (self.simulation.finished != 1 and self.env.now < 1200):
             yield self.env.timeout(300)
+            print('The time at the start of the next pause is', self.env.now)
             self.env.process(self.trigger_pause_event_after_rl_actions(1))  # Schedule the pause trigger
 

@@ -4,11 +4,12 @@ from enum import Enum
 class MachineConfig(object):
     idx = 0
 
-    def __init__(self, cpu_capacity, memory_capacity, disk_capacity, topology, cpu=None, memory=None, disk=None):
+    def __init__(self, cpu_capacity, memory_capacity, disk_capacity, topology, node_id, cpu=None, memory=None, disk=None):
         self.cpu_capacity = cpu_capacity
         self.memory_capacity = memory_capacity
         self.disk_capacity = disk_capacity
         self.topology = topology
+        self.node_id = node_id
 
         self.cpu = cpu_capacity if cpu is None else cpu
         self.memory = memory_capacity if memory is None else memory
@@ -34,9 +35,12 @@ class Machine(object):
         self.memory = machine_config.memory
         self.disk = machine_config.disk
         self.topology = machine_config.topology
+        self.node_id = machine_config.node_id
 
         self.cluster = None
+        self.node = None
         self.task_instances = []
+        self.num_waiting_instances = 0
         self.machine_door = MachineDoor.NULL
 
     def run_task_instance(self, task_instance):
@@ -51,6 +55,12 @@ class Machine(object):
         self.memory += task_instance.memory
         self.disk += task_instance.disk
         self.machine_door = MachineDoor.TASK_OUT
+
+    def restart_task_instance(self, task_instance):
+        self.cpu -= task_instance.cpu
+        self.memory -= task_instance.memory
+        self.disk -= task_instance.disk
+        self.machine_door = MachineDoor.TASK_IN
 
     @property
     def running_task_instances(self):
@@ -71,10 +81,39 @@ class Machine(object):
     def attach(self, cluster):
         self.cluster = cluster
 
+    def attach_node(self, node):
+        self.node = node
+
     def accommodate(self, task_instance):
         return self.cpu >= task_instance.cpu and \
                self.memory >= task_instance.memory and \
                self.disk >= task_instance.disk
+
+    def scheduled_time(self):
+        avg_time = 0.0
+        running_task_instances = self.running_task_instances()
+        for task_instance in running_task_instances:
+            avg_time += task_instance.response_time + task_instance.running_time
+        avg_time = avg_time / len(self.task_instances)
+        return avg_time
+
+    def service_job_scheduled_time(self):
+        avg_time = 0.0
+        running_task_instances = self.running_task_instances()
+        for task_instance in running_task_instances:
+            if task_instance.type == 0:
+                avg_time += task_instance.response_time + task_instance.running_time
+        avg_time = avg_time / len(self.task_instances)
+        return avg_time
+
+    def remaining_time(self):
+        avg_time = 0.0
+        running_task_instances = self.running_task_instances()
+        for task_instance in running_task_instances:
+            avg_time += task_instance.duration - task_instance.running_time
+        avg_time = avg_time / len(self.task_instances)
+        return avg_time            
+
 
     @property
     def feature(self):
@@ -83,6 +122,27 @@ class Machine(object):
     @property
     def capacity(self):
         return [self.cpu_capacity, self.memory_capacity, self.disk_capacity]
+
+    @property
+    def usage(self):
+        return [self.cpu / self.cpu_capacity, self.memory / self.memory_capacity, self.disk / self.disk_capacity]
+
+    @property
+    def avg_usage(self):
+        return ((self.cpu / self.cpu_capacity) + (self.memory / self.memory_capacity) + (self.disk / self.disk_capacity)) / 3
+
+    @property
+    def avg_batch_usage(self):
+        temp_cpu = self.cpu_capacity
+        temp_mem = self.memory_capacity
+        temp_disk = self.disk_capacity
+        running_task_instances = self.running_task_instances()
+        for task_instance in running_task_instances:
+            if task_instance.type == 1:
+                temp_cpu -= task_instance.cpu
+                temp_mem -= task_instance.memory
+                temp_disk -= task_instance.disk
+        return ((temp_cpu / self.cpu_capacity) + (temp_memory / self.memory_capacity) + (temp_disk / self.disk_capacity)) / 3
 
     @property
     def state(self):
