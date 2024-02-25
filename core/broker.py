@@ -17,7 +17,8 @@ class Broker(object):
         self.cluster = simulation.cluster
 
     def run(self):
-        print("broker_runs")
+        starting_time = self.env.now
+        print("broker_runs with starting time", starting_time)
         for job_config in self.job_configs:
             print(job_config.submit_time,self.env.now, job_config.id)
             assert job_config.submit_time >= self.env.now
@@ -26,6 +27,6 @@ class Broker(object):
                 yield self.env.timeout(timeout_duration)
             # yield self.env.timeout(0)
             job = Broker.job_cls(self.env, job_config)
-            print('a job arrived at time %f' % self.env.now)
+            print('job %s arrived at time %f with the broker that started at %s' % (job.id, self.env.now, starting_time))
             random.choice(self.cluster.child_clusters).add_job(job)
         self.destroyed = True

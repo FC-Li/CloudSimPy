@@ -8,7 +8,8 @@ class TaskInstanceConfig(object):
 
 
 class TaskConfig(object):
-    def __init__(self, task_index, instances_number, cpu, memory, disk, duration, response_time, parent_indices=None):
+    def __init__(self, task_index, instances_number, cpu, memory, disk, \
+    duration, response_time, submit_time, parent_indices=None):
         self.task_index = task_index
         self.instances_number = instances_number
         self.cpu = cpu
@@ -16,6 +17,7 @@ class TaskConfig(object):
         self.disk = disk
         self.duration = duration
         self.response_time = response_time
+        self.submit_time = submit_time
         self.parent_indices = parent_indices
 
 

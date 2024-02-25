@@ -30,7 +30,9 @@ class CSVReader(object):
             instances_num = series.instances_num
 
             task_configs = job_task_map.setdefault(job_id, [])
-            task_configs.append(TaskConfig(task_id, instances_num, cpu, memory, disk, duration, response_time, parent_indices))
+            task_configs.append(TaskConfig(task_id, instances_num, cpu, memory, disk, duration, \
+            response_time , submit_time, parent_indices))
+            task_configs.sort(key=attrgetter('submit_time'))
             job_submit_time_map[job_id] = submit_time
             job_response_time_map[job_id] = response_time
 
@@ -57,24 +59,25 @@ class CSVReader(object):
             job_config.submit_time -= submit_time_base
             tasks_number += len(job_config.task_configs)
             for task_config in job_config.task_configs:
+                task_config.submit_time -= submit_time_base
                 task_instances_numbers.append(task_config.instances_number)
                 task_instances_durations.extend([task_config.duration] * int(task_config.instances_number))
                 task_instances_cpu.extend([task_config.cpu] * int(task_config.instances_number))
                 task_instances_memory.extend([task_config.memory] * int(task_config.instances_number))
 
-        print('Jobs number: ', len(ret))
-        print('Tasks number:', tasks_number)
+        # print('Jobs number: ', len(ret))
+        # print('Tasks number:', tasks_number)
 
-        print('Task instances number mean: ', np.mean(task_instances_numbers))
-        print('Task instances number std', np.std(task_instances_numbers))
+        # print('Task instances number mean: ', np.mean(task_instances_numbers))
+        # print('Task instances number std', np.std(task_instances_numbers))
 
-        print('Task instances cpu mean: ', np.mean(task_instances_cpu))
-        print('Task instances cpu std: ', np.std(task_instances_cpu))
+        # print('Task instances cpu mean: ', np.mean(task_instances_cpu))
+        # print('Task instances cpu std: ', np.std(task_instances_cpu))
 
-        print('Task instances memory mean: ', np.mean(task_instances_memory))
-        print('Task instances memory std: ', np.std(task_instances_memory))
+        # print('Task instances memory mean: ', np.mean(task_instances_memory))
+        # print('Task instances memory std: ', np.std(task_instances_memory))
 
-        print('Task instances duration mean: ', np.mean(task_instances_durations))
-        print('Task instances duration std: ', np.std(task_instances_durations))
+        # print('Task instances duration mean: ', np.mean(task_instances_durations))
+        # print('Task instances duration std: ', np.std(task_instances_durations))
 
         return ret

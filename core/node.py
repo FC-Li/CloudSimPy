@@ -1,3 +1,5 @@
+from core.machine import Machine
+
 class Node(object):
     def __init__(self, node_id, topology):
         self.id = node_id
@@ -13,7 +15,7 @@ class Node(object):
         self.cluster = None
         self.machines = []
 
-    def add_machine(self, machine):
+    def add_machine_capacities(self, machine):
         self.cpu_capacity += machine.cpu_capacity
         self.memory_capacity += machine.memory_capacity
         self.disk_capacity += machine.disk_capacity
@@ -46,14 +48,24 @@ class Node(object):
     #     self.machines.append(machine)
     #     self.add_machine(machine)
 
-    def add_machines(self, machines):
-        for machine in machines:
+    def add_machines(self, machine_configs):
+        for machine_config in machine_configs:
+            machine = Machine(machine_config)
+            machine.attach_node(self)
             self.machines.append(machine)
-            machine.attach(self)
+            self.add_machine_capacities(machine)
 
-    def add_machine(self, machine):
-        self.machines.append(machine)
-        machine.attach(self)
+    # def remove_machines(self, machines):
+    #     for machine in machines:
+    #         machine.dettach_node()
+    #         self.machines.remove(machine)
+
+    def delete(self):
+        for running_task_instance in self.running_task_instances():
+            running_task_instance.delete()
+        for machine in self.machines:
+            machine.dettach_node()
+            self.machines.remove(machine)
 
     def scheduled_time(self):
         avg_time = 0.0

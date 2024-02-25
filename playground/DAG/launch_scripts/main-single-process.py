@@ -8,6 +8,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = '3'
 sys.path.append('..')
 
 from core.machine import MachineConfig
+from core.node import Node
 from playground.DAG.algorithm.heuristics.random_algorithm import RandomAlgorithm
 from playground.DAG.algorithm.heuristics.tetris import Tetris
 from playground.DAG.algorithm.heuristics.first_fit import FirstFitAlgorithm
@@ -28,7 +29,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = ''
 np.random.seed(41)
 tf.random.set_seed(41)
 # ************************ Parameters Setting Start ************************
-machines_number = [30, 40 ,110] 
+machines_number = [30, 45 ,105] 
 '''
 near_edge_machines_number = 30
 far_edge_machines_number = 40
@@ -39,13 +40,25 @@ jobs_len = 200
 n_iter = 30
 jobs_csv = os.path.join("DAG", "jobs_files", "job.csv")
 
-machine_configs = [MachineConfig(2, 1, 1, cluster_index, node_id // 3) 
-                   for cluster_index, top_machines_number in enumerate(machines_number) 
-                   for node_id in range(top_machines_number)]
+# machine_configs = [MachineConfig(2, 1, 1, cluster_index, node_id) 
+#                    for cluster_index, top_machines_number in enumerate(machines_number) 
+#                    for node_id in range(top_machines_number // 3)]
 
-node_configs = [Node(cluster_index, node_id // 3) 
+machine_groups = {}  # Dictionary to hold lists of machines grouped by node_id
+for cluster_index, top_machines_number in enumerate(machines_number):
+    for node_id in range(top_machines_number // 3):
+        # Initialize the list for each node_id if not already done
+        if node_id not in machine_groups:
+            machine_groups[node_id] = []
+        # Add machines to the appropriate group
+        machine_groups[node_id].extend(
+            [MachineConfig(2, 1, 1, cluster_index, node_id) for _ in range(3)]
+        )
+
+
+node_configs = [Node(node_id, cluster_index) 
                    for cluster_index, top_machines_number in enumerate(machines_number) 
-                   for node_id in range(top_machines_number)]
+                   for node_id in range(top_machines_number // 3)]
                    
 # csv_reader = CSVReader(jobs_csv)
 # jobs_configs = csv_reader.generate(0, 9)
@@ -56,7 +69,7 @@ node_configs = [Node(cluster_index, node_id // 3)
 
 tic = time.time()
 algorithm = FirstFitAlgorithm()
-episode = Episode(machine_configs, node_configs, jobs_csv, algorithm, None)
+episode = Episode(machine_groups, node_configs, jobs_csv, algorithm, None)
 episode.run()
 print('FirstFitAlgorithm')
 # print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))

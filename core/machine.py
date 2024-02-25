@@ -78,11 +78,14 @@ class Machine(object):
                 ls.append(task_instance)
         return ls
 
-    def attach(self, cluster):
-        self.cluster = cluster
+    # def attach(self, cluster):
+    #     self.cluster = cluster
 
     def attach_node(self, node):
         self.node = node
+    
+    def dettach_node(self):
+        self.node = None
 
     def accommodate(self, task_instance):
         return self.cpu >= task_instance.cpu and \

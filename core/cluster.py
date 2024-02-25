@@ -1,6 +1,3 @@
-from core.machine import Machine
-
-
 class Cluster(object):
     def __init__(self):
         self.machines = []
