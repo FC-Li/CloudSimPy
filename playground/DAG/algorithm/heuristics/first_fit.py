@@ -10,7 +10,7 @@ class FirstFitAlgorithm(Algorithm):
         unmatched_tasks = []
 
         for task in tasks:
-            for task_instance in task.task_instances:
+            for task_instance in task.unscheduled_task_instances:
                 matched = False  # Flag to indicate if the task has been matched
                 for machine in machines:
                     if machine.accommodate(task_instance):
@@ -18,7 +18,7 @@ class FirstFitAlgorithm(Algorithm):
                         % (task_instance.task_instance_index, task.task_config.task_index, task.job.job_config.id, machine.id, cluster.level, \
                         task.task_config.submit_time))
                         task_instance.refresh_response_time(remove_delays(task.job.job_config.submit_time, clock))
-                        task.start_task_instance(machine)
+                        task.start_task_instance(task_instance.task_instance_index, machine)
                         matched_items.append((machine, task_instance))  # Corrected to append a tuple
                         matched = True
                         break  # Exit the inner loop if a match is found
@@ -26,8 +26,8 @@ class FirstFitAlgorithm(Algorithm):
                 if not matched:
                     # Only add the task to unmatched_tasks if no match was found after checking all machines
                     response_time = task_instance.refresh_response_time(remove_delays(task.job.job_config.submit_time, clock))
-                    for i in range((int(task.next_instance_pointer)), int(task.task_config.instances_number)):
-                        task.task_instances[i].passive_refresh_response_time(response_time)
+                    for task_instance in task.unscheduled_task_instances::
+                        task.task_instance.passive_refresh_response_time(response_time)
                     unmatched_tasks.append(task)
                     break
 

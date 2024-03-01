@@ -17,6 +17,7 @@ class CSVReader(object):
         job_task_map = {}
         job_submit_time_map = {}
         job_response_time_map = {}
+        job_type = {}
         for i in range(len(df)):
             series = df.iloc[i]
             job_id = series.job_id
@@ -28,6 +29,7 @@ class CSVReader(object):
             submit_time = series.submit_time + clock
             response_time = series.response_time
             instances_num = series.instances_num
+            type = series.type
 
             task_configs = job_task_map.setdefault(job_id, [])
             task_configs.append(TaskConfig(task_id, instances_num, cpu, memory, disk, duration, \
@@ -35,10 +37,12 @@ class CSVReader(object):
             task_configs.sort(key=attrgetter('submit_time'))
             job_submit_time_map[job_id] = submit_time
             job_response_time_map[job_id] = response_time
+            job_type[job_id] = type
 
         job_configs = []
         for job_id, task_configs in job_task_map.items():
-            job_configs.append(JobConfig(job_id, job_submit_time_map[job_id], job_response_time_map[job_id], task_configs))
+            job_configs.append(JobConfig(job_id, job_submit_time_map[job_id], job_response_time_map[job_id], \
+            job_type[job_id], task_configs))
         job_configs.sort(key=attrgetter('submit_time'))
         self.job_configs = job_configs
         # for job in job_configs:

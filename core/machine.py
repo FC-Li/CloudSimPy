@@ -4,16 +4,16 @@ from enum import Enum
 class MachineConfig(object):
     idx = 0
 
-    def __init__(self, cpu_capacity, memory_capacity, disk_capacity, topology, node_id, cpu=None, memory=None, disk=None):
+    def __init__(self, cpu_capacity, memory_capacity, disk_capacity, topology, node_id, cpu=0, memory=0, disk=0):
         self.cpu_capacity = cpu_capacity
         self.memory_capacity = memory_capacity
         self.disk_capacity = disk_capacity
         self.topology = topology
         self.node_id = node_id
 
-        self.cpu = cpu_capacity if cpu is None else cpu
-        self.memory = memory_capacity if memory is None else memory
-        self.disk = disk_capacity if disk is None else disk
+        self.cpu = 0
+        self.memory = 0
+        self.disk = 0
 
         self.id = MachineConfig.idx
         MachineConfig.idx += 1
@@ -44,22 +44,22 @@ class Machine(object):
         self.machine_door = MachineDoor.NULL
 
     def run_task_instance(self, task_instance):
-        self.cpu -= task_instance.cpu
-        self.memory -= task_instance.memory
-        self.disk -= task_instance.disk
+        self.cpu += task_instance.cpu
+        self.memory += task_instance.memory
+        self.disk += task_instance.disk
         self.task_instances.append(task_instance)
         self.machine_door = MachineDoor.TASK_IN
 
     def stop_task_instance(self, task_instance):
-        self.cpu += task_instance.cpu
-        self.memory += task_instance.memory
-        self.disk += task_instance.disk
-        self.machine_door = MachineDoor.TASK_OUT
-
-    def restart_task_instance(self, task_instance):
         self.cpu -= task_instance.cpu
         self.memory -= task_instance.memory
         self.disk -= task_instance.disk
+        self.machine_door = MachineDoor.TASK_OUT
+
+    def restart_task_instance(self, task_instance):
+        self.cpu += task_instance.cpu
+        self.memory += task_instance.memory
+        self.disk += task_instance.disk
         self.machine_door = MachineDoor.TASK_IN
 
     @property
@@ -78,6 +78,10 @@ class Machine(object):
                 ls.append(task_instance)
         return ls
 
+    def remove_task_instance(self, task_instance):
+        if task_instance in self.task_instances:
+            self.task_instances.remove(task_instance)
+
     # def attach(self, cluster):
     #     self.cluster = cluster
 
@@ -88,9 +92,9 @@ class Machine(object):
         self.node = None
 
     def accommodate(self, task_instance):
-        return self.cpu >= task_instance.cpu and \
-               self.memory >= task_instance.memory and \
-               self.disk >= task_instance.disk
+        return self.cpu_capacity - self.cpu >= task_instance.cpu and \
+               self.memory_capacity - self.memory >= task_instance.memory and \
+               self.disk_capacity - self.disk >= task_instance.disk
 
     def scheduled_time(self):
         avg_time = 0.0
@@ -116,7 +120,6 @@ class Machine(object):
             avg_time += task_instance.duration - task_instance.running_time
         avg_time = avg_time / len(self.task_instances)
         return avg_time            
-
 
     @property
     def feature(self):

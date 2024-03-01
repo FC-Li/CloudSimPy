@@ -22,8 +22,9 @@ class TaskConfig(object):
 
 
 class JobConfig(object):
-    def __init__(self, idx, submit_time, response_time, task_configs):
+    def __init__(self, idx, submit_time, response_time, type, task_configs):
         self.submit_time = submit_time
         self.response_time = response_time
         self.task_configs = task_configs
         self.id = idx
+        self.type = type

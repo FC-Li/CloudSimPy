@@ -1,6 +1,9 @@
 import random
 
 from core.machine import Machine
+from core.machine import MachineConfig
+from core.node import Node
+from playground.auxiliary.find_missing_item import find_first_missing_integer
 
 
 class Cluster(object):
@@ -70,29 +73,70 @@ class Cluster(object):
 
     @property
     def running_task_instances(self):
-        task_instances = []
-        for node in self.nodes:
-            for machine in node.machines:
-                task_instances.extend(machine.running_task_instances)
-        return task_instances
+        if self.child_clusters is not None:
+            task_instances = []
+            for child in self.child_clusters:
+                task_instances.extend(child.running_task_instances)
+            return task_instances
+        else:
+            task_instances = []
+            for node in self.nodes:
+                task_instances.extend(node.running_task_instances)
+            return task_instances
+
+    @property
+    def waiting_task_instances(self):
+        if self.child_clusters is not None:
+            task_instances = []
+            for child in self.child_clusters:
+                task_instances.extend(child.waiting_task_instances)
+            return task_instances
+        else:
+            task_instances = []
+            for node in self.nodes:
+                task_instances.extend(node.waiting_task_instances)
+            return task_instances
+
+    @property
+    def metrics_unstarted_instances(self):
+        if self.child_clusters is not None:
+            ls = []
+            for child in self.child_clusters:
+                ls.extend(child.metrics_unstarted_instances)
+            return ls
+        else:
+            ls = []
+            cluster_sum = [0,0,0]
+            for node in child.nodes:
+                node_sum = node.metrics_unstarted_instances
+                cluster_sum[0] += node_sum[0]
+                cluster_sum[1] += node_sum[1]
+                cluster_sum[2] += node_sum[2]
+            ls.append(cluster_sum)
+            return ls
 
     def add_nodes(self, nodes):
         if self.child_clusters is not None:
             for node in nodes:
                 target_cluster = node.topology
-                self.child_clusters[target_cluster].add_node(node)
+                self.child_clusters[target_cluster].add_nodes(node)
         else:
             for node in nodes:
                 self.nodes.append(node)
                 node.attach_cluster(self)
-    
-    def add_node(self, node):
-        self.nodes.append(node)
-        node.attach_cluster(self)
 
-    def remove_node(self, node):
-        self.nodes.remove(node)
-        node.delete()
+    def create_nodes(self, target_cluster, num):
+        if self.child_clusters is not None:
+            for i in range(num-1):
+                node_id = find_first_missing_integer()
+                machine_configs = [MachineConfig(2, 1, 1, target_cluster, node_id) for _ in range(3)]
+                Node(node_id, target_cluster).add_machines(machine_configs)
+                self.child_clusters[target_cluster].add_nodes(Node(node_id, target_cluster))
+
+    def remove_nodes(self, nodes):
+        for node in nodes:
+            self.nodes.remove(node)
+            node.delete()
 
     def add_job(self, job):
         if self.child_clusters is not None:
@@ -103,27 +147,131 @@ class Cluster(object):
 
     @property
     def cpu(self):
-        return sum([machine.cpu for node in self.nodes for machine in node.machines])
+        if self.child_clusters is not None:
+            ls = []
+            for child in self.child_clusters:
+                ls.append(child.cpu)
+            return ls
+        else:
+            return [sum([machine.cpu for node in self.nodes for machine in node.machines])]
 
     @property
     def memory(self):
-        return sum([machine.memory for node in self.nodes for machine in node.machines])
+        if self.child_clusters is not None:
+            ls = []
+            for child in self.child_clusters:
+                ls.append(child.memory)
+            return ls
+        else:
+            return [sum([machine.memory for node in self.nodes for machine in node.machines])]
+        
 
     @property
     def disk(self):
-        return sum([machine.disk for node in self.nodes for machine in node.machines])
+        if self.child_clusters is not None:
+            ls = []
+            for child in self.child_clusters:
+                ls.append(child.disk)
+            return ls
+        else:
+            return [sum([machine.cpu for node in self.nodes for machine in node.machines])]
+        
 
     @property
     def cpu_capacity(self):
-        return sum(machine.cpu_capacity for node in self.nodes for machine in node.machines)
+        if self.child_clusters is not None:
+            ls = []
+            for child in self.child_clusters:
+                ls.append(child.cpu_capacity)
+            return ls
+        else:
+            return [sum(machine.cpu_capacity for node in self.nodes for machine in node.machines)]
+        
 
     @property
     def memory_capacity(self):
-        return sum(machine.memory_capacity for node in self.nodes for machine in node.machines)
+        if self.child_clusters is not None:
+            ls = []
+            for child in self.child_clusters:
+                ls.append(child.memory_capacity)
+            return ls
+        else:
+            return [sum(machine.memory_capacity for node in self.nodes for machine in node.machines)]
+        
 
     @property
     def disk_capacity(self):
-        return sum(machine.disk_capacity for node in self.nodes for machine in node.machines)
+        if self.child_clusters is not None:
+            ls = []
+            for child in self.child_clusters:
+                ls.append(child.disk_capacity)
+            return ls
+        else:
+            return [sum(machine.disk_capacity for node in self.nodes for machine in node.machines)]
+
+    @property
+    def usage(self):
+        if self.child_clusters is not None:
+            ls = []
+            for child in self.child_clusters:
+                ls.append([child.cpu, child.memory, child.disk])
+            return ls
+        else:
+            return [self.cpu, self.memory, self.disk]
+
+    @property
+    def capacities(self):
+        if self.child_clusters is not None:
+            ls = []
+            for child in self.child_clusters:
+                ls.append([child.cpu_capacity, child.memory_capacity, child.disk_capacity])
+            return ls
+        else:
+            return [self.cpu_capacity, self.memory_capacity, self.disk_capacity]
+
+    @property
+    def anomalous_usage(self):
+        if self.child_clusters is not None:
+            ls = []
+            for child in self.child_clusters:
+                cnt = 0
+                for node in child.nodes:
+                    for machine in node.machines:
+                        usage = machine.usage
+                        if any(val > 1 for val in usage):
+                            cnt += 1
+                ls.append(cnt)
+            return ls
+        else:
+            ls = []
+            cnt = 0
+            for node in self.nodes:
+                for machine in node.machines:
+                    usage = machine.usage
+                    if any(val > 1 for val in usage):
+                        cnt += 1
+                ls.append(cnt)
+            return ls
+
+    @property
+    def response_time(self):
+        if self.child_clusters is not None:
+            ls = []
+            for child in self.child_clusters:
+                avg = 0
+                for node in child.nodes:
+                    avg += node.response_time
+                avg = avg / len(child.nodes)
+                ls.append(avg)
+            return ls
+        else:
+            ls = []
+            avg = 0
+            for node in self.nodes:
+                avg += node.response_time
+            avg = avg / len(child.nodes)
+            ls.append(avg)
+            return ls
 
     # @property
     # def state(self):

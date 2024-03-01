@@ -11,7 +11,6 @@ class Node(object):
         self.reward = reward
         self.clock = clock
 
-
 class RLAlgorithm(object):
     def __init__(self, agent, reward_giver, features_normalize_func, features_extract_func):
         self.agent = agent

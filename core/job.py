@@ -55,17 +55,24 @@ class Task(object):
                 ls.append(task_instance)
         return ls
 
+    @property
+    def unscheduled_task_instances(self):
+        ls = []
+        for task_instance in self.task_instances:
+            if not task_instance.started:
+                ls.append(task_instance)
+        return ls   
+
     # the most heavy
-    def start_task_instance(self, machine):
-        self.task_instances[self.next_instance_pointer].schedule(machine)
-        self.next_instance_pointer += 1
+    def start_task_instance(self, task_instance_index, machine):
+        self.task_instances[self.task_instance_index].schedule(machine)
+        # self.task_instances[self.next_instance_pointer].schedule(machine)
+        # self.next_instance_pointer += 1
 
     # when the task instance remains in the same cluster // when it is a batch job
-    def reset_task_instance(self, task_instance):
-        task_instance_config = TaskInstanceConfig(task_config)
-        task_instance_config.response_time = task_instance.response_time + task_instance.running_time
-        self.task_config.instances_number = str(int(self.task_config.instances_number) + 1)
-        self.task_instances.append(TaskInstance(self.env, self, task_instance_index, task_instance_config))
+    # def reset_task_instance(self, task_instance_index, task_instance_config):
+    #     # self.task_config.instances_number = str(int(self.task_config.instances_number) + 1)
+    #     self.task_instances.append(TaskInstance(self.env, self, task_instance_index, task_instance_config))
 
     def refresh_response_time(self, response_time):
         self.response_time = response_time
@@ -74,8 +81,11 @@ class Task(object):
  
     @property
     def running_time(self):
-        max_inst = int(self.task_config.instances_number)
-        return self.response_time + self.task_instances[max_inst].running_time
+        max_inst = 0.0
+        for task_instance in self.task_instances:
+            if (task_instance.running_time + task_instance.running_time) > max_inst:
+                max_inst = task_instance.running_time + task_instance.running_time
+        return max_inst
 
     @property
     def started(self):
@@ -131,6 +141,7 @@ class Job(object):
         self.env = env
         self.job_config = job_config
         self.id = job_config.id
+        self.type = job_config.type
 
         self.tasks_map = {}
         for task_config in job_config.task_configs:
@@ -265,6 +276,7 @@ class TaskInstance(object):
         self.waiting = False
         self.started = False
         self.finished = False
+        self.reset = False
         self.started_timestamp = None
         self.finished_timestamp = None
 
@@ -288,7 +300,7 @@ class TaskInstance(object):
             time_threshold = (div) * time_threshold # ama einai akrivws 100,200 klp tote paw sto pause
         else:
             time_threshold = (div+1) * time_threshold # ama einai estw kai 0.1 over tote pausarei sto epomeno checkpoint
-        while(not self.finished):
+        while(not self.finished or self.reset):
             if (self.env.now % time_threshold < 0.01 and self.env.now != 0 and self.env.now < 903):
                 flag = 1
                 print('i am task instance %s of task %s of job %s and i am pausing' \
@@ -298,7 +310,7 @@ class TaskInstance(object):
                 # yield self.env.timeout(0.001)  # Wait here while the system is paused
                 print('i am task instance %s of task %s of job %s and i have restarted after pause' \
                 % (self.task_instance_index, self.task.task_index, self.task.job.id))
-            if (self.finished == False and self.waiting == False):
+            if (self.finished == False and self.waiting == False and self.reset == False):
                 if flag == 1:
                     print('i am task instance %s of task %s of job %s and i am running at the time moment %f' \
                     % (self.task_instance_index, self.task.task_index, self.task.job.id, self.env.now))
@@ -318,18 +330,13 @@ class TaskInstance(object):
                     % (self.task_instance_index, self.task.task_index, self.task.job.id, self.env.now))
                     yield self.env.timeout(5)
 
-                    # if (self.env.now % time_threshold < 0.01 and self.env.now != 0):
-                    #     start_rl_time = self.env.now 
-                    #     time_threshold += 300 # perimenei mono thn prwth fora
-                    #     yield self.env.pause_event
-                    #     total_rl_time = total_rl_time + self.env.now - start_rl_time 
                 self.machine.num_waiting_instances -= 1
                 self.waiting = False
                 self.response_time = self.response_time + self.env.now - starting_wait_time - total_rl_time
-                self.machine.restart_task_instance(self)
-            # else:
-            #     self.machine.stop_task_instance(self)
-            #     break
+                # self.machine.restart_task_instance(self)
+            elif self.reset == True:
+                self.reset = False
+                return
 
         self.finished_timestamp = self.env.now
         self.machine.stop_task_instance(self)
@@ -346,9 +353,35 @@ class TaskInstance(object):
         self.config.disk = new_metrics[2]
         if self.machine.accommodate(self):
             self.machine.restart_task_instance(self)
-        else: 
+        else:
+            self.machine.restart_task_instance(self)
             self.machine.num_waiting_instances += 1
             self.waiting = True
+
+    @property
+    def return_metric(self, num):
+        if num == 0:
+            return self.cpu
+        elif num == 1:
+            return self.memory
+        elif num == 2:
+            return self.disk
+
+    @property
+    def avg_metrics(self):
+        return (self.cpu + self.memory + self.disk) / 3
+
+    @property
+    def metrics(self):
+        return [self.cpu, self.memory, self.disk]
+    
+    @property
+    def scheduled_time(self):
+        return (self.response_time + self.running_time)
+
+    @property
+    def remaining_time(self):
+        return (self.duration - self.running_time)
 
     def refresh_response_time(self, response_time):
         self.response_time = response_time
@@ -357,8 +390,13 @@ class TaskInstance(object):
     def passive_refresh_response_time(self, response_time):
         self.response_time = response_time
 
-    def delete(self):
-        self.task.reset_task_instance(self)
+    def reset(self):
+        self.reset = True
+        self.response_time = self.response_time + self.running_time
+        self.started = False
+        self.machine.remove_task_instance(self)
+        # config = self.alter_task_config
+        # self.task.reset_task_instance(self.task_instance_index, config)
 
     def schedule(self, machine):
         self.started = True
@@ -366,3 +404,11 @@ class TaskInstance(object):
         self.machine = machine
         self.machine.run_task_instance(self)
         self.process = self.env.process(self.do_work())
+    
+    # def alter_task_config(self):
+    #     task_instance_config = TaskInstanceConfig(task.task_config)
+    #     task_instance_config.cpu = self.cpu
+    #     task_instance_config.memory = self.memory
+    #     task_instance_config.disk =  self.disk
+    #     task_instance_config.response_time = self.response_time + self.running_time
+    #     return task_instance_config
