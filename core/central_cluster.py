@@ -231,7 +231,7 @@ class Cluster(object):
         else:
             sum = 0 
             for node in self.nodes:
-                sum += 1 - node.avg_usage
+                sum += node.avg_usage
             sum = sum / len(self.nodes)
             return sum
 
