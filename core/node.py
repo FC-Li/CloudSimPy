@@ -85,7 +85,7 @@ class Node(object):
             machines = self.machines
         running_task_instances = self.running_task_instances(machines)
         for task_instance in running_task_instances:
-            if task_instance.type == 0:
+            if task_instance.task.job.type == 0:
                 avg_time += task_instance.response_time + task_instance.running_time
         avg_time = avg_time / len(running_task_instances)
         return avg_time
@@ -117,6 +117,7 @@ class Node(object):
             if (task_instance.task.job.type == 1):
                 batch_times.append(task_instance.response_time)
         return service_times, batch_times
+        
     def remaining_time(self, machines=None):
         avg_time = 0.0
         if machines is None:
@@ -204,7 +205,7 @@ class Node(object):
             machines = self.machines       
         for machine in machines:
             for task_instance in machine.task_instances:
-                if task_instance.type == 0 and task_instance.started and not task_instance.finished:
+                if task_instance.task.job.type == 0 and task_instance.started and not task_instance.finished:
                     ls.append(task_instance)
         return ls
         
