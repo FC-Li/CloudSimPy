@@ -269,24 +269,17 @@ class Cluster(object):
         if self.child_clusters is not None:
             ls = []
             for child in self.child_clusters:
-                cnt = 0
-                for node in child.nodes:
-                    for machine in node.machines:
-                        usage = machine.usage
-                        if any(val > 1 for val in usage):
-                            cnt += 1
+                cnt = child.anomalous_usage
                 ls.append(cnt)
             return ls
         else:
-            ls = []
             cnt = 0
             for node in self.nodes:
                 for machine in node.machines:
                     usage = machine.usage
                     if any(val > 1 for val in usage):
                         cnt += 1
-                ls.append(cnt)
-            return ls
+            return cnt
 
     @property
     def response_time(self):
