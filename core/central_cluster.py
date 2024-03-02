@@ -98,6 +98,13 @@ class Cluster(object):
             return task_instances
 
     @property
+    def len_all_task_instances(self):
+        task_instances = []
+        task_instances.extend(running_task_instances)
+        task_instances.extend(waiting_task_instances)
+        return len(task_instances)
+
+    @property
     def metrics_unstarted_instances(self):
         if self.child_clusters is not None:
             ls = []
