@@ -48,6 +48,15 @@ class Task(object):
         return ls
 
     @property
+    def unfinished_task_instances(self):
+        ls = []
+        for task_instance in self.task_instances:
+            if ((task_instance.started and not task_instance.finished) \
+            or not task_instance.started or task_instance.waiting):
+                ls.append(task_instance)
+        return ls
+
+    @property
     def finished_task_instances(self):
         ls = []
         for task_instance in self.task_instances:
@@ -65,7 +74,7 @@ class Task(object):
 
     # the most heavy
     def start_task_instance(self, task_instance_index, machine):
-        self.task_instances[self.task_instance_index].schedule(machine)
+        self.task_instances[task_instance_index].schedule(machine)
         # self.task_instances[self.next_instance_pointer].schedule(machine)
         # self.next_instance_pointer += 1
 
@@ -285,13 +294,12 @@ class TaskInstance(object):
         return str(self.task.id) + '-' + str(self.task_instance_index)
 
     def do_work(self):
-        # self.cluster.waiting_tasks.remove(self)
-        # self.cluster.running_tasks.append(self)
-        # self.machine.run(self)
+
         assert self.task.task_config.submit_time >= self.env.now
         timeout_duration = self.task.task_config.submit_time - self.env.now
         if timeout_duration > 0:
             yield self.env.timeout(timeout_duration)
+
         flag = 0
         print('Task instance %f of task %f of job %f is executing' %(self.task_instance_index, self.task.task_index, self.task.job.id))
         time_threshold = 300
@@ -301,7 +309,7 @@ class TaskInstance(object):
         else:
             time_threshold = (div+1) * time_threshold # ama einai estw kai 0.1 over tote pausarei sto epomeno checkpoint
         while(not self.finished or self.reset):
-            if (self.env.now % time_threshold < 0.01 and self.env.now != 0 and self.env.now < 903):
+            if (self.env.now % time_threshold < 0.01 and self.env.now != 0):
                 flag = 1
                 print('i am task instance %s of task %s of job %s and i am pausing' \
                 % (self.task_instance_index, self.task.task_index, self.task.job.id))
@@ -315,8 +323,8 @@ class TaskInstance(object):
                     print('i am task instance %s of task %s of job %s and i am running at the time moment %f' \
                     % (self.task_instance_index, self.task.task_index, self.task.job.id, self.env.now))
                     flag = 0
-                self.running_time += 0.01
-                yield self.env.timeout(0.01)
+                self.running_time += 0.1
+                yield self.env.timeout(0.1)
                 if self.running_time >= self.duration:
                     self.finished = True
             elif self.waiting == True:
@@ -326,8 +334,8 @@ class TaskInstance(object):
                 starting_wait_time = self.env.now
                 total_rl_time = 0.0
                 while(not self.machine.accommodate(self)):
-                    print('i am task instance %s of task %s of job %s and i am waiting for reallocation at time %f' \
-                    % (self.task_instance_index, self.task.task_index, self.task.job.id, self.env.now))
+                    # print('i am task instance %s of task %s of job %s and i am waiting for reallocation at time %f' \
+                    # % (self.task_instance_index, self.task.task_index, self.task.job.id, self.env.now))
                     yield self.env.timeout(5)
 
                 self.machine.num_waiting_instances -= 1
@@ -339,6 +347,7 @@ class TaskInstance(object):
                 return
 
         self.finished_timestamp = self.env.now
+        self.finished = True
         self.machine.stop_task_instance(self)
         print('Task instance %f of task %f of job %f has finished in %s time with response_time %s' \
         %(self.task_instance_index, self.task.task_index, self.task.job.id, self.env.now, self.response_time))

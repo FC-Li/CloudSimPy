@@ -9,7 +9,7 @@ class DQLScheduler:
     def act_on_pause(self, current_state, update_model=False):
         if update_model and self.last_state is not None:
             # Calculate reward and next state only if update_model is True and there's a last_state
-            reward = self.reward_giver.get_reward()  # Implement reward calculation
+            reward = self.reward_giver.get_overall_reward()  # Implement reward calculation
             self.agent.remember(self.last_state, self.last_action, reward, current_state, False)
             self.agent.replay(32)  # Assuming batch_size is 32
         
@@ -49,7 +49,7 @@ class DQLScheduler:
             self.cluster.create_nodes(2, 1)
         """
         SOS here!!!
-        i want the above actions to not set the algorithm and call the rl model for the child cluster 
+        i want the actions below to not set the algorithm and call the rl model for the child cluster 
         to decide on the algorithm
         """
         if action == 4: #transfer 5 workloads Near -> Far Edge

@@ -19,10 +19,9 @@ class Cluster(object):
         ls = []
         if self.child_clusters is not None:
             for child in self.child_clusters:
-                for job in child.jobs:
-                    if not job.finished:
-                        ls.append(job)
+                ls.extend(child.unfinished_jobs)
         else:
+            ls = []
             for job in self.jobs:
                 if not job.finished:
                     ls.append(job)
@@ -33,6 +32,13 @@ class Cluster(object):
         ls = []
         for job in self.unfinished_jobs:
             ls.extend(job.unfinished_tasks)
+        return ls
+
+    @property
+    def unfinished_instances(self):
+        ls = []
+        for task in self.unfinished_tasks:
+            ls.extend(task.unfinished_task_instances)
         return ls
 
     @property
@@ -126,7 +132,7 @@ class Cluster(object):
         if self.child_clusters is not None:
             for node in nodes:
                 target_cluster = node.topology
-                self.child_clusters[target_cluster].add_nodes(node)
+                self.child_clusters[target_cluster].add_nodes([node])
         else:
             for node in nodes:
                 self.nodes.append(node)
@@ -245,8 +251,8 @@ class Cluster(object):
     @property
     def response_times(self):
         if self.child_clusters is not None:
-        batch_times = []
-        service_times = []
+            batch_times = []
+            service_times = []
             for child in self.child_clusters:
                 l1, l2 = child.response_time_tuples
                 service_times.extend(l1)

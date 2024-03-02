@@ -1,7 +1,16 @@
 import math
 
 class RewardGiver(cluster):
-    self.cluster = cluster
+    def __init__(self, cluster):
+        self.cluster = cluster
+
+    def get_overall_reward():
+        reward = 0
+        reward += self.utilization()
+        reward += self.response_time()
+        reward += self.anomaly()
+        reward += self.transmit_delays()
+        return reward
 
     def utilization():
         avg_sum = self.cluster.avg_usage  

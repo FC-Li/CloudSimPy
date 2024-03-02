@@ -26,8 +26,8 @@ class FirstFitAlgorithm(Algorithm):
                 if not matched:
                     # Only add the task to unmatched_tasks if no match was found after checking all machines
                     response_time = task_instance.refresh_response_time(remove_delays(task.job.job_config.submit_time, clock))
-                    for task_instance in task.unscheduled_task_instances::
-                        task.task_instance.passive_refresh_response_time(response_time)
+                    for task_instance in task.unscheduled_task_instances:
+                        task_instance.passive_refresh_response_time(response_time)
                     unmatched_tasks.append(task)
                     break
 

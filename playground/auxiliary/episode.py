@@ -23,7 +23,6 @@ class Episode(object):
         event_cnt = 1
         self.env.process(self.trigger_pause_event_after_rl_actions(301, event_cnt))  # Schedule the pause trigger
         
-
         # Your setup continues here...
         # cluster, task_broker, scheduler initialization...
         cluster = Cluster()
@@ -32,11 +31,6 @@ class Episode(object):
             if node_config.id in machine_groups:  # Check if there are machines for this node_id
                 node_config.add_machines(machine_groups[node_config.id])
         cluster.add_nodes(node_configs)
-        # cluster.add_machines(machine_configs)
-        
-
-        # cluster = Cluster()
-        # cluster.add_machines(machine_configs)
 
         task_broker = Episode.broker_cls(self.env, jobs_configs)
 
@@ -54,13 +48,14 @@ class Episode(object):
         tasks_list = []
         yield self.env.timeout(delay)  # Wait for the specific time interval
         print("Performing actions after pausing...")
-        unfinished_tasks = self.simulation.cluster.unfinished_tasks
-        for task in unfinished_tasks:
-            tasks_list.append(task.task_index)
+        unfinished_task_instances = self.simulation.cluster.unfinished_instances
+        for task_instance in unfinished_task_instances:
+            tasks_list.append((task_instance.task.job.id, \
+            task_instance.task.task_index, task_instance.task_instance_index, task_instance.machine.id))
         print(f"Unfinished tasks: {tasks_list}")
         # Perform required actions here...
         
-        generate_task_instance_configs(unfinished_tasks)
+        generate_task_instance_configs(unfinished_task_instances)
 
         # jobs_configs2 = add_job_config(self.simulation, Episode.broker_cls, cnt)
         
@@ -73,7 +68,7 @@ class Episode(object):
         print("Pause event triggered")
         # Reset the pause event for future use if needed
         self.env.pause_event = simpy.Event(self.env)
-        if (self.simulation.finished != 1 and self.env.now < 903):
+        if (self.simulation.finished != 1 and self.env.now < 1503):
             # yield self.env.timeout(300)
             print('The time at the start of the next pause is', self.env.now + 301.0)
             cnt += 1

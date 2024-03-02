@@ -58,7 +58,7 @@ class DQLAgent:
             self.epsilon *= self.epsilon_decay
 
 # Example usage within SimPy environment
-# agent = DQLAgent(state_size=10, action_size=5)  # Define appropriate sizes
+# agent = DQLAgent(state_size=10, action_size=12)  # Define appropriate sizes
 # During each pause:
 #   action = agent.act(current_state)
 #   apply_action_to_simulation(action)
