@@ -153,7 +153,7 @@ class Cluster(object):
                 ls.append(child.cpu)
             return ls
         else:
-            return [sum([machine.cpu for node in self.nodes for machine in node.machines])]
+            return sum([machine.cpu for node in self.nodes for machine in node.machines])
 
     @property
     def memory(self):
@@ -163,7 +163,7 @@ class Cluster(object):
                 ls.append(child.memory)
             return ls
         else:
-            return [sum([machine.memory for node in self.nodes for machine in node.machines])]
+            return sum([machine.memory for node in self.nodes for machine in node.machines])
         
 
     @property
@@ -174,7 +174,7 @@ class Cluster(object):
                 ls.append(child.disk)
             return ls
         else:
-            return [sum([machine.cpu for node in self.nodes for machine in node.machines])]
+            return sum([machine.cpu for node in self.nodes for machine in node.machines])
         
 
     @property
@@ -185,7 +185,7 @@ class Cluster(object):
                 ls.append(child.cpu_capacity)
             return ls
         else:
-            return [sum(machine.cpu_capacity for node in self.nodes for machine in node.machines)]
+            return sum(machine.cpu_capacity for node in self.nodes for machine in node.machines)
         
 
     @property
@@ -196,7 +196,7 @@ class Cluster(object):
                 ls.append(child.memory_capacity)
             return ls
         else:
-            return [sum(machine.memory_capacity for node in self.nodes for machine in node.machines)]
+            return sum(machine.memory_capacity for node in self.nodes for machine in node.machines)
         
 
     @property
@@ -207,7 +207,7 @@ class Cluster(object):
                 ls.append(child.disk_capacity)
             return ls
         else:
-            return [sum(machine.disk_capacity for node in self.nodes for machine in node.machines)]
+            return sum(machine.disk_capacity for node in self.nodes for machine in node.machines)
 
     @property
     def usage(self):
@@ -218,6 +218,22 @@ class Cluster(object):
             return ls
         else:
             return [self.cpu, self.memory, self.disk]
+
+    @property
+    def avg_usage(self):
+        if self.child_clusters is not None:
+            sum = 0
+            for child in self.child_clusters:
+                cl_sum = child.avg_usage
+                sum += cl_sum
+            sum = sum / len(self.child_clusters)
+            return sum
+        else:
+            sum = 0 
+            for node in self.nodes:
+                sum += 1 - node.avg_usage
+            sum = sum / len(self.nodes)
+            return sum
 
     @property
     def capacities(self):
