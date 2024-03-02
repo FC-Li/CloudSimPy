@@ -253,6 +253,22 @@ class Cluster(object):
                 service_times.extend(l1)
                 batch_times.extend(l2)
             return service_times, batch_times
+
+    @property
+    def transmit_delays(self):
+        if self.child_clusters is not None:
+            ls = []
+            for child in self.child_clusters:
+                ls.append(child.transmit_delays)
+            return ls
+        else:
+            cnt = 0
+            for node in self.nodes:
+                for machine in node.machines:
+                    for task_instance in machine.task_instances:
+                        if task_instance.task.job.type == 0:
+                            cnt += 1
+            return cnt
     
     @property
     def capacities(self):
