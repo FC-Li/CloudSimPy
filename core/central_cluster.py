@@ -236,15 +236,22 @@ class Cluster(object):
             return sum
 
     @property
-    def response_time_tuples(self):
+    def response_times(self):
         if self.child_clusters is not None:
-        tuples = []
+        batch_times = []
+        service_times = []
             for child in self.child_clusters:
-                tuples.extend(child.response_time_tuples)
+                l1, l2 = child.response_time_tuples
+                service_times.extend(l1)
+                batch_times.extend(l2)
             return tuples
         else:
+            batch_times = []
+            service_times = []
             for node in child.nodes:
-                tuples.extend(node.all_response_time_tuples)
+                l1, l2 = node.all_response_time_tuples
+                service_times.extend(l1)
+                batch_times.extend(l2)
     
     @property
     def capacities(self):
