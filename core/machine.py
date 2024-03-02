@@ -43,6 +43,8 @@ class Machine(object):
         self.num_waiting_instances = 0
         self.machine_door = MachineDoor.NULL
 
+        self.anomaly = (0,0)
+
     def run_task_instance(self, task_instance):
         self.cpu += task_instance.cpu
         self.memory += task_instance.memory
