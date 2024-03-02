@@ -244,7 +244,7 @@ class Cluster(object):
                 l1, l2 = child.response_time_tuples
                 service_times.extend(l1)
                 batch_times.extend(l2)
-            return tuples
+            return service_times, batch_times
         else:
             batch_times = []
             service_times = []
@@ -252,6 +252,7 @@ class Cluster(object):
                 l1, l2 = node.all_response_time_tuples
                 service_times.extend(l1)
                 batch_times.extend(l2)
+            return service_times, batch_times
     
     @property
     def capacities(self):
