@@ -71,6 +71,8 @@ class Node(object):
 
     def scheduled_time(self, machines=None):  
         avg_time = 0.0
+        if machines is None:
+            machines = self.machines
         running_task_instances = self.running_task_instances(machines)
         for task_instance in running_task_instances:
             avg_time += task_instance.response_time + task_instance.running_time
@@ -79,6 +81,8 @@ class Node(object):
 
     def service_job_scheduled_time(self, machines=None):
         avg_time = 0.0
+        if machines is None:
+            machines = self.machines
         running_task_instances = self.running_task_instances(machines)
         for task_instance in running_task_instances:
             if task_instance.type == 0:
@@ -88,14 +92,33 @@ class Node(object):
     
     def response_time(self, machines=None):  
         avg_time = 0.0
+        if machines is None:
+            machines = self.machines
         running_task_instances = self.running_task_instances(machines)
         for task_instance in running_task_instances:
             avg_time += task_instance.response_time
         avg_time = avg_time / len(running_task_instances)
         return avg_time
 
+    def all_response_time_tuples(self, machines=None):  
+        avg_time = 0.0
+        ls = []
+        tuples = []
+        if machines is None:
+            machines = self.machines
+        running_task_instances = self.running_task_instances(machines)
+        ls.extend(running_task_instances)
+        waiting_task_instances = waiting_task_instances(machines)
+        ls.extend(waiting_task_instances)
+        for task_instance in ls:
+            tuple = (task_instance.response_time, task_instance.task.job.type)
+            tuples.append(tuple)
+        return tuples
+
     def remaining_time(self, machines=None):
         avg_time = 0.0
+        if machines is None:
+            machines = self.machines
         running_task_instances = self.running_task_instances(machines)
         for task_instance in running_task_instances:
             avg_time += task_instance.duration - task_instance.running_time
@@ -201,7 +224,7 @@ class Node(object):
             machines = self.machines       
         for machine in machines:
             for task_instance in machine.task_instances:
-                if task_instance.started:
+                if not task_instance.started:
                     ls.append(task_instance)
         return ls
 
