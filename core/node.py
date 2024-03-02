@@ -103,7 +103,8 @@ class Node(object):
     def all_response_time_tuples(self, machines=None):  
         avg_time = 0.0
         ls = []
-        tuples = []
+        batch_times = []
+        service_times = []
         if machines is None:
             machines = self.machines
         running_task_instances = self.running_task_instances(machines)
@@ -111,10 +112,11 @@ class Node(object):
         waiting_task_instances = waiting_task_instances(machines)
         ls.extend(waiting_task_instances)
         for task_instance in ls:
-            tuple = (task_instance.response_time, task_instance.task.job.type)
-            tuples.append(tuple)
-        return tuples
-
+            if (task_instance.task.job.type == 0):
+                service_times.append(task_instance.response_time)
+            if (task_instance.task.job.type == 1):
+                batch_times.append(task_instance.response_time)
+        return service_times, batch_times
     def remaining_time(self, machines=None):
         avg_time = 0.0
         if machines is None:
