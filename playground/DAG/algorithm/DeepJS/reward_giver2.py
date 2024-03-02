@@ -25,8 +25,8 @@ class RewardGiver(cluster):
                 sum += 0.5
             else:
                 sum += math.exp(-((rt - RTmax_batch) / RTmax_batch))
-        sum = sum / (len(service_response_times) + len(batch_response_times))
-        return sum
+        reward = reward / (len(service_response_times) + len(batch_response_times))
+        return reward
 
     def anomaly():
         sum = 0
@@ -40,9 +40,19 @@ class RewardGiver(cluster):
                 sum += 2
             elif tuple[0] == 1 and tuple[1] == 1:
                 sum -= 2
-        sum = sum / len(tuples)
+        reward = sum / len(tuples)
+        return reward
 
     def transmit_delays():
+        sum = 0
+        len_task_instances = self.cluster.len_all_task_instances
+        delays = self.cluster.transmit_delays
+        sum += delays[0]
+        sum -= delays[2]
+        reward = sum / len_task_instances
+        return reward
+        
+        
         
         
                 
