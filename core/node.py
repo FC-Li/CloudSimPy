@@ -221,6 +221,17 @@ class Node(object):
         return ls
 
     @property
+    def non_waiting_instances(self, machines=None):
+        ls = []
+        if machines is None:
+            machines = self.machines       
+        for machine in machines:
+            for task_instance in machine.task_instances:
+                if (task_instance.running and not task_instance.waiting) or not task_instance.started:
+                    ls.append(task_instance)
+        return ls
+
+    @property
     def not_started_task_instances(self, machines=None):
         ls = []
         if machines is None:

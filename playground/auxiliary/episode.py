@@ -6,7 +6,9 @@ from core.scheduler import Scheduler
 from core.broker import Broker
 from core.simulation import Simulation
 from playground.auxiliary.add_job_config import add_job_config
+from playground.auxiliary.print_instances import print_selected_task_instances
 from playground.auxiliary.new_task_configs import generate_task_instance_configs
+from playground.DAG.algorithm.heuristics.redirect_workloads import redirect_workload
 
 
 
@@ -45,17 +47,30 @@ class Episode(object):
         self.env.run()
 
     def trigger_pause_event_after_rl_actions(self, delay, cnt):
-        tasks_list = []
         yield self.env.timeout(delay)  # Wait for the specific time interval
         print("Performing actions after pausing...")
+
         unfinished_task_instances = self.simulation.cluster.unfinished_instances
-        for task_instance in unfinished_task_instances:
-            tasks_list.append((task_instance.task.job.id, \
-            task_instance.task.task_index, task_instance.task_instance_index, task_instance.machine.id))
-        print(f"Unfinished tasks: {tasks_list}")
+        print_selected_task_instances(unfinished_task_instances, "unfinished")
+        running_task_instances = self.simulation.cluster.running_task_instances
+        print_selected_task_instances(running_task_instances, "running")
+        waiting_task_instances = self.simulation.cluster.waiting_task_instances
+        print_selected_task_instances(waiting_task_instances, "waiting")
+        not_started_task_instances = self.simulation.cluster.not_started_task_instances
+        print_selected_task_instances(not_started_task_instances, "not_started")
+
         # Perform required actions here...
+
+        waiting_machines = self.simulation.cluster.machines_only_waiting_instances
+        deadlock_waiting_machines = []
+        for machine in waiting_machines:
+            print(f"waiting machines workloads are {len(machine.waiting_task_instances)}")
+            if len(machine.waiting_task_instances) > 1:
+                deadlock_waiting_machines.append(machine)
+            print(type(machine))
+        redirect_workload(deadlock_waiting_machines)
         
-        generate_task_instance_configs(unfinished_task_instances)
+        generate_task_instance_configs(self.simulation.cluster.non_waiting_instances)
 
         # jobs_configs2 = add_job_config(self.simulation, Episode.broker_cls, cnt)
         
@@ -68,7 +83,7 @@ class Episode(object):
         print("Pause event triggered")
         # Reset the pause event for future use if needed
         self.env.pause_event = simpy.Event(self.env)
-        if (self.simulation.finished != 1 and self.env.now < 1503):
+        if (self.simulation.finished != 1 and self.env.now < 5503):
             # yield self.env.timeout(300)
             print('The time at the start of the next pause is', self.env.now + 301.0)
             cnt += 1

@@ -1,3 +1,5 @@
+import simpy
+
 from core.config import *
 
 class Task(object):
@@ -283,6 +285,7 @@ class TaskInstance(object):
         self.new = True
 
         self.waiting = False
+        self.running = False
         self.started = False
         self.finished = False
         self.reset = False
@@ -294,63 +297,83 @@ class TaskInstance(object):
         return str(self.task.id) + '-' + str(self.task_instance_index)
 
     def do_work(self):
+        try:
+            # assert self.task.task_config.submit_time >= self.env.now
+            # timeout_duration = self.task.task_config.submit_time - self.env.now
+            # if timeout_duration > 0:
+            #     yield self.env.timeout(timeout_duration)
+            flag = 0
+            print('Task instance %f of task %f of job %f is executing' %(self.task_instance_index, self.task.task_index, self.task.job.id))
+            time_threshold = 300
+            div = self.env.now / time_threshold
+            if ((self.env.now % time_threshold) == 0 and self.env.now != 0):
+                time_threshold = (div) * time_threshold # ama einai akrivws 100,200 klp tote paw sto pause
+            else:
+                time_threshold = (div+1) * time_threshold # ama einai estw kai 0.1 over tote pausarei sto epomeno checkpoint
+            while(not self.finished or self.reset):
+                if (self.env.now % time_threshold < 0.1 and self.env.now != 0):
+                    flag = 1
+                    print('i am task instance %s of task %s of job %s and i am pausing' \
+                    % (self.task_instance_index, self.task.task_index, self.task.job.id))
+                    time_threshold += 300 # perimenei mono thn prwth fora
+                    yield self.env.pause_event
+                    # yield self.env.timeout(0.001)  # Wait here while the system is paused
+                    print('i am task instance %s of task %s of job %s and i have restarted after pause \
+                        with metrics %f %f %f' % (self.task_instance_index, self.task.task_index, self.task.job.id, \
+                        self.cpu, self.memory, self.disk))
+                if (self.finished == False and self.waiting == False and self.reset == False):
+                    if flag == 1:
+                        print('i am task instance %s of task %s of job %s and i am running at the time moment %f' \
+                        % (self.task_instance_index, self.task.task_index, self.task.job.id, self.env.now))
+                        flag = 0
+                    self.running_time += 0.1
+                    yield self.env.timeout(0.1)
+                    if self.running_time >= self.duration:
+                        self.finished = True
+                elif self.waiting == True:
+                    print('i am task instance %s of task %s of job %s and i am waiting for reallocation \
+                    with running time %f and remaining time %f' % (self.task_instance_index, self.task.task_index, \
+                    self.task.job.id, self.running_time, self.duration-self.running_time))
+                    while(not self.machine.accommodate(self) and not self.reset):
+                        if (self.env.now % time_threshold < 6 and self.env.now != 0):
+                            print('i am task instance %s of task %s of job %s and i am pausing' \
+                            % (self.task_instance_index, self.task.task_index, self.task.job.id))
+                            time_threshold += 300 # perimenei mono thn prwth fora
+                            yield self.env.pause_event
+                            # yield self.env.timeout(0.001)  # Wait here while the system is paused
+                            print('i am task instance %s of task %s of job %s and i have restarted after pause\
+                                with metrics %f %f %f' % (self.task_instance_index, self.task.task_index, self.task.job.id, \
+                                self.cpu, self.memory, self.disk))
+                        if (not self.machine.accommodate(self) and not self.reset):
+                            yield self.env.timeout(5)
+                            self.response_time += 5
+                    self.machine.num_waiting_instances -= 1
+                    self.waiting = False
+                    if self.reset:
+                        print('i am task instance %s of task %s of job %s and i am reseting' \
+                            % (self.task_instance_index, self.task.task_index, self.task.job.id))
+                        self.reset = False
+                        return
+                    self.running = True
+                    # self.machine.restart_task_instance(self)
+                elif self.reset == True:
+                    print('i am task instance %s of task %s of job %s and i am reseting' \
+                            % (self.task_instance_index, self.task.task_index, self.task.job.id))
+                    self.reset = False
+                    return
 
-        assert self.task.task_config.submit_time >= self.env.now
-        timeout_duration = self.task.task_config.submit_time - self.env.now
-        if timeout_duration > 0:
-            yield self.env.timeout(timeout_duration)
-
-        flag = 0
-        print('Task instance %f of task %f of job %f is executing' %(self.task_instance_index, self.task.task_index, self.task.job.id))
-        time_threshold = 300
-        div = self.env.now / time_threshold
-        if ((self.env.now % time_threshold) == 0 and self.env.now != 0):
-            time_threshold = (div) * time_threshold # ama einai akrivws 100,200 klp tote paw sto pause
-        else:
-            time_threshold = (div+1) * time_threshold # ama einai estw kai 0.1 over tote pausarei sto epomeno checkpoint
-        while(not self.finished or self.reset):
-            if (self.env.now % time_threshold < 0.01 and self.env.now != 0):
-                flag = 1
-                print('i am task instance %s of task %s of job %s and i am pausing' \
-                % (self.task_instance_index, self.task.task_index, self.task.job.id))
-                time_threshold += 300 # perimenei mono thn prwth fora
-                yield self.env.pause_event
-                # yield self.env.timeout(0.001)  # Wait here while the system is paused
-                print('i am task instance %s of task %s of job %s and i have restarted after pause' \
-                % (self.task_instance_index, self.task.task_index, self.task.job.id))
-            if (self.finished == False and self.waiting == False and self.reset == False):
-                if flag == 1:
-                    print('i am task instance %s of task %s of job %s and i am running at the time moment %f' \
-                    % (self.task_instance_index, self.task.task_index, self.task.job.id, self.env.now))
-                    flag = 0
-                self.running_time += 0.1
-                yield self.env.timeout(0.1)
-                if self.running_time >= self.duration:
-                    self.finished = True
-            elif self.waiting == True:
-                print('i am task instance %s of task %s of job %s and i am waiting for reallocation \
-                with running time %f and remaining time %f' % (self.task_instance_index, self.task.task_index, \
-                self.task.job.id, self.running_time, self.duration-self.running_time))
-                starting_wait_time = self.env.now
-                total_rl_time = 0.0
-                while(not self.machine.accommodate(self)):
-                    # print('i am task instance %s of task %s of job %s and i am waiting for reallocation at time %f' \
-                    # % (self.task_instance_index, self.task.task_index, self.task.job.id, self.env.now))
-                    yield self.env.timeout(5)
-
-                self.machine.num_waiting_instances -= 1
-                self.waiting = False
-                self.response_time = self.response_time + self.env.now - starting_wait_time - total_rl_time
-                # self.machine.restart_task_instance(self)
-            elif self.reset == True:
-                self.reset = False
-                return
-
-        self.finished_timestamp = self.env.now
-        self.finished = True
-        self.machine.stop_task_instance(self)
-        print('Task instance %f of task %f of job %f has finished in %s time with response_time %s' \
-        %(self.task_instance_index, self.task.task_index, self.task.job.id, self.env.now, self.response_time))
+            self.finished_timestamp = self.env.now
+            self.running = False
+            self.finished = True
+            self.machine.stop_task_instance(self)
+            print('Task instance %f of task %f of job %f has finished in %s time with response_time %s' \
+            %(self.task_instance_index, self.task.task_index, self.task.job.id, self.env.now, self.response_time))
+    
+        except simpy.Interrupt:
+            print('Task instance %f of task %f of job %f has been interrupted and will stop' \
+            %(self.task_instance_index, self.task.task_index, self.task.job.id))
+            self.reset = False
+            return
     
     def recalc_metrics(self, new_metrics):
         self.machine.stop_task_instance(self)
@@ -366,6 +389,7 @@ class TaskInstance(object):
             self.machine.restart_task_instance(self)
             self.machine.num_waiting_instances += 1
             self.waiting = True
+            self.running = False
 
     @property
     def return_metric(self, num):
@@ -399,16 +423,19 @@ class TaskInstance(object):
     def passive_refresh_response_time(self, response_time):
         self.response_time = response_time
 
-    def reset(self):
+    def reset_instance(self):
         self.reset = True
         self.response_time = self.response_time + self.running_time
         self.started = False
+        self.waiting = False
+        self.running = False
         self.machine.remove_task_instance(self)
         # config = self.alter_task_config
         # self.task.reset_task_instance(self.task_instance_index, config)
 
     def schedule(self, machine):
         self.started = True
+        self.running = True
         self.started_timestamp = self.env.now
         self.machine = machine
         self.machine.run_task_instance(self)

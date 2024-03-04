@@ -37,7 +37,7 @@ class Machine(object):
         self.topology = machine_config.topology
         self.node_id = machine_config.node_id
 
-        self.cluster = None
+        # self.cluster = None
         self.node = None
         self.task_instances = []
         self.num_waiting_instances = 0
@@ -68,7 +68,23 @@ class Machine(object):
     def running_task_instances(self):
         ls = []
         for task_instance in self.task_instances:
-            if task_instance.started and not task_instance.finished:
+            if task_instance.running and not task_instance.finished:
+                ls.append(task_instance)
+        return ls
+
+    @property
+    def waiting_task_instances(self):
+        ls = []
+        for task_instance in self.task_instances:
+            if task_instance.waiting:
+                ls.append(task_instance)
+        return ls
+
+    @property
+    def unstarted_task_instances(self):
+        ls = []
+        for task_instance in self.task_instances:
+            if not task_instance.started:
                 ls.append(task_instance)
         return ls
 

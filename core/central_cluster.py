@@ -104,6 +104,61 @@ class Cluster(object):
             return task_instances
 
     @property
+    def non_waiting_instances(self):
+        if self.child_clusters is not None:
+            task_instances = []
+            for child in self.child_clusters:
+                task_instances.extend(child.non_waiting_instances)
+            return task_instances
+        else:
+            task_instances = []
+            for node in self.nodes:
+                task_instances.extend(node.non_waiting_instances)
+            return task_instances
+
+    @property
+    def not_started_task_instances(self):
+        if self.child_clusters is not None:
+            task_instances = []
+            for child in self.child_clusters:
+                task_instances.extend(child.not_started_task_instances)
+            return task_instances
+        else:
+            task_instances = []
+            for node in self.nodes:
+                task_instances.extend(node.not_started_task_instances)
+            return task_instances
+    
+    @property
+    def machines_only_waiting_instances(self):
+        if self.child_clusters is not None:
+            machines = []
+            for child in self.child_clusters:
+                machines.extend(child.machines_only_waiting_instances)
+            return machines
+        else:
+            machines = []
+            for node in self.nodes:
+                for machine in node.machines:
+                    if (machine.running_task_instances == [] and \
+                    machine.unstarted_task_instances == [] and machine.waiting_task_instances != []):
+                        machines.append(machine)
+            return machines
+
+    @property
+    def cluster_machines(self):
+        if self.child_clusters is not None:
+            machines = []
+            for child in self.child_clusters:
+                machines.extend(child.cluster_machines)
+            return machines
+        else:
+            machines = []
+            for node in self.nodes:
+                machines.extend(node.machines)
+            return machines   
+
+    @property
     def len_all_task_instances(self):
         task_instances = []
         task_instances.extend(running_task_instances)
