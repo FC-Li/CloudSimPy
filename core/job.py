@@ -54,7 +54,7 @@ class Task(object):
         ls = []
         for task_instance in self.task_instances:
             if ((task_instance.started and not task_instance.finished) \
-            or not task_instance.started or task_instance.waiting):
+            or task_instance.waiting):
                 ls.append(task_instance)
         return ls
 
@@ -105,13 +105,15 @@ class Task(object):
                 return True
         return False
 
-    @property
-    def waiting_task_instances_number(self):
-        return self.task_config.instances_number - self.next_instance_pointer
+    # @property
+    # def waiting_task_instances_number(self):
+    #     return self.task_config.instances_number - self.next_instance_pointer
 
     @property
     def has_waiting_task_instances(self):
-        return self.task_config.instances_number > self.next_instance_pointer
+        if len(self.unscheduled_task_instances) != 0:
+            return True
+        return False
 
     @property
     def finished(self):
@@ -119,9 +121,10 @@ class Task(object):
         A task is finished only if it has no waiting task instances and no running task instances.
         :return: bool
         """
-        if self.has_waiting_task_instances:
-            return False
-        if len(self.running_task_instances) != 0:
+        ls = []
+        ls.extend(self.unfinished_task_instances)
+        ls.extend(self.unscheduled_task_instances)
+        if len(ls) != 0:
             return False
         return True
 
@@ -311,11 +314,12 @@ class TaskInstance(object):
             else:
                 time_threshold = (div+1) * time_threshold # ama einai estw kai 0.1 over tote pausarei sto epomeno checkpoint
             while(not self.finished or self.reset):
-                if (self.env.now % time_threshold < 0.1 and self.env.now != 0):
+                if (((self.env.now + 0.1) / time_threshold) > 1 and self.env.now != 0):
                     flag = 1
-                    print('i am task instance %s of task %s of job %s and i am pausing' \
-                    % (self.task_instance_index, self.task.task_index, self.task.job.id))
-                    time_threshold += 300 # perimenei mono thn prwth fora
+                    print('i am task instance %s of task %s of job %s and i am pausing at time %f' \
+                    'with threshold %f '% (self.task_instance_index, self.task.task_index, \
+                    self.task.job.id, self.env.now, time_threshold))
+                    time_threshold += 301 # perimenei mono thn prwth fora
                     yield self.env.pause_event
                     # yield self.env.timeout(0.001)  # Wait here while the system is paused
                     print('i am task instance %s of task %s of job %s and i have restarted after pause \
@@ -331,24 +335,26 @@ class TaskInstance(object):
                     if self.running_time >= self.duration:
                         self.finished = True
                 elif self.waiting == True:
-                    print('i am task instance %s of task %s of job %s and i am waiting for reallocation \
-                    with running time %f and remaining time %f' % (self.task_instance_index, self.task.task_index, \
+                    print('i am task instance %s of task %s of job %s and i am waiting for reallocation ' \
+                    'with running time %f and remaining time %f' % (self.task_instance_index, self.task.task_index, \
                     self.task.job.id, self.running_time, self.duration-self.running_time))
                     while(not self.machine.accommodate(self) and not self.reset):
-                        if (self.env.now % time_threshold < 6 and self.env.now != 0):
-                            print('i am task instance %s of task %s of job %s and i am pausing' \
-                            % (self.task_instance_index, self.task.task_index, self.task.job.id))
-                            time_threshold += 300 # perimenei mono thn prwth fora
+                        if ((self.env.now + 0.1) / time_threshold > 1 and self.env.now != 0):
+                            print('i am task instance %s of task %s of job %s and i am pausing at time %f' \
+                            % (self.task_instance_index, self.task.task_index, self.task.job.id,self.env.now))
+                            time_threshold += 301 # perimenei mono thn prwth fora
                             yield self.env.pause_event
                             # yield self.env.timeout(0.001)  # Wait here while the system is paused
-                            print('i am task instance %s of task %s of job %s and i have restarted after pause\
-                                with metrics %f %f %f' % (self.task_instance_index, self.task.task_index, self.task.job.id, \
-                                self.cpu, self.memory, self.disk))
+                            print('i am task instance %s of task %s of job %s and i have restarted after pause, '\
+                                'with metrics %f %f %f and machine acc flag %s and %s and %s' % (self.task_instance_index, \
+                                self.task.task_index, self.task.job.id, self.cpu, self.memory, \
+                                self.disk, self.machine.accommodate(self), self.machine.feature, self.machine.capacity))
                         if (not self.machine.accommodate(self) and not self.reset):
-                            yield self.env.timeout(5)
-                            self.response_time += 5
+                            yield self.env.timeout(0.5)
+                            self.response_time += 0.5
                     self.machine.num_waiting_instances -= 1
                     self.waiting = False
+                    self.machine.restart_task_instance(self)
                     if self.reset:
                         print('i am task instance %s of task %s of job %s and i am reseting' \
                             % (self.task_instance_index, self.task.task_index, self.task.job.id))
@@ -372,6 +378,7 @@ class TaskInstance(object):
         except simpy.Interrupt:
             print('Task instance %f of task %f of job %f has been interrupted and will stop' \
             %(self.task_instance_index, self.task.task_index, self.task.job.id))
+            self.running = False
             self.reset = False
             return
     
@@ -386,7 +393,6 @@ class TaskInstance(object):
         if self.machine.accommodate(self):
             self.machine.restart_task_instance(self)
         else:
-            self.machine.restart_task_instance(self)
             self.machine.num_waiting_instances += 1
             self.waiting = True
             self.running = False
@@ -429,6 +435,7 @@ class TaskInstance(object):
         self.started = False
         self.waiting = False
         self.running = False
+        self.machine.stop_task_instance(self)
         self.machine.remove_task_instance(self)
         # config = self.alter_task_config
         # self.task.reset_task_instance(self.task_instance_index, config)

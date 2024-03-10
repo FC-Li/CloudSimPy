@@ -35,4 +35,5 @@ class Simulation(object):
     @property
     def finished(self):
         return self.task_broker.destroyed \
+               and len(self.cluster.unfinished_task_instances) == 0 \
                and len(self.cluster.unfinished_jobs) == 0

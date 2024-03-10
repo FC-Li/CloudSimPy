@@ -42,6 +42,15 @@ class Node(object):
                 if task_instance.finished:
                     ls.append(task_instance)
             return ls
+    
+    @property
+    def unfinished_task_instances(self):
+        ls = []
+        for machine in self.machines:
+            for task_instance in machine.task_instances:
+                if not task_instance.finished:
+                    ls.append(task_instance)
+        return ls
 
     def attach_cluster(self, cluster):
         self.cluster = cluster
@@ -63,8 +72,6 @@ class Node(object):
     #         self.machines.remove(machine)
 
     def delete(self):
-        for running_task_instance in self.running_task_instances():
-            running_task_instance.delete()
         for machine in self.machines:
             machine.dettach_node()
             self.machines.remove(machine)

@@ -50,7 +50,7 @@ class Episode(object):
         yield self.env.timeout(delay)  # Wait for the specific time interval
         print("Performing actions after pausing...")
 
-        unfinished_task_instances = self.simulation.cluster.unfinished_instances
+        unfinished_task_instances = self.simulation.cluster.unfinished_task_instances
         print_selected_task_instances(unfinished_task_instances, "unfinished")
         running_task_instances = self.simulation.cluster.running_task_instances
         print_selected_task_instances(running_task_instances, "running")
@@ -67,7 +67,6 @@ class Episode(object):
             print(f"waiting machines workloads are {len(machine.waiting_task_instances)}")
             if len(machine.waiting_task_instances) > 1:
                 deadlock_waiting_machines.append(machine)
-            print(type(machine))
         redirect_workload(deadlock_waiting_machines)
         
         generate_task_instance_configs(self.simulation.cluster.non_waiting_instances)
@@ -83,7 +82,8 @@ class Episode(object):
         print("Pause event triggered")
         # Reset the pause event for future use if needed
         self.env.pause_event = simpy.Event(self.env)
-        if (self.simulation.finished != 1 and self.env.now < 5503):
+        if (not self.simulation.finished):
+            print(self.simulation.finished)
             # yield self.env.timeout(300)
             print('The time at the start of the next pause is', self.env.now + 301.0)
             cnt += 1

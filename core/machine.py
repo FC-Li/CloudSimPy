@@ -62,7 +62,6 @@ class Machine(object):
         self.cpu += task_instance.cpu
         self.memory += task_instance.memory
         self.disk += task_instance.disk
-        self.machine_door = MachineDoor.TASK_IN
 
     @property
     def running_task_instances(self):

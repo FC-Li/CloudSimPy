@@ -13,20 +13,17 @@ class Scheduler(object):
     #     self.cluster = cluster
 
     def make_decision(self):
-        matched_items, unmatched_tasks = self.algorithm(self.cluster, self.env.now)
+        print("yes")
+        yield from self.algorithm(self.cluster, self.env)
+        print("maybe")
         # yield self.env.timeout(100)
         yield self.env.pause_event
         # print("come on")
-        for unmatched_task in unmatched_tasks:
-            print(unmatched_task.task_index)
-
-        #SOS edw exw ta unmatched tasks na ta dwsw sto rl 
-        # print(unmatched_tasks)
 
     def run(self, cluster):
         # self.attach(self.simulation, cluster)
         self.cluster = cluster
-        while not self.simulation.finished:
+        while (not self.simulation.finished or self.env.now < 400):
             print("im the scheduler of the cluster", self.cluster.level)
             yield from self.make_decision()
             # yield self.env.timeout(300) # kanw mia fora to make decision gia kathe time frame anamesa stis apofaseis tou rl

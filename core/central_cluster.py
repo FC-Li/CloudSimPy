@@ -57,18 +57,30 @@ class Cluster(object):
 
     @property
     def ready_tasks_which_has_waiting_instance(self):
-        ls = []
-        for job in self.jobs:
-            ls.extend(job.ready_tasks_which_has_waiting_instance)
-        return ls
+        if self.child_clusters is not None:
+            tasks = []
+            for child in self.child_clusters:
+                tasks.extend(child.ready_tasks_which_has_waiting_instance)
+            return jobs
+        else:
+            ls = []
+            for job in self.jobs:
+                ls.extend(job.ready_tasks_which_has_waiting_instance)
+            return ls
 
     @property
     def finished_jobs(self):
-        ls = []
-        for job in self.jobs:
-            if job.finished:
-                ls.append(job)
-        return ls
+        if self.child_clusters is not None:
+            jobs = []
+            for child in self.child_clusters:
+                jobs.extend(child.finished_jobs)
+            return jobs
+        else:
+            ls = []
+            for job in self.jobs:
+                if job.finished:
+                    ls.append(job)
+            return ls
 
     @property
     def finished_tasks(self):
@@ -128,6 +140,19 @@ class Cluster(object):
             for node in self.nodes:
                 task_instances.extend(node.not_started_task_instances)
             return task_instances
+
+    @property
+    def unfinished_task_instances(self):
+        if self.child_clusters is not None:
+            task_instances = []
+            for child in self.child_clusters:
+                task_instances.extend(child.unfinished_task_instances)
+            return task_instances
+        else:
+            task_instances = []
+            for node in self.nodes:
+                task_instances.extend(node.unfinished_task_instances)
+            return task_instances   
     
     @property
     def machines_only_waiting_instances(self):

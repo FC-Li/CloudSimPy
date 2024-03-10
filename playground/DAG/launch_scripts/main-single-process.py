@@ -29,7 +29,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = ''
 np.random.seed(41)
 tf.random.set_seed(41)
 # ************************ Parameters Setting Start ************************
-machines_number = [30, 45 , 105] 
+machines_number = [9, 21 , 45] 
 '''
 near_edge_machines_number = 30
 far_edge_machines_number = 40
@@ -38,7 +38,7 @@ cloud_machines_number = 100
 
 jobs_len = 200
 n_iter = 30
-jobs_csv = os.path.join("DAG", "jobs_files", "job.csv")
+jobs_csv = os.path.join("DAG", "jobs_files", "small_modified_jobs.csv")
 
 machine_groups = {}  # Dictionary to hold lists of machines grouped by node_id
 for cluster_index, top_machines_number in enumerate(machines_number):
