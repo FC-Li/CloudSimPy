@@ -17,21 +17,24 @@ class Broker(object):
         self.cluster = simulation.cluster
 
     def run(self):
-        time_threshold = 300
+        time_threshold = 301
         starting_time = self.env.now
         print("broker_runs with starting time", starting_time)
         for job_config in self.job_configs:
             print(job_config.submit_time,self.env.now, job_config.id)
-            assert job_config.submit_time >= self.env.now
-            timeout_duration = job_config.submit_time - self.env.now
-            div = self.env.now / time_threshold
+            # assert job_config.submit_time >= self.env.now
+            if job_config.submit_time >= self.env.now:
+                timeout_duration = job_config.submit_time - self.env.now
+            else: 
+                timeout_duration = 0
+            div = self.env.now // time_threshold
             if ((self.env.now % time_threshold) == 0 and self.env.now != 0):
                 time_threshold = (div) * time_threshold # ama einai akrivws 300,600 klp tote paw sto pause
             else:
                 time_threshold = (div+1) * time_threshold # ama einai estw kai 0.1 over tote pausarei sto epomeno checkpoint
             while(timeout_duration > 0):
-                if (self.env.now % time_threshold < 0.01 and self.env.now != 0):
-                    time_threshold += 300 # perimenei mono thn prwth fora
+                if ((self.env.now + 0.1)/ time_threshold > 1 and self.env.now != 0):
+                    time_threshold += 301 # perimenei mono thn prwth fora
                     yield self.env.pause_event
                 else:
                     timeout_duration -= 0.1

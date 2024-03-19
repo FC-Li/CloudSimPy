@@ -29,14 +29,14 @@ os.environ['CUDA_VISIBLE_DEVICES'] = ''
 np.random.seed(41)
 tf.random.set_seed(41)
 # ************************ Parameters Setting Start ************************
-machines_number = [9, 21 , 45] 
+machines_number = [6, 15 , 36] 
 '''
 near_edge_machines_number = 30
 far_edge_machines_number = 40
 cloud_machines_number = 100
 '''
 
-jobs_len = 200
+jobs_num = 40
 n_iter = 30
 jobs_csv = os.path.join("DAG", "jobs_files", "small_modified_jobs.csv")
 
@@ -64,7 +64,7 @@ node_configs = [Node(node_id, cluster_index)
 
 tic = time.time()
 algorithm = FirstFitAlgorithm()
-episode = Episode(machine_groups, node_configs, jobs_csv, algorithm, None)
+episode = Episode(machine_groups, node_configs, jobs_csv, jobs_num, algorithm, None)
 episode.run()
 print('FirstFitAlgorithm')
 # print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))

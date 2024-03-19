@@ -43,25 +43,42 @@ class Machine(object):
         self.num_waiting_instances = 0
         self.machine_door = MachineDoor.NULL
 
-        self.anomaly = (0,0)
+        self.anomaly = [0,0]
 
     def run_task_instance(self, task_instance):
-        self.cpu += task_instance.cpu
-        self.memory += task_instance.memory
-        self.disk += task_instance.disk
+        ls = self.roundup_metrics(task_instance)
+        self.cpu += ls[0]
+        self.memory += ls[1]
+        self.disk += ls[2]
         self.task_instances.append(task_instance)
         self.machine_door = MachineDoor.TASK_IN
 
     def stop_task_instance(self, task_instance):
-        self.cpu -= task_instance.cpu
-        self.memory -= task_instance.memory
-        self.disk -= task_instance.disk
+        ls = self.roundup_metrics(task_instance)
+        self.cpu -= ls[0]
+        self.memory -= ls[1]
+        self.disk -= ls[2]
         self.machine_door = MachineDoor.TASK_OUT
 
     def restart_task_instance(self, task_instance):
-        self.cpu += task_instance.cpu
-        self.memory += task_instance.memory
-        self.disk += task_instance.disk
+        ls = self.roundup_metrics(task_instance)
+        self.cpu += ls[0]
+        self.memory += ls[1]
+        self.disk += ls[2]
+    
+    def roundup_metrics(self, task_instance):
+        temp_cpu = round(task_instance.cpu, 5)
+        temp_memory = round(task_instance.memory, 5)
+        temp_disk = round(task_instance.disk, 5)
+        return [temp_cpu, temp_memory, temp_disk]
+
+    def check_machine_usage(self):
+        if self.cpu < 0.00001:
+            self.cpu = 0
+        if self.memory < 0.00001:
+            self.memory = 0
+        if self.disk < 0.00001:
+            self.disk = 0
 
     @property
     def running_task_instances(self):
@@ -113,6 +130,7 @@ class Machine(object):
                self.memory_capacity - self.memory >= task_instance.memory and \
                self.disk_capacity - self.disk >= task_instance.disk
 
+    @property
     def scheduled_time(self):
         avg_time = 0.0
         running_task_instances = self.running_task_instances()
@@ -121,6 +139,7 @@ class Machine(object):
         avg_time = avg_time / len(self.task_instances)
         return avg_time
 
+    @property
     def service_job_scheduled_time(self):
         avg_time = 0.0
         running_task_instances = self.running_task_instances()
@@ -130,6 +149,7 @@ class Machine(object):
         avg_time = avg_time / len(self.task_instances)
         return avg_time
 
+    @property
     def remaining_time(self):
         avg_time = 0.0
         running_task_instances = self.running_task_instances()

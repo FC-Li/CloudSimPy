@@ -99,7 +99,15 @@ class Cluster(object):
         else:
             task_instances = []
             for node in self.nodes:
-                task_instances.extend(node.running_task_instances)
+                task_instances.extend(node.running_task_instances())
+            return task_instances
+
+    @property
+    def separate_len_running_task_instances(self):
+        if self.child_clusters is not None:
+            task_instances = []
+            for child in self.child_clusters:
+                task_instances.append(len(child.running_task_instances))
             return task_instances
 
     @property
@@ -112,7 +120,18 @@ class Cluster(object):
         else:
             task_instances = []
             for node in self.nodes:
-                task_instances.extend(node.waiting_task_instances)
+                task_instances.extend(node.waiting_task_instances())
+            for job in self.jobs:
+                for task in job.tasks:
+                    task_instances.extend(task.unscheduled_task_instances)
+            return task_instances
+
+    @property
+    def separate_len_waiting_task_instances(self):
+        if self.child_clusters is not None:
+            task_instances = []
+            for child in self.child_clusters:
+                task_instances.append(len(child.waiting_task_instances))
             return task_instances
 
     @property
@@ -125,7 +144,7 @@ class Cluster(object):
         else:
             task_instances = []
             for node in self.nodes:
-                task_instances.extend(node.non_waiting_instances)
+                task_instances.extend(node.non_waiting_instances())
             return task_instances
 
     @property
@@ -137,8 +156,9 @@ class Cluster(object):
             return task_instances
         else:
             task_instances = []
-            for node in self.nodes:
-                task_instances.extend(node.not_started_task_instances)
+            for job in self.jobs:
+                for task in job.tasks:
+                    task_instances.extend(task.unscheduled_task_instances)
             return task_instances
 
     @property
@@ -186,8 +206,8 @@ class Cluster(object):
     @property
     def len_all_task_instances(self):
         task_instances = []
-        task_instances.extend(running_task_instances)
-        task_instances.extend(waiting_task_instances)
+        task_instances.extend(self.running_task_instances)
+        task_instances.extend(self.waiting_task_instances)
         return len(task_instances)
 
     @property
@@ -200,11 +220,13 @@ class Cluster(object):
         else:
             ls = []
             cluster_sum = [0,0,0]
-            for node in child.nodes:
-                node_sum = node.metrics_unstarted_instances
-                cluster_sum[0] += node_sum[0]
-                cluster_sum[1] += node_sum[1]
-                cluster_sum[2] += node_sum[2]
+            task_instances = []
+            for job in self.jobs:
+                for task in job.tasks:
+                    for task_instance in task.unscheduled_task_instances:
+                        cluster_sum[0] += task_instance.cpu
+                        cluster_sum[1] += task_instance.memory
+                        cluster_sum[2] += task_instance.disk
             ls.append(cluster_sum)
             return ls
 
@@ -323,8 +345,10 @@ class Cluster(object):
             return sum
         else:
             sum = 0 
+            if len(self.nodes) == 0:
+                return 0
             for node in self.nodes:
-                sum += node.avg_usage
+                sum += node.avg_usage()
             sum = sum / len(self.nodes)
             return sum
 
@@ -334,15 +358,15 @@ class Cluster(object):
             batch_times = []
             service_times = []
             for child in self.child_clusters:
-                l1, l2 = child.response_time_tuples
+                l1, l2 = child.response_times
                 service_times.extend(l1)
                 batch_times.extend(l2)
             return service_times, batch_times
         else:
             batch_times = []
             service_times = []
-            for node in child.nodes:
-                l1, l2 = node.all_response_time_tuples
+            for node in self.nodes:
+                l1, l2 = node.all_response_time_tuples()
                 service_times.extend(l1)
                 batch_times.extend(l2)
             return service_times, batch_times
@@ -417,16 +441,18 @@ class Cluster(object):
             for child in self.child_clusters:
                 avg = 0
                 for node in child.nodes:
-                    avg += node.response_time
+                    avg += node.response_time()
                 avg = avg / len(child.nodes)
                 ls.append(avg)
             return ls
         else:
             ls = []
             avg = 0
+            if len(self.nodes) == 0:
+                return 0
             for node in self.nodes:
-                avg += node.response_time
-            avg = avg / len(child.nodes)
+                avg += node.response_time()
+            avg = avg / len(self.nodes)
             ls.append(avg)
             return ls
 

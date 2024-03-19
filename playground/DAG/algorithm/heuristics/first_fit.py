@@ -8,7 +8,7 @@ class FirstFitAlgorithm(Algorithm):
         clock = env.now
         self.env = env
         time_threshold = 300
-        div = clock / time_threshold
+        div = clock // time_threshold
         if clock == 0:
             time_threshold = 300
         elif ((clock % time_threshold) == 0):
@@ -27,9 +27,9 @@ class FirstFitAlgorithm(Algorithm):
                     matched = False  # Flag to indicate if the task has been matched
                     for machine in machines:
                         if machine.accommodate(task_instance):
-                            print('task instance %s of task %s of job %s was allocated to machine %f of the cluster %f with submit time %f' \
-                            % (task_instance.task_instance_index, task.task_config.task_index, task.job.job_config.id, machine.id, cluster.level, \
-                            task.task_config.submit_time))
+                            # print('task instance %s of task %s of job %s was allocated to machine %f of the cluster %f with submit time %f' \
+                            # % (task_instance.task_instance_index, task.task_config.task_index, task.job.job_config.id, machine.id, cluster.level, \
+                            # task.task_config.submit_time))
                             # task_instance.passive_refresh_response_time(remove_delays(task.job.job_config.submit_time, self.env.now))
                             task_instance.passive_refresh_response_time(self.env.now - task.job.job_config.submit_time)
                             task.start_task_instance(task_instance.task_instance_index, machine)
@@ -46,5 +46,5 @@ class FirstFitAlgorithm(Algorithm):
 
 
 
-        print('I just executed the first fit... for cluster', cluster.level)
+        # print('I just executed the first fit... for cluster', cluster.level)
         return

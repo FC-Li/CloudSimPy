@@ -23,7 +23,6 @@ class Node(object):
         self.memory += machine.memory_capacity
         self.disk += machine.disk_capacity
 
-    @property
     def running_task_instances(self, machines=None):
         ls = []
         if machines == None:
@@ -80,31 +79,33 @@ class Node(object):
         avg_time = 0.0
         if machines is None:
             machines = self.machines
-        running_task_instances = self.running_task_instances(machines)
-        for task_instance in running_task_instances:
+        running_task_instances_list = self.running_task_instances(machines)
+        for task_instance in running_task_instances_list:
             avg_time += task_instance.response_time + task_instance.running_time
-        avg_time = avg_time / len(running_task_instances)
+        avg_time = avg_time / len(running_task_instances_list)
         return avg_time
 
     def service_job_scheduled_time(self, machines=None):
         avg_time = 0.0
         if machines is None:
             machines = self.machines
-        running_task_instances = self.running_task_instances(machines)
-        for task_instance in running_task_instances:
+        running_task_instances_list = self.running_task_instances(machines)
+        for task_instance in running_task_instances_list:
             if task_instance.task.job.type == 0:
                 avg_time += task_instance.response_time + task_instance.running_time
-        avg_time = avg_time / len(running_task_instances)
+        avg_time = avg_time / len(running_task_instances_list)
         return avg_time
     
     def response_time(self, machines=None):  
         avg_time = 0.0
         if machines is None:
             machines = self.machines
-        running_task_instances = self.running_task_instances(machines)
-        for task_instance in running_task_instances:
+        running_task_instances_list = self.running_task_instances(machines)
+        if len(running_task_instances_list) == 0:
+            return 0
+        for task_instance in running_task_instances_list:
             avg_time += task_instance.response_time
-        avg_time = avg_time / len(running_task_instances)
+        avg_time = avg_time / len(running_task_instances_list)
         return avg_time
 
     def all_response_time_tuples(self, machines=None):  
@@ -114,10 +115,10 @@ class Node(object):
         service_times = []
         if machines is None:
             machines = self.machines
-        running_task_instances = self.running_task_instances(machines)
-        ls.extend(running_task_instances)
-        waiting_task_instances = waiting_task_instances(machines)
-        ls.extend(waiting_task_instances)
+        running_task_instances_list = self.running_task_instances(machines)
+        ls.extend(running_task_instances_list)
+        waiting_task_instances_list = self.waiting_task_instances(machines)
+        ls.extend(waiting_task_instances_list)
         for task_instance in ls:
             if (task_instance.task.job.type == 0):
                 service_times.append(task_instance.response_time)
@@ -129,10 +130,10 @@ class Node(object):
         avg_time = 0.0
         if machines is None:
             machines = self.machines
-        running_task_instances = self.running_task_instances(machines)
-        for task_instance in running_task_instances:
+        running_task_instances_list = self.running_task_instances(machines)
+        for task_instance in running_task_instances_list:
             avg_time += task_instance.duration - task_instance.running_time
-        avg_time = avg_time / len(running_task_instances)
+        avg_time = avg_time / len(running_task_instances_list)
         return avg_time            
 
     @property
@@ -142,18 +143,19 @@ class Node(object):
         self.disk = sum(machine.disk for machine in self.machines)
         return [self.cpu, self.memory, self.disk]
 
-    @property
     def capacity(self, machines=None):
         if machines is None:
             return [self.cpu_capacity, self.memory_capacity, self.disk_capacity]
         else:
+            cpu_cap = 0
+            mem_cap = 0
+            disk_cap = 0
             for machine in machines:
                 cpu_cap += machine.cpu_capacity
                 mem_cap += machine.memory_capacity
                 disk_cap += machine.disk_capacity
             return [cpu_cap, mem_cap, disk_cap]
 
-    @property
     def usage(self, machines=None):
         if machines is None:
             machines = self.machines
@@ -167,7 +169,6 @@ class Node(object):
             self.disk = disk
         return [(cpu / capacities[0]), (memory / capacities[1]), (disk / capacities[2])]
 
-    @property
     def avg_usage(self, machines=None):
         if machines is None:
             machines = self.machines
@@ -181,20 +182,18 @@ class Node(object):
             self.disk = disk
         return ((cpu / capacities[0]) + (memory / capacities[1]) + (disk / capacities[2])) / 3
 
-    @property
     def avg_batch_usage(self,machines=None):
         if machines is None:
             machines = self.machines
         capacities = self.capacity(machines)
-        running_task_instances = self.running_task_instances(machines)
-        for task_instance in running_task_instances:
+        running_task_instances_list = self.running_task_instances(machines)
+        for task_instance in running_task_instances_list:
             if task_instance.type == 1:
                 temp_cpu -= task_instance.cpu
                 temp_mem -= task_instance.memory
                 temp_disk -= task_instance.disk
         return ((temp_cpu / capacities[0]) + (temp_mem / capacities[1]) + (temp_disk / capacities[2])) / 3
 
-    @property
     def running_batch_task_instances(self, machines=None):
         ls = []
         if machines is None:
@@ -205,7 +204,6 @@ class Node(object):
                     ls.append(task_instance)
         return ls
 
-    @property
     def running_service_task_instances(self, machines=None):
         ls = []
         if machines is None:
@@ -215,52 +213,27 @@ class Node(object):
                 if task_instance.task.job.type == 0 and task_instance.started and not task_instance.finished:
                     ls.append(task_instance)
         return ls
-        
-    @property
+
     def waiting_task_instances(self, machines=None):
         ls = []
         if machines is None:
             machines = self.machines       
         for machine in machines:
             for task_instance in machine.task_instances:
-                if task_instance.waiting or not task_instance.started:
+                if task_instance.waiting:
                     ls.append(task_instance)
         return ls
 
-    @property
     def non_waiting_instances(self, machines=None):
         ls = []
         if machines is None:
             machines = self.machines       
         for machine in machines:
             for task_instance in machine.task_instances:
-                if (task_instance.running and not task_instance.waiting) or not task_instance.started:
+                if (task_instance.running and not task_instance.waiting):
                     ls.append(task_instance)
-        return ls
+        return ls 
 
-    @property
-    def not_started_task_instances(self, machines=None):
-        ls = []
-        if machines is None:
-            machines = self.machines       
-        for machine in machines:
-            for task_instance in machine.task_instances:
-                if not task_instance.started:
-                    ls.append(task_instance)
-        return ls
-
-    @property
-    def metrics_unstarted_instances(self,machines=None):
-        if machines is None:
-            machines = self.machines 
-        not_started_task_instances = self.not_started_task_instances(machines)
-        for task_instance in not_started_task_instances:
-            temp_cpu += task_instance.cpu
-            temp_mem += task_instance.memory
-            temp_disk += task_instance.disk
-        return [temp_cpu, temp_mem, temp_disk]   
-
-    @property
     def workload_accomodation(self, workload):
         ls = []
         for machine in self.machines:

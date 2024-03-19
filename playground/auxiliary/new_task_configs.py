@@ -9,8 +9,8 @@ def generate_task_instance_configs(task_instances, alteration_range=(0.8, 1.2)):
         
         # Create a new TaskInstanceConfig based on the original, with altered metrics
         altered_metrics = [
-            a if a <= 2 else 2,
-            b if b <= 1 else 1,
-            c if c <= 1 else 1,
+            0.0001 if a < 0.0001 else (2 if a > 2 else a),
+            0.0001 if b < 0.0001 else (1 if b > 1 else b),
+            0.0001 if c < 0.0001 else (1 if c > 1 else c)
         ]
         task_instance.recalc_metrics(altered_metrics)

@@ -25,11 +25,11 @@ class Simulation(object):
             self.env.process(self.monitor.run())
         self.env.process(self.task_broker.run())
 
-        print("i got in the loop with the mutliple scheduler instances and im the cluster", self.cluster.child_clusters[0].level)
+        # print("i got in the loop with the mutliple scheduler instances and im the cluster", self.cluster.child_clusters[0].level)
         self.env.process(self.near_scheduler.run(self.cluster.child_clusters[0]))
-        print("i got in the loop with the mutliple scheduler instances and im the cluster", self.cluster.child_clusters[1].level)
+        # print("i got in the loop with the mutliple scheduler instances and im the cluster", self.cluster.child_clusters[1].level)
         self.env.process(self.far_scheduler.run(self.cluster.child_clusters[1]))
-        print("i got in the loop with the mutliple scheduler instances and im the cluster", self.cluster.child_clusters[2].level)
+        # print("i got in the loop with the mutliple scheduler instances and im the cluster", self.cluster.child_clusters[2].level)
         self.env.process(self.cloud_scheduler.run(self.cluster.child_clusters[2]))
 
     @property

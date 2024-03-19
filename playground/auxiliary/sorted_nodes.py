@@ -1,25 +1,24 @@
 import random
 
-def presorted_nodes(nodes, algorithm):
-    if len(nodes) <= 0:
-        return None
-    elif len(node.running_task_instances) <= 0:
-        return None
-    elif algorithm == max_util:
+def presorted_nodes(cluster, algorithm):
+    nodes = cluster.nodes
+    if len(cluster.running_task_instances) <= 0:
+        return random.choice(nodes)
+    elif algorithm == "max_util":
         max_tuple = (0.0,nodes[0])
         for node in nodes:
-            usage = node.usage
+            usage = node.usage()
             if max(usage) > max_tuple[0]:
                 max_tuple = (max(usage), node)
         return max_tuple[1]       
-    elif algorithm == avg_util:
+    elif algorithm == "avg_util":
         max_tuple = (0.0,nodes[0])
         for node in nodes:
-            avg_usage = node.avg_usage
+            avg_usage = node.avg_usage()
             if avg_usage > max_tuple[0]:
                 max_tuple = (avg_usage, node)
         return max_tuple[1]
-    elif algorithm == scheduled_time:
+    elif algorithm == "scheduled_time":
         min_tuple = (1000000.0,nodes[0])
         for node in nodes:
             avg_time = 0.0
@@ -29,7 +28,7 @@ def presorted_nodes(nodes, algorithm):
             if avg_time < min_tuple[0]:
                 min_tuple = (avg_time, node)
         return min_tuple[1]
-    elif algorithm == remaining_time:
+    elif algorithm == "remaining_time":
         min_tuple = (1000000.0,nodes[0])
         for node in nodes:
             avg_time = 0.0
@@ -39,7 +38,7 @@ def presorted_nodes(nodes, algorithm):
             if avg_time < min_tuple[0]:
                 min_tuple = (avg_time, node)
         return min_tuple[1]
-    elif algorithm == active_workloads:
+    elif algorithm == "active_workloads":
         max_tuple = (0.0,nodes[0])
         for node in nodes:
             avg_num = 0.0
@@ -48,7 +47,7 @@ def presorted_nodes(nodes, algorithm):
             if avg_num > max_tuple[0]:
                 max_tuple = (avg_num, node)
         return max_tuple[1]    
-    elif algorithm == batch_job_util:
+    elif algorithm == "batch_job_util":
         max_tuple = (0.0,nodes[0])
         for node in nodes:
             avg_usage = 0.0
@@ -58,7 +57,7 @@ def presorted_nodes(nodes, algorithm):
             if avg_usage > max_tuple[0]:
                 max_tuple = (avg_usage, node)
         return max_tuple[1]
-    elif algorithm == service_job_scheduled_time:
+    elif algorithm == "service_job_scheduled_time":
         min_tuple = (1000000.0,nodes[0])
         for node in nodes:
             avg_time = 0.0
@@ -70,13 +69,9 @@ def presorted_nodes(nodes, algorithm):
         return min_tuple[1]
 
 def receiver_sorted_nodes(nodes, algorithm, workload):
-    if len(nodes) <= 0:
-        return None
-    elif len(node.running_task_instances) == 0 or len(node.workload_accomodation(workload)) == 0:
-        return None
-    elif algorithm == max_util:
+    if algorithm == "max_util":
         min_tuple = (10000.0, nodes[0], nodes[0].machines[0]) #find node with min_util
-        min_machine = nodes[0].machine[0]
+        min_machine = nodes[0].machines[0]
         for node in nodes:
             min_util = 0.0
             list = node.workload_accomodation(workload)
@@ -93,7 +88,7 @@ def receiver_sorted_nodes(nodes, algorithm, workload):
             else: 
                 return (None, None)
         return (min_tuple[1], min_tuple[2])   
-    elif algorithm == avg_util:
+    elif algorithm == "avg_util":
         min_tuple = (100000.0, nodes[0])
         min_machine = nodes[0].machine[0]
         for node in nodes:
@@ -112,7 +107,7 @@ def receiver_sorted_nodes(nodes, algorithm, workload):
             else: 
                 return (None, None)
         return (min_tuple[1], min_tuple[2])
-    elif algorithm == scheduled_time:
+    elif algorithm == "scheduled_time":
         min_tuple = (1000000.0, nodes[0])
         min_machine = nodes[0].machine[0]
         for node in nodes:
@@ -132,7 +127,7 @@ def receiver_sorted_nodes(nodes, algorithm, workload):
             else: 
                 return (None, None)
         return (min_tuple[1], min_tuple[2])
-    elif algorithm == remaining_time:
+    elif algorithm == "remaining_time":
         min_tuple = (1000000.0, nodes[0])
         min_machine = nodes[0].machine[0]
         for node in nodes:
@@ -152,7 +147,7 @@ def receiver_sorted_nodes(nodes, algorithm, workload):
             else: 
                 return (None, None)
         return (min_tuple[1], min_tuple[2])
-    elif algorithm == active_workloads:
+    elif algorithm == "active_workloads":
         min_tuple = (10000000000.0, nodes[0])
         min_machine = nodes[0].machine[0]
         for node in nodes:
@@ -172,7 +167,7 @@ def receiver_sorted_nodes(nodes, algorithm, workload):
             else: 
                 return (None, None)
         return (min_tuple[1], min_tuple[2]) 
-    elif algorithm == batch_job_util:
+    elif algorithm == "batch_job_util":
         min_tuple = (100000.0, nodes[0])
         min_machine = nodes[0].machine[0]
         for node in nodes:
@@ -191,7 +186,7 @@ def receiver_sorted_nodes(nodes, algorithm, workload):
             else: 
                 return (None, None)
         return (min_tuple[1], min_tuple[2])
-    elif algorithm == service_job_scheduled_time:
+    elif algorithm == "service_job_scheduled_time":
         min_tuple = (1000000.0, nodes[0])
         min_machine = nodes[0].machine[0]
         for node in nodes:
@@ -213,12 +208,12 @@ def receiver_sorted_nodes(nodes, algorithm, workload):
         return (min_tuple[1], min_tuple[2])
 
 def presorted_workloads(node, algorithm):
-    if len(node.running_task_instances) <= 0:
+    if len(node.running_task_instances()) <= 0:
         return None
-    elif algorithm == max_util:
-        list = node.running_task_instances
+    elif algorithm == "max_util":
+        list = node.running_task_instances()
         max_tuple = (0.0, list[0])
-        usage = node.usage
+        usage = node.usage()
         max_val = max(usage)
         max_index = usage.index(max_val)
         for task_instance in list:
@@ -226,31 +221,31 @@ def presorted_workloads(node, algorithm):
             if metric > max_tuple[0]:
                 max_tuple = (metric, task_instance)
         return max_tuple[1]
-    elif algorithm == avg_util:
-        list = node.running_task_instances
+    elif algorithm == "avg_util":
+        list = node.running_task_instances()
         max_tuple = (0.0, list[0])
         for task_instance in list:
             avg_metrics = task_instance.avg_metrics
             if avg_metrics > max_tuple[0]:
                 max_tuple = (avg_metrics, task_instance)
         return max_tuple[1]    
-    elif algorithm == scheduled_time:
-        list = node.running_task_instances
+    elif algorithm == "scheduled_time":
+        list = node.running_task_instances()
         min_tuple = (1000000.0, list[0])
         for task_instance in list:
             scheduled_time = task_instance.scheduled_time
             if scheduled_time < min_tuple[0]:
                 min_tuple = (scheduled_time, task_instance)
             return min_tuple[1]
-    elif algorithm == scheduled_time:
-        list = node.running_task_instances
+    elif algorithm == "remaining_time":
+        list = node.running_task_instances()
         min_tuple = (1000000.0, list[0])
         for task_instance in list:
             rem_time = task_instance.remaining_time
             if rem_time < min_tuple[0]:
                 min_tuple = (rem_time, task_instance)
             return min_tuple[1]
-    elif algorithm == active_workloads:
+    elif algorithm == "active_workloads":
         selected_task_instance = random.choice(node.running_task_instances)
         return selected_task_instance    
     elif algorithm == batch_job_util:
@@ -261,7 +256,7 @@ def presorted_workloads(node, algorithm):
             if avg_metrics > max_tuple[0]:
                 max_tuple = (avg_metrics, task_instance)
         return max_tuple[1]    
-    elif algorithm == service_job_scheduled_time:
+    elif algorithm == "service_job_scheduled_time":
         list = node.running_service_task_instances
         min_tuple = (1000000.0, list[0])
         for task_instance in list:
@@ -269,3 +264,41 @@ def presorted_workloads(node, algorithm):
             if rem_time < min_tuple[0]:
                 min_tuple = (rem_time, task_instance)
             return min_tuple[1]
+
+def sorted_unscheduled_instances(unscheduled, algorithm):
+    if algorithm == "max_util":
+        sorted_unscheduled = sorted(unscheduled, key=lambda x: \
+        (x.cpu + x.memory + x.disk), reverse=True)
+        return sorted_unscheduled
+    elif algorithm == "avg_util":
+        sorted_unscheduled = sorted(unscheduled, key=lambda x: \
+        (x.cpu + x.memory + x.disk), reverse=True)
+        return sorted_unscheduled
+    elif algorithm == "scheduled_time":
+        sorted_unscheduled = sorted(unscheduled, key=lambda x: \
+        x.duration, reverse=True)
+        return sorted_unscheduled
+    elif algorithm == "remaining_time":
+        sorted_unscheduled = sorted(unscheduled, key=lambda x: \
+        x.duration, reverse=True)
+        return sorted_unscheduled
+    elif algorithm == "active_workloads":
+        sorted_unscheduled = sorted(unscheduled, key=lambda x: \
+        x.duration, reverse=True)
+        return sorted_unscheduled   
+    elif algorithm == "batch_job_util":
+        batch_list = []
+        for instance in list:
+            if instance.task.job.type == 1:
+                batch_list.append(instance)
+        sorted_unscheduled = sorted(batch_list, key=lambda x: \
+        (x.cpu + x.memory + x.disk), reverse=True)
+        return sorted_unscheduled
+    elif algorithm == "service_job_scheduled_time":
+        service_list = []
+        for instance in list:
+            if instance.task.job.type == 0:
+                service_list.append(instance)
+        sorted_unscheduled = sorted(service_list, key=lambda x: \
+        (x.cpu + x.memory + x.disk), reverse=True)
+        return sorted_unscheduled

@@ -1,10 +1,10 @@
 import math
 
-class RewardGiver(cluster):
+class RewardGiver():
     def __init__(self, cluster):
         self.cluster = cluster
 
-    def get_overall_reward():
+    def get_overall_reward(self):
         reward = 0
         reward += self.utilization()
         reward += self.response_time()
@@ -12,12 +12,12 @@ class RewardGiver(cluster):
         reward += self.transmit_delays()
         return reward
 
-    def utilization():
+    def utilization(self):
         avg_sum = self.cluster.avg_usage  
         reward = 1 - avg_sum
         return reward
 
-    def response_time():
+    def response_time(self):
         RTmin = 0
         RTmax_batch = 10000
         RTmax_service = 2000
@@ -34,10 +34,12 @@ class RewardGiver(cluster):
                 sum += 0.5
             else:
                 sum += math.exp(-((rt - RTmax_batch) / RTmax_batch))
-        reward = reward / (len(service_response_times) + len(batch_response_times))
+        if len(service_response_times) + len(batch_response_times) == 0:
+            return 0
+        reward = sum / (len(service_response_times) + len(batch_response_times))
         return reward
 
-    def anomaly():
+    def anomaly(self):
         sum = 0
         tuples = self.cluster.anomaly_update
         for tuple in tuples:
@@ -52,7 +54,7 @@ class RewardGiver(cluster):
         reward = sum / len(tuples)
         return reward
 
-    def transmit_delays():
+    def transmit_delays(self):
         sum = 0
         len_task_instances = self.cluster.len_all_task_instances
         delays = self.cluster.transmit_delays
