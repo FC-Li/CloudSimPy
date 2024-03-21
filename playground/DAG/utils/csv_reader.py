@@ -18,6 +18,10 @@ class CSVReader(object):
         job_submit_time_map = {}
         job_response_time_map = {}
         job_type = {}
+
+        # Calculate the total number of unique jobs
+        self.total_jobs = df.job_id.nunique()
+
         for i in range(len(df)):
             series = df.iloc[i]
             job_id = series.job_id
@@ -47,6 +51,10 @@ class CSVReader(object):
         self.job_configs = job_configs
         # for job in job_configs:
         #     print(job.submit_time)
+
+    # Method to access the total number of jobs
+    def get_total_jobs(self):
+        return self.total_jobs
 
     def generate(self, offset, number):
         number = number if offset + number < len(self.job_configs) else len(self.job_configs) - offset

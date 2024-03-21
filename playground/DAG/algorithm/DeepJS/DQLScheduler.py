@@ -86,4 +86,10 @@ class DQLScheduler:
         if action == 11: #reallocate 5 workloads inside Cloud 
             workloads = extract_workloads(self.cluster.child_clusters[2], "max_util", 5)
             receive_workloads(self.cluster.child_clusters[2], "max_util", workloads)
+        # if action == 12: #cluster 0 - 1 node scale down
+        #     self.cluster.remove_nodes(0, 1)
+        # if action == 13: #cluster 1 - 1 node scale down
+        #     self.cluster.remove_nodes(1, 1)
+        # if action == 14: #cluster 2 - 1 node scale down
+        #     self.cluster.remove_nodes(2, 1)
         

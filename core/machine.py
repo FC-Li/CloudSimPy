@@ -125,6 +125,15 @@ class Machine(object):
     def dettach_node(self):
         self.node = None
 
+    def stop_machine(self):
+        for task_instance in self.task_instances:
+            try:
+                task_instance.reset_instance()
+                task_instance.process.interrupt()
+            except:
+                print(task_instance.task_instance_index, task_instance.machine)
+        self.dettach_node()
+
     def accommodate(self, task_instance):
         return self.cpu_capacity - self.cpu >= task_instance.cpu and \
                self.memory_capacity - self.memory >= task_instance.memory and \

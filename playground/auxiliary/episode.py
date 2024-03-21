@@ -1,6 +1,8 @@
 import simpy
 import os
+import pandas as pd
 
+from tensorflow.keras.models import load_model
 from playground.DAG.utils.csv_reader import CSVReader
 from core.central_cluster import Cluster
 from core.scheduler import Scheduler
@@ -12,17 +14,19 @@ from playground.DAG.algorithm.DeepJS.reward_giver2 import RewardGiver
 from playground.auxiliary.add_job_config import add_job_config
 from playground.auxiliary.print_instances import print_selected_task_instances
 from playground.auxiliary.new_task_configs import generate_task_instance_configs
+from playground.auxiliary.update_df_with_averages import *
 from playground.DAG.algorithm.heuristics.redirect_workloads import redirect_workload
-
 
 
 class Episode(object):
     broker_cls = Broker
 
-    def __init__(self, machine_groups, node_configs, jobs_csv, jobs_num, algorithm, event_file):
+    def __init__(self, machine_groups, node_configs, jobs_csv, algorithm, event_file):
         self.env = simpy.Environment()
+        self.method = 1
 
         csv_reader = CSVReader(jobs_csv, self.env.now)
+        jobs_num = csv_reader.get_total_jobs()
         jobs_configs = csv_reader.generate(0, jobs_num)
         
         self.env.pause_event = simpy.Event(self.env)  # Corrected to use self.env
@@ -46,14 +50,20 @@ class Episode(object):
 
         self.simulation = Simulation(self.env, cluster, task_broker, near_scheduler, far_scheduler, cloud_scheduler, event_file)
 
-        model_dir = 'DAG/algorithm/DeepJS/agents/%s' % jobs_num
-        if os.path.isdir(model_dir):
-            model = load_model(model_dir)
-            self.agent = DQLAgent(39, 12, 0.001, jobs_num, model)
-        else:
-            self.agent = DQLAgent(39, 12, 0.001, jobs_num)
-        reward_giver = RewardGiver(cluster)
-        self.scheduler = DQLScheduler(self.agent, cluster, reward_giver)
+        if self.method == 1:
+            model_dir = 'DAG/algorithm/DeepJS/agents/%s' % jobs_num
+            model_path = os.path.join(model_dir, 'model.h5')
+            if os.path.isdir(model_path):
+                model = load_model(model_path)
+                self.agent = DQLAgent(39, 12, 0.95, jobs_num, model)
+            else:
+                self.agent = DQLAgent(39, 12, 0.95, jobs_num)
+            reward_giver = RewardGiver(cluster)
+            self.scheduler = DQLScheduler(self.agent, cluster, reward_giver)
+
+        # Initialize DataFrame
+        columns = ['Time', 'Cluster', 'CPU', 'Memory', 'Disk']
+        self.df = pd.DataFrame(columns=columns)
 
     def run(self):
         self.simulation.run()
@@ -79,23 +89,28 @@ class Episode(object):
         ls.extend(waiting_task_instances)
 
         # Perform required actions here...
-        if len(ls) > 0:
-            current_state = self.scheduler.extract_state()
-            print(current_state)
-            self.scheduler.act_on_pause(current_state, 4)
 
-            generate_task_instance_configs(self.simulation.cluster.non_waiting_instances)
+        if self.method == 1:
+            if len(ls) > 0:
+                current_state = self.scheduler.extract_state()
+                print(current_state)
+                self.scheduler.act_on_pause(current_state, 16)
 
-            for machine in self.simulation.cluster.cluster_machines:
-                machine.check_machine_usage()
+                generate_task_instance_configs(self.simulation.cluster.non_waiting_instances)
 
-        # waiting_machines = self.simulation.cluster.machines_only_waiting_instances
-        # deadlock_waiting_machines = []
-        # for machine in waiting_machines:
-        #     # print(f"waiting machines workloads are {len(machine.waiting_task_instances)}")
-        #     if len(machine.waiting_task_instances) > 1:
-        #         deadlock_waiting_machines.append(machine)
-        # redirect_workload(deadlock_waiting_machines)
+                for machine in self.simulation.cluster.cluster_machines:
+                    machine.check_machine_usage()
+            
+        self.df = update_df_with_averages(self.df, self.simulation.cluster, self.env.now)
+
+        if self.method == 0:
+            waiting_machines = self.simulation.cluster.machines_only_waiting_instances
+            deadlock_waiting_machines = []
+            for machine in waiting_machines:
+                # print(f"waiting machines workloads are {len(machine.waiting_task_instances)}")
+                if len(machine.waiting_task_instances) > 1:
+                    deadlock_waiting_machines.append(machine)
+            redirect_workload(deadlock_waiting_machines)
 
         # jobs_configs2 = add_job_config(self.simulation, Episode.broker_cls, cnt)
         
@@ -114,6 +129,13 @@ class Episode(object):
             cnt += 1
             self.env.process(self.trigger_pause_event_after_rl_actions(301, cnt))  # Schedule the pause trigger
         else:
-            self.agent.save_model()
+            if self.method == 1:
+                self.agent.save_model()
             print(self.env.now)
+            # After collecting all data
+            overall_averages = calculate_overall_averages(self.df)
+            print(overall_averages)
+            average_type_instances_df(self.simulation.cluster)
+            anomaly_2_step_occurancies_df(self.simulation.cluster)
+            type_instances_response_times_df(self.simulation.cluster)
 

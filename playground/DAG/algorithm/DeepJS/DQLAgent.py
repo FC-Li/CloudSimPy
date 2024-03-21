@@ -5,7 +5,6 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from collections import deque
 import random
-from tensorflow.keras.models import load_model
 
 class DQLAgent:
     def __init__(self, state_size, action_size, gamma, name, model=None):
@@ -46,16 +45,13 @@ class DQLAgent:
         """Returns action based on a given state, following an epsilon-greedy policy."""
         if np.random.rand(0,1) <= self.epsilon:
             return random.randrange(self.action_size)
-        # state = np.array(state, dtype=np.float32)
-        # If state does not have the right shape, add a batch dimension
-        # if len(state.shape) == 1:
-        #     state = np.expand_dims(state, axis=0)  # Reshape to (1, number_of_features)
         act_values = self.model.predict(state)
         return np.argmax(act_values[0])
 
     def replay(self, batch_size):
         """Trains the model using randomly sampled experiences from the replay buffer."""
-        minibatch = random.sample(self.memory, batch_size)
+        size = batch_size // 2
+        minibatch = random.sample(self.memory, size)
         for state, action, reward, next_state, done in minibatch:
             target = reward
             if not done:
@@ -70,7 +66,9 @@ class DQLAgent:
         model_dir = 'DAG/algorithm/DeepJS/agents/%s' % self.name
         if not os.path.isdir(model_dir):
             os.makedirs(model_dir)
-        self.model.save(model_dir)
+        model_path = os.path.join(model_dir, 'model.h5')
+        self.model.save(model_path)
+        # self.model.save(model_dir)
 
 # Example usage within SimPy environment
 # agent = DQLAgent(state_size=12, action_size=21)  # Define appropriate sizes

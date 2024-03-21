@@ -41,6 +41,19 @@ class Node(object):
                 if task_instance.finished:
                     ls.append(task_instance)
             return ls
+
+    @property
+    def finished_type_task_instances(self):
+        service_instances = []
+        batch_instances = []
+        for machine in self.machines:
+            for task_instance in machine.task_instances:
+                if task_instance.finished:
+                    if task_instance.task.job.type == 2:
+                        service_instances.append(task_instance)
+                    elif task_instance.task.job.type == 1:
+                        batch_instances.append(task_instance)
+            return [service_instances, batch_instances]
     
     @property
     def unfinished_task_instances(self):
@@ -72,8 +85,8 @@ class Node(object):
 
     def delete(self):
         for machine in self.machines:
-            machine.dettach_node()
             self.machines.remove(machine)
+            machine.stop_machine()
 
     def scheduled_time(self, machines=None):  
         avg_time = 0.0
@@ -91,7 +104,7 @@ class Node(object):
             machines = self.machines
         running_task_instances_list = self.running_task_instances(machines)
         for task_instance in running_task_instances_list:
-            if task_instance.task.job.type == 0:
+            if task_instance.task.job.type == 2:
                 avg_time += task_instance.response_time + task_instance.running_time
         avg_time = avg_time / len(running_task_instances_list)
         return avg_time
@@ -120,11 +133,27 @@ class Node(object):
         waiting_task_instances_list = self.waiting_task_instances(machines)
         ls.extend(waiting_task_instances_list)
         for task_instance in ls:
-            if (task_instance.task.job.type == 0):
+            if (task_instance.task.job.type == 2):
                 service_times.append(task_instance.response_time)
             if (task_instance.task.job.type == 1):
                 batch_times.append(task_instance.response_time)
         return service_times, batch_times
+    
+    def finished_response_times(self, machines=None):  
+        batch_times = 0
+        service_times = 0
+        service_len = 0
+        batch_len = 0
+        if machines is None:
+            machines = self.machines
+        finished_type_task_instances = self.finished_type_task_instances
+        for task_instance in finished_type_task_instances[0]:
+            service_times += task_instance.response_time
+            service_len += 1
+        for task_instance in finished_type_task_instances[1]:
+            batch_times += task_instance.response_time
+            batch_len += 1
+        return [[service_times, service_len], [batch_times, batch_len]]
         
     def remaining_time(self, machines=None):
         avg_time = 0.0
@@ -210,7 +239,7 @@ class Node(object):
             machines = self.machines       
         for machine in machines:
             for task_instance in machine.task_instances:
-                if task_instance.task.job.type == 0 and task_instance.started and not task_instance.finished:
+                if task_instance.task.job.type == 2 and task_instance.started and not task_instance.finished:
                     ls.append(task_instance)
         return ls
 
