@@ -6,21 +6,26 @@ class RewardGiver():
 
     def get_overall_reward(self):
         reward = 0
-        # reward += self.utilization()
-        reward += self.response_time()
+        util = self.utilization()
+        response_times = self.response_time()
+        transmit_delays = self.transmit_delays()
+        reward += util
+        reward += response_times
         # reward += self.anomaly()
-        reward += self.transmit_delays()
+        reward += transmit_delays
+        print('util reward is %f, response_time reward is %f and transmit delays reawrd is %f'\
+        % (util, response_times, transmit_delays))
         return reward
 
     def utilization(self):
         avg_sum = self.cluster.avg_usage  
-        reward = 1 - avg_sum
+        reward = avg_sum
         return reward
 
     def response_time(self):
         RTmin = 0
         RTmax_batch = 5000
-        RTmax_service = 1000
+        RTmax_service = 2000
         sum = 0
       
         service_response_times, batch_response_times = self.cluster.response_times
@@ -67,6 +72,8 @@ class RewardGiver():
         else:
             sum2 = delays[2] / len_cloud_task_instances
         reward = sum1 - sum2
+        print('edge instances len is %f and cloud job instances len is %f'\
+        % (len_edge_task_instances, len_cloud_task_instances))
         return reward
         
         

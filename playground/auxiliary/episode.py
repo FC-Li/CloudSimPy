@@ -37,9 +37,14 @@ class Episode(object):
         # cluster, task_broker, scheduler initialization...
         cluster = Cluster()
         cluster.child_clusters = [Cluster(level=i) for i in range(3)]  # Create 3 child clusters
+
+        # Iterate over node_configs to add machines based on the modified key structure
         for node_config in node_configs:
-            if node_config.id in machine_groups:  # Check if there are machines for this node_id
-                node_config.add_machines(machine_groups[node_config.id])
+            key = (node_config.topology, node_config.id)
+            # Check if the constructed key matches any entry in machine_groups
+            if key in machine_groups:
+                # Use the machines associated with the constructed key
+                node_config.add_machines(machine_groups[key])
         cluster.add_nodes(node_configs)
 
         task_broker = Episode.broker_cls(self.env, jobs_configs)
@@ -100,8 +105,15 @@ class Episode(object):
 
                 for machine in self.simulation.cluster.cluster_machines:
                     machine.check_machine_usage()
+                print('the total number of machines is %f and there are %f in edge,'\
+                '%f in far edge and %f in the Cloud' %(len(self.simulation.cluster.cluster_machines),\
+                len(self.simulation.cluster.child_clusters[0].cluster_machines),\
+                len(self.simulation.cluster.child_clusters[1].cluster_machines),\
+                len(self.simulation.cluster.child_clusters[2].cluster_machines)))
             
         self.df = update_df_with_averages(self.df, self.simulation.cluster, self.env.now)
+        overall_averages = calculate_overall_averages(self.df, self.simulation.cluster)
+        print(overall_averages)
 
         if self.method == 0:
             waiting_machines = self.simulation.cluster.machines_only_waiting_instances
@@ -133,7 +145,7 @@ class Episode(object):
                 self.agent.save_model()
             print(self.env.now)
             # After collecting all data
-            overall_averages = calculate_overall_averages(self.df)
+            overall_averages = calculate_overall_averages(self.df, self.simulation.cluster)
             print(overall_averages)
             average_type_instances_df(self.simulation.cluster)
             anomaly_2_step_occurancies_df(self.simulation.cluster)

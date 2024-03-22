@@ -339,7 +339,7 @@ class Cluster(object):
                 ls.append(child.disk)
             return ls
         else:
-            return sum([machine.cpu for node in self.nodes for machine in node.machines])
+            return sum([machine.disk for node in self.nodes for machine in node.machines])
         
 
     @property
@@ -408,19 +408,22 @@ class Cluster(object):
     def avg_usage(self):
         if self.child_clusters is not None:
             sum = 0
+            num = 0
             for child in self.child_clusters:
-                cl_sum = child.avg_usage
+                cl_sum, cl_len = child.avg_usage
+                if cl_len == 0:
+                    continue
                 sum += cl_sum
-            sum = sum / len(self.child_clusters)
+                num += cl_len
+            sum = sum / num
             return sum
         else:
             sum = 0 
-            if len(self.nodes) == 0:
-                return 0
+            num = 0
             for node in self.nodes:
                 sum += node.avg_usage()
-            sum = sum / len(self.nodes)
-            return sum
+            num += len(self.nodes)
+            return sum, num
 
     @property
     def response_times(self):
@@ -453,7 +456,7 @@ class Cluster(object):
             for node in self.nodes:
                 for machine in node.machines:
                     for task_instance in machine.task_instances:
-                        if task_instance.task.job.type == 2:
+                        if (not task_instance.finished and task_instance.task.job.type == 2):
                             cnt += 1
             return cnt
     

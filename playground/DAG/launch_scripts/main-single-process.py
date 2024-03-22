@@ -42,11 +42,14 @@ jobs_csv = os.path.join("DAG", "jobs_files", "small_modified_jobs.csv")
 machine_groups = {}  # Dictionary to hold lists of machines grouped by node_id
 for cluster_index, top_machines_number in enumerate(machines_number):
     for node_id in range(top_machines_number // 3):
-        # Initialize the list for each node_id if not already done
-        if node_id not in machine_groups:
-            machine_groups[node_id] = []
-        # Add machines to the appropriate group
-        machine_groups[node_id].extend(
+        # Use a tuple of (cluster_index, node_id) as the key to ensure uniqueness
+        key = (cluster_index, node_id)
+
+        # Initialize the list for each unique (cluster_index, node_id) if not already done
+        if key not in machine_groups:
+            machine_groups[key] = []
+        # Add machines to the appropriate group identified by the unique key
+        machine_groups[key].extend(
             [MachineConfig(2, 1, 1, cluster_index, node_id) for _ in range(3)]
         )
 
