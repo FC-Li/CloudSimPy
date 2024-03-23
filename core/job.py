@@ -50,6 +50,16 @@ class Task(object):
         return ls
 
     @property
+    def non_waiting_task_instances(self):
+        ls = []
+        for task_instance in self.task_instances:
+            if task_instance.started and not task_instance.finished \
+            and not task_instance.waiting:
+                ls.append(task_instance)
+        return ls
+
+
+    @property
     def unfinished_task_instances(self):
         ls = []
         for task_instance in self.task_instances:
@@ -91,6 +101,26 @@ class Task(object):
             self.task_instances[i].passive_refresh_response_time(response_time)
  
     @property
+    def metrics(self):
+        cpu = mem = disk = 0
+        for task_instance in self.task_instances:
+            task_in_metrics = task_instance.metrics
+            cpu += task_in_metrics[0]
+            mem += task_in_metrics[1]
+            disk += task_in_metrics[2]
+        return [cpu, mem, disk]
+    
+    @property
+    def usage(self):
+        cpu = mem = disk = 0
+        for task_instance in self.non_waiting_task_instances:
+            task_in_metrics = task_instance.metrics
+            cpu += task_in_metrics[0]
+            mem += task_in_metrics[1]
+            disk += task_in_metrics[2]
+        return [cpu, mem, disk]
+
+    @property
     def running_time(self):
         max_inst = 0.0
         for task_instance in self.task_instances:
@@ -99,15 +129,27 @@ class Task(object):
         return max_inst
 
     @property
+    def scheduled_time(self):
+        avg = 0
+        for task_instance in self.task_instances:
+            avg += task_instance.scheduled_time
+        avg /= len(self.task_instances)
+        return avg
+    
+    @property
+    def remaining_time(self):
+        avg = 0
+        for task_instance in self.task_instances:
+            avg += task_instance.remaining_time
+        avg /= len(self.task_instances)
+        return avg
+
+    @property
     def started(self):
         for task_instance in self.task_instances:
             if task_instance.started:
                 return True
         return False
-
-    # @property
-    # def waiting_task_instances_number(self):
-    #     return self.task_config.instances_number - self.next_instance_pointer
 
     @property
     def has_waiting_task_instances(self):
@@ -177,6 +219,26 @@ class Job(object):
     @property
     def tasks(self):
         return self.tasks_map.values()
+    
+    @property
+    def metrics(self):
+        cpu = mem = disk = 0
+        for task in self.tasks:
+            task_metrics = task.metrics
+            cpu += task_metrics[0]
+            mem += task_metrics[1]
+            disk += task_metrics[2]
+        return [cpu, mem, disk]
+    
+    @property
+    def usage(self):
+        cpu = mem = disk = 0
+        for task in self.tasks:
+            task_metrics = task.usage
+            cpu += task_metrics[0]
+            mem += task_metrics[1]
+            disk += task_metrics[2]
+        return [cpu, mem, disk]
 
     @property
     def running_time(self):
@@ -186,6 +248,22 @@ class Job(object):
             if running_time(task) > max_running_time:
                 max_running_time = running_time(task)
         return running_time
+    
+    @property
+    def scheduled_time(self):
+        avg = 0
+        for task in self.tasks:
+            avg += task.scheduled_time
+        avg /= len(self.tasks)
+        return avg
+
+    @property
+    def remaining_time(self):
+        avg = 0
+        for task in self.tasks:
+            avg += task.remaining_time
+        avg /= len(self.tasks)
+        return avg
 
     @property
     def unfinished_tasks(self):
@@ -225,6 +303,27 @@ class Job(object):
         for task in self.tasks:
             if task.started and not task.finished:
                 ls.append(task)
+        return ls
+
+    @property
+    def task_instances(self):
+        ls = []
+        for task in self.tasks:
+            ls.extend(task.task_instances)
+        return ls
+    
+    @property
+    def non_waiting_instances(self):
+        ls = []
+        for task in self.tasks:
+            ls.extend(task.non_waiting_instances)
+        return ls
+    
+    @property
+    def running_instances(self):
+        ls = []
+        for task in self.tasks:
+            ls.extend(task.running_instances)
         return ls
 
     @property

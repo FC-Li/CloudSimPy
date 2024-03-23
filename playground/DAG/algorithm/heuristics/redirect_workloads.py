@@ -3,43 +3,21 @@ import random
 from playground.auxiliary import remove_delays
 from playground.auxiliary.sorted_nodes import *
 
-def extract_workloads(cluster, algorithm, num_workloads): #synartisi mono gia extraction
+def extract_jobs(cluster, algorithm, num_jobs): #synartisi mono gia extraction
     machines = cluster.cluster_machines
-    nodes = cluster.nodes
-    if len(nodes) == 0:
+    jobs = cluster.jobs
+    selected_jobs = []
+    if len(jobs) == 0:
         return None
     algorithm = algorithm #select which algo from sorted_nodes.py
-    workloads = []
-    unscheduled = cluster.not_started_task_instances
-    sorted_unscheduled = sorted_unscheduled_instances(unscheduled, algorithm)
-    if len(unscheduled) > num_workloads:
-        for i in range(num_workloads):
-            workload = sorted_unscheduled[i]
-            workloads.append(workload)
-        return workloads
-    elif len(unscheduled) == 0:
-        for i in range(num_workloads):
-            node = presorted_nodes(cluster, algorithm)
-            workload = presorted_workloads(node, algorithm)
-            if workload == None:
-                continue
-            workload.reset_instance()
-            workload.process.interrupt()
-            workloads.append(workload)
-        return workloads
-    else:
-        for i in range(len(unscheduled)):
-            workload = sorted_unscheduled[i]
-            workloads.append(workload)
-        for i in range(num_workloads - len(unscheduled)):
-            node = presorted_nodes(cluster, algorithm)
-            workload = presorted_workloads(node, algorithm)
-            if workload == None:
-                continue
-            workload.reset_instance()
-            workload.process.interrupt()
-            workloads.append(workload)
-        return workloads
+    for i in range(num_jobs):
+        job = presorted_job(cluster, algorithm)
+        for active_workload in job.running_instances:
+            active_workload.reset_instance()
+            active_workload.process.interrupt()
+        cluster.jobs.remove(job)
+        selected_jobs.append(job)
+    return selected_jobs
 
 def reallocate_cluster_workloads(cluster, algorithm, num_workloads): #synartisi gia reall entos cluster
     machines = cluster.cluster_machines
@@ -62,9 +40,12 @@ def reallocate_cluster_workloads(cluster, algorithm, num_workloads): #synartisi 
         workloads.append((workload, machine))
     return workloads
 
-def receive_workloads(cluster, algorithm, workloads): #synartisi gia apodoxi workloads apo allo cluster
+def receive_jobs(cluster, algorithm, jobs): #synartisi gia apodoxi workloads apo allo cluster
     machines = cluster.cluster_machines
     nodes = cluster.nodes
+    workloads = []
+    for job in jobs:
+        workloads.extend(job.task_instances)
     if len(nodes) == 0:
         return 
     algorithm = algorithm #select which algo from sorted_nodes.py

@@ -62,29 +62,29 @@ class DQLScheduler:
         i want the actions below to not set the algorithm and call the rl model for the child cluster 
         to decide on the algorithm
         """
-        if action == 4: #transfer 5 workloads Near -> Far Edge
-            workloads = extract_workloads(self.cluster.child_clusters[0], "max_util", 5)
-            receive_workloads(self.cluster.child_clusters[1], "max_util", workloads)
-        if action == 5: #transfer 5 workloads Cloud -> Far Edge
-            workloads = extract_workloads(self.cluster.child_clusters[2], "max_util", 5)
-            receive_workloads(self.cluster.child_clusters[1], "max_util", workloads)
-        if action == 6: #transfer 5 workloads Far -> Near Edge
-            workloads = extract_workloads(self.cluster.child_clusters[1], "max_util", 5)
-            receive_workloads(self.cluster.child_clusters[0], "max_util", workloads)
-        if action == 7: #transfer 5 workloads Far -> Cloud Edge
-            workloads = extract_workloads(self.cluster.child_clusters[1], "max_util", 5)
-            receive_workloads(self.cluster.child_clusters[2], "max_util", workloads)
-        if action == 8: #transfer 5 workloads Cloud -> Near Edge
-            workloads = extract_workloads(self.cluster.child_clusters[2], "max_util", 5)
-            receive_workloads(self.cluster.child_clusters[0], "max_util", workloads)
+        if action == 4: #transfer 2 jobs Near -> Far Edge
+            jobs = extract_jobs(self.cluster.child_clusters[0], "max_util", 2)
+            receive_jobs(self.cluster.child_clusters[1], "max_util", jobs)
+        if action == 5: #transfer 2 jobs Cloud -> Far Edge
+            jobs = extract_jobs(self.cluster.child_clusters[2], "max_util", 2)
+            receive_jobs(self.cluster.child_clusters[1], "max_util", jobs)
+        if action == 6: #transfer 2 jobs Far -> Near Edge
+            jobs = extract_jobs(self.cluster.child_clusters[1], "max_util", 2)
+            receive_jobs(self.cluster.child_clusters[0], "max_util", jobs)
+        if action == 7: #transfer 2 jobs Far -> Cloud Edge
+            jobs = extract_workloads(self.cluster.child_clusters[1], "max_util", 2)
+            receive_jobs(self.cluster.child_clusters[2], "max_util", jobs)
+        if action == 8: #transfer 2 jobs Cloud -> Near Edge
+            jobs = extract_workloads(self.cluster.child_clusters[2], "max_util", 2)
+            receive_jobs(self.cluster.child_clusters[0], "max_util", jobs)
         if action == 9: #reallocate 5 workloads inside Near Edge
-            workloads = extract_workloads(self.cluster.child_clusters[0], "max_util", 5)
+            workloads = extract_workloads(self.cluster.child_clusters[0], "max_util", 10)
             receive_workloads(self.cluster.child_clusters[0], "max_util", workloads)
         if action == 10: #reallocate 5 workloads inside Far Edge
-            workloads = extract_workloads(self.cluster.child_clusters[1], "max_util", 5)
+            workloads = extract_workloads(self.cluster.child_clusters[1], "max_util", 10)
             receive_workloads(self.cluster.child_clusters[1], "max_util", workloads)
         if action == 11: #reallocate 5 workloads inside Cloud 
-            workloads = extract_workloads(self.cluster.child_clusters[2], "max_util", 5)
+            workloads = extract_workloads(self.cluster.child_clusters[2], "max_util", 10)
             receive_workloads(self.cluster.child_clusters[2], "max_util", workloads)
         # if action == 12: #cluster 0 - 1 node scale down
         #     self.cluster.remove_nodes(0, 1)

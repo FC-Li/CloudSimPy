@@ -1,72 +1,66 @@
 import random
 
-def presorted_nodes(cluster, algorithm):
-    nodes = cluster.nodes
-    if len(cluster.running_task_instances) <= 0:
-        return random.choice(nodes)
+def presorted_jobs(cluster, algorithm):
+    jobs = cluster.jobs
+    if len(cluster.unfinished_jobs) <= 0:
+        return random.choice(jobs)
     elif algorithm == "max_util":
-        max_tuple = (0.0,nodes[0])
-        for node in nodes:
-            usage = node.usage()
-            if max(usage) > max_tuple[0]:
-                max_tuple = (max(usage), node)
+        max_tuple = (0.0,jobs[0])
+        for job in jobs:
+            usage = job.metrics()
+            sum = usage[0] + usage[1] + usage[2]
+            if sum > max_tuple[0]:
+                max_tuple = (sum, job)
         return max_tuple[1]       
     elif algorithm == "avg_util":
-        max_tuple = (0.0,nodes[0])
-        for node in nodes:
-            avg_usage = node.avg_usage()
-            if avg_usage > max_tuple[0]:
-                max_tuple = (avg_usage, node)
+        max_tuple = (0.0,jobs[0])
+        for job in jobs:
+            usage = job.usage()
+            sum = usage[0] + usage[1] + usage[2]
+            if sum > max_tuple[0]:
+                max_tuple = (sum, job)
         return max_tuple[1]
     elif algorithm == "scheduled_time":
-        min_tuple = (1000000.0,nodes[0])
-        for node in nodes:
-            avg_time = 0.0
-            for machine in node.machines:
-                avg_time += machine.scheduled_time
-            avg_time = avg_time / 3
+        min_tuple = (1000000.0,jobs[0])
+        for job in jobs:
+            avg_time = job.scheduled_time
             if avg_time < min_tuple[0]:
-                min_tuple = (avg_time, node)
+                min_tuple = (avg_time, job)
         return min_tuple[1]
     elif algorithm == "remaining_time":
-        min_tuple = (1000000.0,nodes[0])
-        for node in nodes:
-            avg_time = 0.0
-            for machine in node.machines:
-                avg_time += machine.remaining_time
-            avg_time = avg_time / 3
+        min_tuple = (1000000.0,jobs[0])
+        for job in jobs:
+            avg_time = job.remaining_time
             if avg_time < min_tuple[0]:
-                min_tuple = (avg_time, node)
+                min_tuple = (avg_time, job)
         return min_tuple[1]
     elif algorithm == "active_workloads":
-        max_tuple = (0.0,nodes[0])
-        for node in nodes:
-            avg_num = 0.0
-            num = node.running_task_instances
-            avg_num = num / 3
-            if avg_num > max_tuple[0]:
-                max_tuple = (avg_num, node)
+        max_tuple = (0.0,jobs[0])
+        for job in jobs:
+            sum = job.non_waiting_instances
+            if sum > max_tuple[0]:
+                max_tuple = (sum, job)
         return max_tuple[1]    
-    elif algorithm == "batch_job_util":
-        max_tuple = (0.0,nodes[0])
-        for node in nodes:
-            avg_usage = 0.0
-            for machine in node_machines:
-                avg_usage += machine.avg_batch_usage
-            avg_usage = avg_usage / 3
-            if avg_usage > max_tuple[0]:
-                max_tuple = (avg_usage, node)
-        return max_tuple[1]
-    elif algorithm == "service_job_scheduled_time":
-        min_tuple = (1000000.0,nodes[0])
-        for node in nodes:
-            avg_time = 0.0
-            for machine in node_machines:
-                avg_time += machine.service_job_scheduled_time
-            avg_time = avg_time / 3
-            if avg_time < min_tuple[0]:
-                min_tuple = (avg_time, node)
-        return min_tuple[1]
+    # elif algorithm == "batch_job_util":
+    #     max_tuple = (0.0,nodes[0])
+    #     for node in nodes:
+    #         avg_usage = 0.0
+    #         for machine in node_machines:
+    #             avg_usage += machine.avg_batch_usage
+    #         avg_usage = avg_usage / 3
+    #         if avg_usage > max_tuple[0]:
+    #             max_tuple = (avg_usage, node)
+    #     return max_tuple[1]
+    # elif algorithm == "service_job_scheduled_time":
+    #     min_tuple = (1000000.0,nodes[0])
+    #     for node in nodes:
+    #         avg_time = 0.0
+    #         for machine in node_machines:
+    #             avg_time += machine.service_job_scheduled_time
+    #         avg_time = avg_time / 3
+    #         if avg_time < min_tuple[0]:
+    #             min_tuple = (avg_time, node)
+    #     return min_tuple[1]
 
 def receiver_sorted_nodes(nodes, algorithm, workload):
     if algorithm == "max_util":
@@ -207,7 +201,7 @@ def receiver_sorted_nodes(nodes, algorithm, workload):
                 return (None, None)
         return (min_tuple[1], min_tuple[2])
 
-def presorted_workloads(node, algorithm):
+def presorted_workloads(cluster, algorithm):
     if len(node.running_task_instances()) <= 0:
         return None
     elif algorithm == "max_util":
@@ -265,40 +259,40 @@ def presorted_workloads(node, algorithm):
                 min_tuple = (rem_time, task_instance)
             return min_tuple[1]
 
-def sorted_unscheduled_instances(unscheduled, algorithm):
-    if algorithm == "max_util":
-        sorted_unscheduled = sorted(unscheduled, key=lambda x: \
-        (x.cpu + x.memory + x.disk), reverse=True)
-        return sorted_unscheduled
-    elif algorithm == "avg_util":
-        sorted_unscheduled = sorted(unscheduled, key=lambda x: \
-        (x.cpu + x.memory + x.disk), reverse=True)
-        return sorted_unscheduled
-    elif algorithm == "scheduled_time":
-        sorted_unscheduled = sorted(unscheduled, key=lambda x: \
-        x.duration, reverse=True)
-        return sorted_unscheduled
-    elif algorithm == "remaining_time":
-        sorted_unscheduled = sorted(unscheduled, key=lambda x: \
-        x.duration, reverse=True)
-        return sorted_unscheduled
-    elif algorithm == "active_workloads":
-        sorted_unscheduled = sorted(unscheduled, key=lambda x: \
-        x.duration, reverse=True)
-        return sorted_unscheduled   
-    elif algorithm == "batch_job_util":
-        batch_list = []
-        for instance in list:
-            if instance.task.job.type == 1:
-                batch_list.append(instance)
-        sorted_unscheduled = sorted(batch_list, key=lambda x: \
-        (x.cpu + x.memory + x.disk), reverse=True)
-        return sorted_unscheduled
-    elif algorithm == "service_job_scheduled_time":
-        service_list = []
-        for instance in list:
-            if instance.task.job.type == 0:
-                service_list.append(instance)
-        sorted_unscheduled = sorted(service_list, key=lambda x: \
-        (x.cpu + x.memory + x.disk), reverse=True)
-        return sorted_unscheduled
+# def sorted_unscheduled_instances(unscheduled, algorithm):
+#     if algorithm == "max_util":
+#         sorted_unscheduled = sorted(unscheduled, key=lambda x: \
+#         (x.cpu + x.memory + x.disk), reverse=True)
+#         return sorted_unscheduled
+#     elif algorithm == "avg_util":
+#         sorted_unscheduled = sorted(unscheduled, key=lambda x: \
+#         (x.cpu + x.memory + x.disk), reverse=True)
+#         return sorted_unscheduled
+#     elif algorithm == "scheduled_time":
+#         sorted_unscheduled = sorted(unscheduled, key=lambda x: \
+#         x.duration, reverse=True)
+#         return sorted_unscheduled
+#     elif algorithm == "remaining_time":
+#         sorted_unscheduled = sorted(unscheduled, key=lambda x: \
+#         x.duration, reverse=True)
+#         return sorted_unscheduled
+#     elif algorithm == "active_workloads":
+#         sorted_unscheduled = sorted(unscheduled, key=lambda x: \
+#         x.duration, reverse=True)
+#         return sorted_unscheduled   
+#     elif algorithm == "batch_job_util":
+#         batch_list = []
+#         for instance in list:
+#             if instance.task.job.type == 1:
+#                 batch_list.append(instance)
+#         sorted_unscheduled = sorted(batch_list, key=lambda x: \
+#         (x.cpu + x.memory + x.disk), reverse=True)
+#         return sorted_unscheduled
+#     elif algorithm == "service_job_scheduled_time":
+#         service_list = []
+#         for instance in list:
+#             if instance.task.job.type == 0:
+#                 service_list.append(instance)
+#         sorted_unscheduled = sorted(service_list, key=lambda x: \
+#         (x.cpu + x.memory + x.disk), reverse=True)
+#         return sorted_unscheduled
