@@ -11,8 +11,8 @@ def update_df_with_averages(df, cluster, time):
                 'Time': time,
                 'Cluster': child.level,
                 'CPU': averages[child.level][0],
-                'Memory': averages[child.level][1],
-                'Disk': averages[child.level][2]
+                'Memory': averages[child.level][1]
+                # 'Disk': averages[child.level][2]
             }
             new_rows.append(new_row)
     
@@ -32,9 +32,10 @@ def calculate_overall_averages(df, cluster):
         # Divide by the respective capacities
         averages_df.loc[i, 'CPU'] /= capacities[i][0]
         averages_df.loc[i, 'Memory'] /= capacities[i][1]
-        averages_df.loc[i, 'Disk'] /= capacities[i][2]
+        # averages_df.loc[i, 'Disk'] /= capacities[i][2]
 
-    return averages_df[['CPU', 'Memory', 'Disk']]
+    # return averages_df[['CPU', 'Memory', 'Disk']]
+    return averages_df[['CPU', 'Memory']]
 
 def plot_cpu(df):
     for cluster_name in df['Cluster'].unique():

@@ -12,11 +12,13 @@ class DQLAgent:
         self.action_size = action_size
         self.memory = deque(maxlen=2000)  # Replay buffer
         self.gamma = gamma  # Discount rate
-        self.epsilon = 0.1  # Exploration rate
+        self.epsilon = 0.4  # Exploration rate
         self.epsilon_min = 0.01
-        self.epsilon_decay = 0.995
+        self.epsilon_decay = 0.95
         self.learning_rate = 0.001
         self.name = name
+        self.update_frequency = 10  # Train the model every 10 timesteps
+        self.timestep_since_last_update = 0  # Counter for timesteps since last training
         # self.summary_path = summary_path if summary_path is not None else './tensorboard/%s--%s' % (
         #     name, time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime()))
         # self.summary_writer = tf.contrib.summary.create_file_writer(self.summary_path)
@@ -28,11 +30,23 @@ class DQLAgent:
         else:
             self.model = model
         
+    # def _build_model(self):
+    #     """Builds a deep neural network model."""
+    #     model = Sequential()
+    #     model.add(Dense(24, input_dim=self.state_size, activation='relu'))
+    #     model.add(Dense(24, activation='relu'))
+    #     model.add(Dense(self.action_size, activation='linear'))
+    #     model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam(lr=self.learning_rate))
+    #     return model
+    
     def _build_model(self):
         """Builds a deep neural network model."""
         model = Sequential()
-        model.add(Dense(24, input_dim=self.state_size, activation='relu'))
+        model.add(Dense(3, input_dim=self.state_size, activation='relu'))
+        model.add(Dense(9, activation='relu'))
+        model.add(Dense(18, activation='relu'))
         model.add(Dense(24, activation='relu'))
+        model.add(Dense(9, activation='relu'))
         model.add(Dense(self.action_size, activation='linear'))
         model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam(lr=self.learning_rate))
         return model
@@ -43,24 +57,28 @@ class DQLAgent:
 
     def act(self, state):
         """Returns action based on a given state, following an epsilon-greedy policy."""
-        if np.random.rand(0,1) <= self.epsilon:
+        print("epsilon value is ", self.epsilon)
+        if np.random.rand() <= self.epsilon:
+            print("i selected randomly")
             return random.randrange(self.action_size)
         act_values = self.model.predict(state)
         return np.argmax(act_values[0])
 
     def replay(self, batch_size):
         """Trains the model using randomly sampled experiences from the replay buffer."""
-        size = batch_size // 2
-        minibatch = random.sample(self.memory, size)
-        for state, action, reward, next_state, done in minibatch:
-            target = reward
-            if not done:
-                target = reward + self.gamma * np.amax(self.model.predict(next_state)[0])
-            target_f = self.model.predict(state)
-            target_f[0][action] = target
-            self.model.fit(state, target_f, epochs=1, verbose=0)
-        if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay
+        self.timestep_since_last_update += 1
+        if self.timestep_since_last_update >= self.update_frequency:
+            minibatch = random.sample(self.memory, batch_size)
+            for state, action, reward, next_state, done in minibatch:
+                target = reward
+                if not done:
+                    target = reward + self.gamma * np.amax(self.model.predict(next_state)[0])
+                target_f = self.model.predict(state)
+                target_f[0][action] = target
+                self.model.fit(state, target_f, epochs=1, verbose=0)
+            if self.epsilon > self.epsilon_min:
+                self.epsilon *= self.epsilon_decay
+            self.timestep_since_last_update = 0
 
     def save_model(self):
         model_dir = 'DAG/algorithm/DeepJS/agents/%s' % self.name

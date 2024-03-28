@@ -1,6 +1,3 @@
-from core.monitor import Monitor
-
-
 class Simulation(object):
     def __init__(self, env, cluster, task_broker, near_scheduler, far_scheduler, cloud_scheduler, event_file):
         self.env = env
@@ -10,9 +7,6 @@ class Simulation(object):
         self.far_scheduler = far_scheduler
         self.cloud_scheduler = cloud_scheduler
         self.event_file = event_file
-        if event_file is not None:
-            self.monitor = Monitor(self)
-
         self.task_broker.attach(self)
         self.near_scheduler.attach(self)
         self.far_scheduler.attach(self)

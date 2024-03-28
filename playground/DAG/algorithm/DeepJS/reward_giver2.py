@@ -15,6 +15,7 @@ class RewardGiver():
         reward += transmit_delays
         print('util reward is %f, response_time reward is %f and transmit delays reawrd is %f'\
         % (util, response_times, transmit_delays))
+        print(reward)
         return reward
 
     def utilization(self):
@@ -26,23 +27,41 @@ class RewardGiver():
         RTmin = 0
         RTmax_batch = 5000
         RTmax_service = 2000
-        sum = 0
+        sum1 = sum2 = 0
       
         service_response_times, batch_response_times = self.cluster.response_times
         for rt in service_response_times:
             if (RTmin <= rt and RTmax_service > rt):
-                sum += 1
+                sum1 += 1
             else:
-                sum += math.exp(-((rt - RTmax_service) / RTmax_service))
+                sum1 += math.exp(-((rt - RTmax_service) / RTmax_service))
         for rt in batch_response_times:
             if (RTmin <= rt and RTmax_batch > rt):
-                sum += 0.5
+                sum1 += 0.5
             else:
-                sum += math.exp(-((rt - RTmax_batch) / RTmax_batch))
+                sum1 += math.exp(-((rt - RTmax_batch) / RTmax_batch))
         if len(service_response_times) + len(batch_response_times) == 0:
-            return 0
-        reward = sum / (len(service_response_times) + len(batch_response_times))
-        return reward
+            reward1 = 0
+        else:
+            reward1 = sum1 / (len(service_response_times) + len(batch_response_times))
+
+        service_finished_instances, batch_finished_instances = self.cluster.finished_type_response_times
+        for instance in service_finished_instances:
+            if (RTmin <= instance.response_time and RTmax_service > instance.response_time):
+                sum2 += 1
+            else:
+                sum2 += math.exp(-((instance.response_time - RTmax_service) / RTmax_service))
+        for instance in batch_finished_instances:
+            if (RTmin <= instance.response_time and RTmax_batch > instance.response_time):
+                sum2 += 0.5
+            else:
+                sum2 += math.exp(-((instance.response_time - RTmax_batch) / RTmax_batch))
+        if len(service_finished_instances) + len(batch_finished_instances) == 0:
+            reward2 = 0
+        else:
+            reward2 = sum2 / (len(service_finished_instances) + len(batch_finished_instances))
+
+        return 0.5 * (reward1 + reward2)
 
     def anomaly(self):
         sum = 0

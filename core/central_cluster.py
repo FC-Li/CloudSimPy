@@ -7,10 +7,11 @@ from playground.auxiliary.find_missing_item import find_first_missing_integer
 
 
 class Cluster(object):
-    def __init__(self, level=None):
+    def __init__(self, level=None, capacity=None):
         # self.machines = []
         self.nodes = []
         self.jobs = []
+        self.node_capacity = capacity
         self.level = level  # Optional: Identify the cluster level or type
         self.child_clusters = [] if level is None else None  # Central cluster has child clusters
 
@@ -34,6 +35,13 @@ class Cluster(object):
             ls.extend(job.unfinished_tasks)
         return ls
 
+    @property
+    def running_unfinished_instances(self):
+        ls = []
+        for task in self.unfinished_tasks:
+            ls.extend(task.running_unfinished_task_instances)
+        return ls
+    
     @property
     def unfinished_instances(self):
         ls = []
@@ -108,6 +116,19 @@ class Cluster(object):
             task_instances = []
             for child in self.child_clusters:
                 task_instances.append(len(child.running_task_instances))
+            return task_instances
+
+    @property
+    def service_running_task_instances(self):
+        if self.child_clusters is not None:
+            task_instances = []
+            for child in self.child_clusters:
+                task_instances.append(len(child.service_running_task_instances))
+            return task_instances
+        else:
+            task_instances = []
+            for node in self.nodes:
+                task_instances.extend(node.unfinished_service_task_instances)
             return task_instances
 
     @property
@@ -192,6 +213,8 @@ class Cluster(object):
                 service_instances.extend(ls[0])
                 batch_instances.extend(ls[1])
             overall_len = len(service_instances) + len(batch_instances)
+            if overall_len == 0:
+                return [0,0]
             return [len(service_instances)/ overall_len, len(batch_instances)/ overall_len]     
     
     @property
@@ -220,6 +243,25 @@ class Cluster(object):
                 batch_instances += ls[1][0]
                 batch_len += ls[1][1]
             return [[service_instances, service_len], [batch_instances, batch_len]] 
+        
+    @property
+    def finished_type_response_times(self):
+        if self.child_clusters is not None:
+            service_instances = []
+            batch_instances = []
+            for child in self.child_clusters:
+                ls = child.finished_type_response_times
+                service_instances.extend(ls[0])
+                batch_instances.extend(ls[1])
+            return service_instances, batch_instances
+        else:
+            service_instances = []
+            batch_instances = []
+            for node in self.nodes:
+                ls = node.finished_type_task_instances
+                service_instances.extend(ls[0])
+                batch_instances.extend(ls[1])
+            return [service_instances, batch_instances] 
 
     @property
     def machines_only_waiting_instances(self):
@@ -274,7 +316,7 @@ class Cluster(object):
                         cluster_sum[0] += task_instance.cpu
                         cluster_sum[1] += task_instance.memory
                         cluster_sum[2] += task_instance.disk
-            ls.append(cluster_sum)
+            ls.append(cluster_sum[:2])
             return ls
 
     def add_nodes(self, nodes):
@@ -289,7 +331,11 @@ class Cluster(object):
 
     def create_nodes(self, target_cluster, num):
         if self.child_clusters is not None:
-            for i in range(num):
+            if num > (self.child_clusters[target_cluster].node_capacity - \
+            len(self.child_clusters[target_cluster].nodes)):
+                num = (self.child_clusters[target_cluster].node_capacity - \
+                len(self.child_clusters[target_cluster].nodes))
+            for i in range(int(num)):
                 node_id = find_first_missing_integer(self.nodes)
                 machine_configs = [MachineConfig(2, 1, 1, target_cluster, node_id) for _ in range(3)]
                 node = Node(node_id, target_cluster)
@@ -382,7 +428,9 @@ class Cluster(object):
                 ls.append(child.usage)
             return ls
         else:
-            return [self.cpu, self.memory, self.disk]
+            return [self.cpu / self.capacities[0], self.memory / self.capacities[1]]
+            # return [self.cpu / self.capacities[0], self.memory / self.capacities[1], \
+            # self.disk / self.capacities[2]]
 
     @property
     def average_metrics_usage(self):
@@ -438,10 +486,13 @@ class Cluster(object):
         else:
             batch_times = []
             service_times = []
-            for node in self.nodes:
-                l1, l2 = node.all_response_time_tuples()
-                service_times.extend(l1)
-                batch_times.extend(l2)
+            for job in self.jobs:
+                for task in job.unfinished_tasks:
+                    for task_instance in task.unfinished_task_instances:
+                        if (task_instance.task.job.type == 2):
+                            service_times.append(task_instance.response_time)
+                        if (task_instance.task.job.type == 1):
+                            batch_times.append(task_instance.response_time)
             return service_times, batch_times
 
     @property
@@ -453,10 +504,10 @@ class Cluster(object):
             return ls
         else:
             cnt = 0
-            for node in self.nodes:
-                for machine in node.machines:
-                    for task_instance in machine.task_instances:
-                        if (not task_instance.finished and task_instance.task.job.type == 2):
+            for job in self.jobs:
+                for task in job.unfinished_tasks:
+                    for task_instance in task.unfinished_task_instances:
+                        if (task_instance.task.job.type == 2):
                             cnt += 1
             return cnt
     
@@ -465,10 +516,32 @@ class Cluster(object):
         if self.child_clusters is not None:
             ls = []
             for child in self.child_clusters:
-                ls.append([child.cpu_capacity, child.memory_capacity, child.disk_capacity])
+                ls.append([child.cpu_capacity, child.memory_capacity])
+                # ls.append([child.cpu_capacity, child.memory_capacity, child.disk_capacity])
             return ls
         else:
-            return [self.cpu_capacity, self.memory_capacity, self.disk_capacity]
+            return [self.cpu_capacity, self.memory_capacity]
+            # return [self.cpu_capacity, self.memory_capacity, self.disk_capacity]
+        
+    @property
+    def active_nodes(self):
+        if self.child_clusters is not None:
+            ls = []
+            for child in self.child_clusters:
+                ls.append(child.active_nodes)
+            return ls
+        else:
+            return len(self.nodes)
+
+    @property
+    def node_capacities(self):
+        if self.child_clusters is not None:
+            ls = []
+            for child in self.child_clusters:
+                ls.append(child.node_capacities)
+            return ls
+        else:
+            return self.node_capacity
 
     @property
     def anomalous_usage(self):
@@ -537,11 +610,7 @@ class Cluster(object):
         if self.child_clusters is not None:
             ls = []
             for child in self.child_clusters:
-                avg = 0
-                for node in child.nodes:
-                    avg += node.response_time()
-                avg = avg / len(child.nodes)
-                ls.append(avg)
+                ls.extend(child.response_time)
             return ls
         else:
             ls = []

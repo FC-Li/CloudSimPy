@@ -10,11 +10,15 @@ def extract_jobs(cluster, algorithm, num_jobs): #synartisi mono gia extraction
     if len(jobs) == 0:
         return None
     algorithm = algorithm #select which algo from sorted_nodes.py
+    if num_jobs > len(jobs):
+        num_jobs = len(jobs)
     for i in range(num_jobs):
-        job = presorted_job(cluster, algorithm)
-        for active_workload in job.running_instances:
-            active_workload.reset_instance()
-            active_workload.process.interrupt()
+        job = presorted_jobs(cluster, algorithm)
+        for task_instance in job.task_instances:
+            if task_instance.started:
+                task_instance.reset_instance()
+            if (task_instance.started and (not task_instance.finished)):
+                task_instance.process.interrupt()
         cluster.jobs.remove(job)
         selected_jobs.append(job)
     return selected_jobs
@@ -44,7 +48,10 @@ def receive_jobs(cluster, algorithm, jobs): #synartisi gia apodoxi workloads apo
     machines = cluster.cluster_machines
     nodes = cluster.nodes
     workloads = []
+    if jobs == None:
+        return
     for job in jobs:
+        cluster.jobs.append(job)
         workloads.extend(job.task_instances)
     if len(nodes) == 0:
         return 

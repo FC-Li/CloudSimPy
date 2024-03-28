@@ -27,9 +27,9 @@ class FirstFitAlgorithm(Algorithm):
                     matched = False  # Flag to indicate if the task has been matched
                     for machine in machines:
                         if machine.accommodate(task_instance):
-                            # print('task instance %s of task %s of job %s was allocated to machine %f of the cluster %f with submit time %f' \
-                            # % (task_instance.task_instance_index, task.task_config.task_index, task.job.job_config.id, machine.id, cluster.level, \
-                            # task.task_config.submit_time))
+                            # print('task instance %s of task %s of job %s was allocated to machine %f of the cluster %f with submit time %f ' \
+                            # 'at time %d' % (task_instance.task_instance_index, task.task_config.task_index, task.job.job_config.id, machine.id, cluster.level, \
+                            # task.task_config.submit_time, self.env.now))
                             # task_instance.passive_refresh_response_time(remove_delays(task.job.job_config.submit_time, self.env.now))
                             task_instance.passive_refresh_response_time(self.env.now - task.job.job_config.submit_time)
                             task.start_task_instance(task_instance.task_instance_index, machine)
@@ -41,8 +41,10 @@ class FirstFitAlgorithm(Algorithm):
                             # task_instance.passive_refresh_response_time(remove_delays(task.job.job_config.submit_time, self.env.now))
                             task_instance.passive_refresh_response_time(self.env.now - task.job.job_config.submit_time)
                         # break
-            num_running_instances = len(cluster.running_task_instances)
+            # num_running_instances = len(cluster.running_task_instances)
             yield self.env.timeout(1) 
+
+           
 
 
 

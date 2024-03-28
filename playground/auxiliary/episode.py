@@ -21,7 +21,8 @@ from playground.DAG.algorithm.heuristics.redirect_workloads import redirect_work
 class Episode(object):
     broker_cls = Broker
 
-    def __init__(self, machine_groups, node_configs, jobs_csv, algorithm, event_file):
+    def __init__(self, machine_groups, machines_number, node_configs, \
+    jobs_csv, algorithm, event_file):
         self.env = simpy.Environment()
         self.method = 1
 
@@ -36,7 +37,9 @@ class Episode(object):
         # Your setup continues here...
         # cluster, task_broker, scheduler initialization...
         cluster = Cluster()
-        cluster.child_clusters = [Cluster(level=i) for i in range(3)]  # Create 3 child clusters
+        cluster.child_clusters.append(Cluster(0, (machines_number[0] * 2) / 3))
+        cluster.child_clusters.append(Cluster(1, (machines_number[1] * 2) / 3))
+        cluster.child_clusters.append(Cluster(2, (machines_number[2] * 2) / 3))
 
         # Iterate over node_configs to add machines based on the modified key structure
         for node_config in node_configs:
@@ -60,9 +63,9 @@ class Episode(object):
             model_path = os.path.join(model_dir, 'model.h5')
             if os.path.isdir(model_path):
                 model = load_model(model_path)
-                self.agent = DQLAgent(39, 12, 0.95, jobs_num, model)
+                self.agent = DQLAgent(36, 12, 0.95, jobs_num, model)
             else:
-                self.agent = DQLAgent(39, 12, 0.95, jobs_num)
+                self.agent = DQLAgent(36, 12, 0.95, jobs_num)
             reward_giver = RewardGiver(cluster)
             self.scheduler = DQLScheduler(self.agent, cluster, reward_giver)
 
@@ -76,12 +79,12 @@ class Episode(object):
 
     def trigger_pause_event_after_rl_actions(self, delay, cnt):
         yield self.env.timeout(delay)  # Wait for the specific time interval
-        # print("Performing actions after pausing...")
+        print("Performing actions after pausing at time ", self.env.now)
 
-        if self.env.now > 5000:
-            unfinished_task_instances = self.simulation.cluster.unfinished_task_instances
-            print_selected_task_instances(unfinished_task_instances, "unfinished")
-            print(self.env.now)
+        # if self.env.now > 5000:
+        #     unfinished_task_instances = self.simulation.cluster.unfinished_task_instances
+        #     print_selected_task_instances(unfinished_task_instances, "unfinished")
+        #     print(self.env.now)
         running_task_instances = self.simulation.cluster.running_task_instances
         # print_selected_task_instances(running_task_instances, "running")
         waiting_task_instances = self.simulation.cluster.waiting_task_instances
@@ -111,9 +114,16 @@ class Episode(object):
                 len(self.simulation.cluster.child_clusters[1].cluster_machines),\
                 len(self.simulation.cluster.child_clusters[2].cluster_machines)))
             
+        for child in self.simulation.cluster.child_clusters:
+            if len(child.running_task_instances) == 0:
+                for instance in child.unfinished_instances:
+                    print('i am task instance %s of task %s of job %s with running flag %s,' \
+                    'waiting flag %s,started flag %s and finisihed flag %s' \
+                    % (instance.task_instance_index, instance.task.task_index, instance.task.job.id, \
+                    instance.running, instance.waiting, instance.started, instance.finished))
         self.df = update_df_with_averages(self.df, self.simulation.cluster, self.env.now)
         overall_averages = calculate_overall_averages(self.df, self.simulation.cluster)
-        print(overall_averages)
+        # print(overall_averages)
 
         if self.method == 0:
             waiting_machines = self.simulation.cluster.machines_only_waiting_instances

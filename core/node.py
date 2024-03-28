@@ -63,6 +63,15 @@ class Node(object):
                 if not task_instance.finished:
                     ls.append(task_instance)
         return ls
+    
+    @property
+    def unfinished_service_task_instances(self):
+        ls = []
+        for machine in self.machines:
+            for task_instance in machine.task_instances:
+                if not task_instance.finished and task_instance.task.job.type == 2:
+                    ls.append(task_instance)
+        return ls
 
     def attach_cluster(self, cluster):
         self.cluster = cluster
@@ -120,24 +129,6 @@ class Node(object):
             avg_time += task_instance.response_time
         avg_time = avg_time / len(running_task_instances_list)
         return avg_time
-
-    def all_response_time_tuples(self, machines=None):  
-        avg_time = 0.0
-        ls = []
-        batch_times = []
-        service_times = []
-        if machines is None:
-            machines = self.machines
-        running_task_instances_list = self.running_task_instances(machines)
-        ls.extend(running_task_instances_list)
-        waiting_task_instances_list = self.waiting_task_instances(machines)
-        ls.extend(waiting_task_instances_list)
-        for task_instance in ls:
-            if (task_instance.task.job.type == 2):
-                service_times.append(task_instance.response_time)
-            if (task_instance.task.job.type == 1):
-                batch_times.append(task_instance.response_time)
-        return service_times, batch_times
     
     def finished_response_times(self, machines=None):  
         batch_times = 0
@@ -204,12 +195,13 @@ class Node(object):
         capacities = self.capacity(machines)
         cpu = sum(machine.cpu for machine in machines)
         memory = sum(machine.memory for machine in machines)
-        disk = sum(machine.disk for machine in machines)
+        # disk = sum(machine.disk for machine in machines)
         if machines is None:
             self.cpu = cpu
             self.memory = memory
-            self.disk = disk
-        return ((cpu / capacities[0]) + (memory / capacities[1]) + (disk / capacities[2])) / 3
+            # self.disk = disk
+        return ((cpu / capacities[0]) + (memory / capacities[1])) / 2
+        # return ((cpu / capacities[0]) + (memory / capacities[1]) + (disk / capacities[2])) / 3
 
     def avg_batch_usage(self,machines=None):
         if machines is None:

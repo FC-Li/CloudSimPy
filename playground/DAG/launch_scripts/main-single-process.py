@@ -29,7 +29,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = ''
 np.random.seed(41)
 tf.random.set_seed(41)
 # ************************ Parameters Setting Start ************************
-machines_number = [6, 15 , 36] 
+machines_number = [60, 150 , 360] 
 '''
 near_edge_machines_number = 30
 far_edge_machines_number = 40
@@ -66,7 +66,7 @@ node_configs = [Node(node_id, cluster_index)
 
 tic = time.time()
 algorithm = FirstFitAlgorithm()
-episode = Episode(machine_groups, node_configs, jobs_csv, algorithm, None)
+episode = Episode(machine_groups, machines_number, node_configs, jobs_csv, algorithm, None)
 episode.run()
 print('FirstFitAlgorithm')
 # print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))

@@ -4,10 +4,8 @@ import os
 
 # Assuming you've loaded the CSV files into pandas DataFrames named job_df and jobs_df
 # Load your CSV files
-job_csv = os.path.join("DAG", "jobs_files", "job.csv")
-jobs_csv = os.path.join("DAG", "jobs_files", "jobs.csv")
+jobs_csv = os.path.join("DAG", "jobs_files", "backup_jobs.csv")
 
-job_df = pd.read_csv(job_csv)
 jobs_df = pd.read_csv(jobs_csv)
 
 # Set response_time to 0 for all rows in jobs.csv
@@ -29,7 +27,7 @@ modified_jobs_csv_path = 'DAG/jobs_files/modified_jobs.csv'
 jobs_df.to_csv(modified_jobs_csv_path, index=False)
 
 # Keep only the first 50 rows
-df_first_50 = jobs_df.head(200)
+df_first_50 = jobs_df.head(5000)
 # Save the modified DataFrame to a new CSV file
 df_first_50.to_csv('DAG/jobs_files/small_modified_jobs.csv', index=False)
 

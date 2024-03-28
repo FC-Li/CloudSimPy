@@ -58,13 +58,11 @@ class Task(object):
                 ls.append(task_instance)
         return ls
 
-
     @property
-    def unfinished_task_instances(self):
+    def running_unfinished_task_instances(self):
         ls = []
         for task_instance in self.task_instances:
-            if ((task_instance.started and not task_instance.finished) \
-            or task_instance.waiting):
+            if (task_instance.started and not task_instance.finished):
                 ls.append(task_instance)
         return ls
 
@@ -73,6 +71,14 @@ class Task(object):
         ls = []
         for task_instance in self.task_instances:
             if task_instance.finished:
+                ls.append(task_instance)
+        return ls
+    
+    @property
+    def unfinished_task_instances(self):
+        ls = []
+        for task_instance in self.task_instances:
+            if not task_instance.finished:
                 ls.append(task_instance)
         return ls
 
@@ -313,6 +319,13 @@ class Job(object):
         return ls
     
     @property
+    def started_task_instances(self):
+        ls = []
+        for task in self.tasks:
+            ls.extend(task.running_unfinished_task_instances)
+        return ls    
+
+    @property
     def non_waiting_instances(self):
         ls = []
         for task in self.tasks:
@@ -323,7 +336,7 @@ class Job(object):
     def running_instances(self):
         ls = []
         for task in self.tasks:
-            ls.extend(task.running_instances)
+            ls.extend(task.running_task_instances)
         return ls
 
     @property
@@ -405,6 +418,7 @@ class TaskInstance(object):
             # if timeout_duration > 0:
             #     yield self.env.timeout(timeout_duration)
             flag = 0
+            self.reset = False
             # print('Task instance %f of task %f of job %f is executing' %(self.task_instance_index, self.task.task_index, self.task.job.id))
             time_threshold = 300
             div = self.env.now // time_threshold
@@ -469,8 +483,8 @@ class TaskInstance(object):
                         self.running = True
                         # self.machine.restart_task_instance(self)
                 elif self.reset == True:
-                    print('i am task instance %s of task %s of job %s and i am reseting' \
-                            % (self.task_instance_index, self.task.task_index, self.task.job.id))
+                    # print('i am task instance %s of task %s of job %s and i am reseting' \
+                    #         % (self.task_instance_index, self.task.task_index, self.task.job.id))
                     self.reset = False
                     return
 
@@ -535,13 +549,21 @@ class TaskInstance(object):
         self.response_time = response_time
 
     def reset_instance(self):
-        self.reset = True
-        self.response_time = self.response_time + self.running_time
-        self.started = False
-        self.waiting = False
-        self.running = False
-        self.machine.stop_task_instance(self)
-        self.machine.remove_task_instance(self)
+        if self.finished == True:
+            self.started = False
+            self.finished == False
+            self.machine.task_instances.remove(self)
+            self.machine = None
+        else:
+            self.reset = True
+            self.response_time = self.response_time + self.running_time
+            self.started = False
+            self.running = False
+            if self.waiting == False:
+                self.machine.stop_task_instance(self)
+            self.waiting = False
+            self.machine.remove_task_instance(self)
+            self.machine = None
         # config = self.alter_task_config
         # self.task.reset_task_instance(self.task_instance_index, config)
 
