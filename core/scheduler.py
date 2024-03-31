@@ -20,7 +20,7 @@ class Scheduler(object):
     def run(self, cluster):
         # self.attach(self.simulation, cluster)
         self.cluster = cluster
-        while (not self.simulation.finished or self.env.now < 400):
+        while (not self.simulation.finished):
             # print("im the scheduler of the cluster", self.cluster.level)
             yield from self.make_decision()
             # yield self.env.timeout(300) # kanw mia fora to make decision gia kathe time frame anamesa stis apofaseis tou rl

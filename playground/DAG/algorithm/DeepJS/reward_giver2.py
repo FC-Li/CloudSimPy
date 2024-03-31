@@ -9,12 +9,14 @@ class RewardGiver():
         util = self.utilization()
         response_times = self.response_time()
         transmit_delays = self.transmit_delays()
+        monetary_cost = self.monetary_cost()
         reward += util
         reward += response_times
+        reward += monetary_cost
         # reward += self.anomaly()
-        reward += transmit_delays
-        print('util reward is %f, response_time reward is %f and transmit delays reawrd is %f'\
-        % (util, response_times, transmit_delays))
+        # reward += (0.25 * transmit_delays)
+        print('util reward is %f, response_time reward is %f and transmit delays reward is %f '\
+        'and monetary cost is %f' % (util, response_times, (0.25 * transmit_delays), monetary_cost))
         print(reward)
         return reward
 
@@ -25,7 +27,7 @@ class RewardGiver():
 
     def response_time(self):
         RTmin = 0
-        RTmax_batch = 5000
+        RTmax_batch = 2000
         RTmax_service = 2000
         sum1 = sum2 = 0
       
@@ -94,6 +96,34 @@ class RewardGiver():
         print('edge instances len is %f and cloud job instances len is %f'\
         % (len_edge_task_instances, len_cloud_task_instances))
         return reward
+    
+    def monetary_cost(self):
+        pricing = [0.056, 0.054, 0.052]
+        max_machines = [66, 165, 396]  # Max machines for each level
+        bill = []
+        machines = 0
+        for child in self.cluster.child_clusters:
+            cnt = 0
+            for node in child.nodes:
+                for machine in node.machines:
+                    cnt += pricing[child.level]
+                    machines += 1
+            bill.append(cnt)
+        if machines == 0:
+            return 0
+        total_cost = sum(bill)
+
+        # Calculate the maximum possible cost accounting for different levels
+        max_cost = sum([max_machines[i] * pricing[i] for i in range(len(pricing))])
+
+
+        # Normalize the total cost to be between 0 and 1
+        normalized_cost = (total_cost) / (max_cost)  # Adjusted based on your cost calculation
+
+        return (1 - normalized_cost)
+
+        
+                
         
         
         

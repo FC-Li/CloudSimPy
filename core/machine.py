@@ -111,6 +111,14 @@ class Machine(object):
             if task_instance.finished:
                 ls.append(task_instance)
         return ls
+    
+    @property
+    def unfinished_task_instances(self):
+        ls = []
+        for task_instance in self.task_instances:
+            if not task_instance.finished:
+                ls.append(task_instance)
+        return ls
 
     def remove_task_instance(self, task_instance):
         if task_instance in self.task_instances:
@@ -126,12 +134,9 @@ class Machine(object):
         self.node = None
 
     def stop_machine(self):
-        for task_instance in self.task_instances:
-            try:
-                task_instance.reset_instance()
-                task_instance.process.interrupt()
-            except:
-                print(task_instance.task_instance_index, task_instance.machine)
+        for task_instance in self.unfinished_task_instances:
+            task_instance.reset_instance()
+            task_instance.process.interrupt()
         self.dettach_node()
 
     def accommodate(self, task_instance):

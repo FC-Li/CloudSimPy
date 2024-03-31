@@ -2,9 +2,11 @@ import numpy as np
 import os
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dense, Dropout
 from collections import deque
 import random
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.regularizers import l2
 
 class DQLAgent:
     def __init__(self, state_size, action_size, gamma, name, model=None):
@@ -12,12 +14,12 @@ class DQLAgent:
         self.action_size = action_size
         self.memory = deque(maxlen=2000)  # Replay buffer
         self.gamma = gamma  # Discount rate
-        self.epsilon = 0.4  # Exploration rate
+        self.epsilon = 0.5  # Exploration rate
         self.epsilon_min = 0.01
-        self.epsilon_decay = 0.95
+        self.epsilon_decay = 0.995
         self.learning_rate = 0.001
         self.name = name
-        self.update_frequency = 10  # Train the model every 10 timesteps
+        self.update_frequency = 5  # Train the model every 10 timesteps
         self.timestep_since_last_update = 0  # Counter for timesteps since last training
         # self.summary_path = summary_path if summary_path is not None else './tensorboard/%s--%s' % (
         #     name, time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime()))
@@ -39,16 +41,36 @@ class DQLAgent:
     #     model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam(lr=self.learning_rate))
     #     return model
     
+    # def _build_model(self):
+    #     """Builds a deep neural network model."""
+    #     model = Sequential()
+    #     model.add(Dense(3, input_dim=self.state_size, activation='relu'))
+    #     model.add(Dense(9, activation='relu'))
+    #     model.add(Dense(18, activation='relu'))
+    #     model.add(Dense(24, activation='relu'))
+    #     model.add(Dense(9, activation='relu'))
+    #     model.add(Dense(self.action_size, activation='linear'))
+    #     model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam(lr=self.learning_rate))
+    #     return model
+
     def _build_model(self):
-        """Builds a deep neural network model."""
+        """Builds a deep neural network model with added regularization."""
         model = Sequential()
-        model.add(Dense(3, input_dim=self.state_size, activation='relu'))
-        model.add(Dense(9, activation='relu'))
-        model.add(Dense(18, activation='relu'))
-        model.add(Dense(24, activation='relu'))
-        model.add(Dense(9, activation='relu'))
+        # Input layer
+        model.add(Dense(64, input_dim=self.state_size, activation='relu', kernel_regularizer=l2(0.01)))
+        model.add(Dropout(0.2))
+        # Hidden layers
+        model.add(Dense(128, activation='relu', kernel_regularizer=l2(0.01)))
+        model.add(Dropout(0.2))
+        model.add(Dense(128, activation='relu', kernel_regularizer=l2(0.01)))
+        model.add(Dropout(0.2))
+        model.add(Dense(64, activation='relu', kernel_regularizer=l2(0.01)))
+        model.add(Dropout(0.2))
+        # Output layer
         model.add(Dense(self.action_size, activation='linear'))
-        model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam(lr=self.learning_rate))
+        # Compile model
+        model.compile(loss='mse', optimizer=Adam(learning_rate=self.learning_rate))
+
         return model
 
     def remember(self, state, action, reward, next_state, done):

@@ -1,6 +1,5 @@
 import random
 
-from playground.auxiliary import remove_delays
 from playground.auxiliary.sorted_nodes import *
 
 def extract_jobs(cluster, algorithm, num_jobs): #synartisi mono gia extraction
@@ -15,9 +14,11 @@ def extract_jobs(cluster, algorithm, num_jobs): #synartisi mono gia extraction
     for i in range(num_jobs):
         job = presorted_jobs(cluster, algorithm)
         for task_instance in job.task_instances:
+            started = task_instance.started
+            finished = task_instance.finished
             if task_instance.started:
                 task_instance.reset_instance()
-            if (task_instance.started and (not task_instance.finished)):
+            if (started and not finished):
                 task_instance.process.interrupt()
         cluster.jobs.remove(job)
         selected_jobs.append(job)

@@ -1,6 +1,7 @@
 import simpy
 import os
 import pandas as pd
+import math
 
 from tensorflow.keras.models import load_model
 from playground.DAG.utils.csv_reader import CSVReader
@@ -32,14 +33,24 @@ class Episode(object):
         
         self.env.pause_event = simpy.Event(self.env)  # Corrected to use self.env
         event_cnt = 1
-        self.env.process(self.trigger_pause_event_after_rl_actions(301, event_cnt))  # Schedule the pause trigger
+        self.env.process(self.trigger_pause_event_after_rl_actions(100, event_cnt))  # Schedule the pause trigger
         
         # Your setup continues here...
         # cluster, task_broker, scheduler initialization...
+        nodes_cap = []
+        for i in range(3):
+            nodes = (machines_number[i] / 3) + ((0.1 * machines_number[i]) / 3)
+            # Round up to the closest integer
+            nodes = math.ceil(nodes)
+            nodes_cap.append(nodes)
+    
         cluster = Cluster()
-        cluster.child_clusters.append(Cluster(0, (machines_number[0] * 2) / 3))
-        cluster.child_clusters.append(Cluster(1, (machines_number[1] * 2) / 3))
-        cluster.child_clusters.append(Cluster(2, (machines_number[2] * 2) / 3))
+        cluster.child_clusters.append(Cluster(0, nodes_cap[0]))
+        cluster.child_clusters.append(Cluster(1, nodes_cap[1]))
+        cluster.child_clusters.append(Cluster(2, nodes_cap[2]))
+        # cluster.child_clusters.append(Cluster(0, (machines_number[0] * 2) / 3))
+        # cluster.child_clusters.append(Cluster(1, (machines_number[1] * 2) / 3))
+        # cluster.child_clusters.append(Cluster(2, (machines_number[2] * 2) / 3))
 
         # Iterate over node_configs to add machines based on the modified key structure
         for node_config in node_configs:
@@ -63,9 +74,9 @@ class Episode(object):
             model_path = os.path.join(model_dir, 'model.h5')
             if os.path.isdir(model_path):
                 model = load_model(model_path)
-                self.agent = DQLAgent(36, 12, 0.95, jobs_num, model)
+                self.agent = DQLAgent(27, 16, 0.95, jobs_num, model)
             else:
-                self.agent = DQLAgent(36, 12, 0.95, jobs_num)
+                self.agent = DQLAgent(27, 16, 0.95, jobs_num)
             reward_giver = RewardGiver(cluster)
             self.scheduler = DQLScheduler(self.agent, cluster, reward_giver)
 
@@ -115,12 +126,14 @@ class Episode(object):
                 len(self.simulation.cluster.child_clusters[2].cluster_machines)))
             
         for child in self.simulation.cluster.child_clusters:
-            if len(child.running_task_instances) == 0:
+            if len(child.running_task_instances) < 5 and self.env.now > 5000:
                 for instance in child.unfinished_instances:
                     print('i am task instance %s of task %s of job %s with running flag %s,' \
-                    'waiting flag %s,started flag %s and finisihed flag %s' \
-                    % (instance.task_instance_index, instance.task.task_index, instance.task.job.id, \
-                    instance.running, instance.waiting, instance.started, instance.finished))
+                    'waiting flag %s,started flag %s, reset %s, finished %s, machine %s and cluster %s ' \
+                    'and running time %f and remaining time %f' % (instance.task_instance_index, \
+                    instance.task.task_index, instance.task.job.id, instance.running, instance.waiting, \
+                    instance.started, instance.reset, instance.finished, instance.machine, child.level, \
+                    instance.running_time, instance.duration - instance.running_time))
         self.df = update_df_with_averages(self.df, self.simulation.cluster, self.env.now)
         overall_averages = calculate_overall_averages(self.df, self.simulation.cluster)
         # print(overall_averages)
@@ -139,7 +152,7 @@ class Episode(object):
         '''
         Here i will call funcs to perform the rl model actions based on the system state!!
         '''
-        # print("Finished with the actions")
+        # print("Finished with the actions at time " , self.env.now)
         # yield self.env.timeout(300)
         self.env.pause_event.succeed()  # Trigger the pause
         # print("Pause event triggered")
@@ -149,7 +162,7 @@ class Episode(object):
             # yield self.env.timeout(300)
             # print('The time at the start of the next pause is', self.env.now + 301.0)
             cnt += 1
-            self.env.process(self.trigger_pause_event_after_rl_actions(301, cnt))  # Schedule the pause trigger
+            self.env.process(self.trigger_pause_event_after_rl_actions(100, cnt))  # Schedule the pause trigger
         else:
             if self.method == 1:
                 self.agent.save_model()

@@ -29,7 +29,8 @@ class Node(object):
             machines = self.machines
         for machine in machines:
             for task_instance in machine.task_instances:
-                if task_instance.started and not task_instance.finished:
+                if task_instance.started and not task_instance.waiting \
+                and not task_instance.finished:
                     ls.append(task_instance)
         return ls
 

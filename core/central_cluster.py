@@ -345,9 +345,10 @@ class Cluster(object):
     def remove_nodes(self, target_cluster, num):
         if self.child_clusters is not None:
             for i in range(num):
-                node = random.choice(self.child_clusters[target_cluster].nodes)
-                self.child_clusters[target_cluster].nodes.remove(node)
-                node.delete()
+                if len(self.child_clusters[target_cluster].nodes) > 2:
+                    node = random.choice(self.child_clusters[target_cluster].nodes)
+                    self.child_clusters[target_cluster].nodes.remove(node)
+                    node.delete()
 
     def add_job(self, job):
         if self.child_clusters is not None:
@@ -428,6 +429,8 @@ class Cluster(object):
                 ls.append(child.usage)
             return ls
         else:
+            if self.capacities[0] == 0:
+                return [0, 0]
             return [self.cpu / self.capacities[0], self.memory / self.capacities[1]]
             # return [self.cpu / self.capacities[0], self.memory / self.capacities[1], \
             # self.disk / self.capacities[2]]
@@ -489,6 +492,9 @@ class Cluster(object):
             for job in self.jobs:
                 for task in job.unfinished_tasks:
                     for task_instance in task.unfinished_task_instances:
+                        if task_instance.started == False:
+                            task_instance.response_time = task_instance.env.now - \
+                            task_instance.task.task_config.submit_time
                         if (task_instance.task.job.type == 2):
                             service_times.append(task_instance.response_time)
                         if (task_instance.task.job.type == 1):
@@ -523,25 +529,35 @@ class Cluster(object):
             return [self.cpu_capacity, self.memory_capacity]
             # return [self.cpu_capacity, self.memory_capacity, self.disk_capacity]
         
-    @property
-    def active_nodes(self):
-        if self.child_clusters is not None:
-            ls = []
-            for child in self.child_clusters:
-                ls.append(child.active_nodes)
-            return ls
-        else:
-            return len(self.nodes)
+    # @property
+    # def active_nodes(self):
+    #     if self.child_clusters is not None:
+    #         ls = []
+    #         for child in self.child_clusters:
+    #             ls.append(child.active_nodes)
+    #         return ls
+    #     else:
+    #         return len(self.nodes)
 
+    # @property
+    # def node_capacities(self):
+    #     if self.child_clusters is not None:
+    #         ls = []
+    #         for child in self.child_clusters:
+    #             ls.append(child.node_capacities)
+    #         return ls
+    #     else:
+    #         return self.node_capacity
+    
     @property
-    def node_capacities(self):
+    def nodes_num_usage(self):
         if self.child_clusters is not None:
             ls = []
             for child in self.child_clusters:
-                ls.append(child.node_capacities)
+                ls.append(child.nodes_num_usage)
             return ls
         else:
-            return self.node_capacity
+            return (len(self.nodes) / self.node_capacity)
 
     @property
     def anomalous_usage(self):
@@ -606,22 +622,24 @@ class Cluster(object):
             return [cnt, len(node.machines)]
 
     @property
-    def response_time(self):
+    def overall_response_time(self):
         if self.child_clusters is not None:
             ls = []
             for child in self.child_clusters:
-                ls.extend(child.response_time)
+                avg, cnt = child.overall_response_time
+                if (cnt == 0):
+                    ls.append(0)
+                else:
+                    ls.append(avg / cnt)
             return ls
         else:
-            ls = []
+            cnt = 0
             avg = 0
-            if len(self.nodes) == 0:
-                return 0
-            for node in self.nodes:
-                avg += node.response_time()
-            avg = avg / len(self.nodes)
-            ls.append(avg)
-            return ls
+            for job in self.jobs:
+                for task_instance in job.task_instances:
+                    avg += task_instance.response_time 
+                    cnt += 1
+            return avg, cnt
 
     # @property
     # def state(self):
