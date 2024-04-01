@@ -33,7 +33,7 @@ class Episode(object):
         
         self.env.pause_event = simpy.Event(self.env)  # Corrected to use self.env
         event_cnt = 1
-        self.env.process(self.trigger_pause_event_after_rl_actions(100, event_cnt))  # Schedule the pause trigger
+        self.env.process(self.trigger_pause_event_after_rl_actions(50, event_cnt))  # Schedule the pause trigger
         
         # Your setup continues here...
         # cluster, task_broker, scheduler initialization...
@@ -72,9 +72,10 @@ class Episode(object):
         if self.method == 1:
             model_dir = 'DAG/algorithm/DeepJS/agents/%s' % jobs_num
             model_path = os.path.join(model_dir, 'model.h5')
-            if os.path.isdir(model_path):
+            if os.path.exists(model_path):
                 model = load_model(model_path)
                 self.agent = DQLAgent(27, 16, 0.95, jobs_num, model)
+                print("i loaded a pre-existing model")
             else:
                 self.agent = DQLAgent(27, 16, 0.95, jobs_num)
             reward_giver = RewardGiver(cluster)
@@ -125,15 +126,15 @@ class Episode(object):
                 len(self.simulation.cluster.child_clusters[1].cluster_machines),\
                 len(self.simulation.cluster.child_clusters[2].cluster_machines)))
             
-        for child in self.simulation.cluster.child_clusters:
-            if len(child.running_task_instances) < 5 and self.env.now > 5000:
-                for instance in child.unfinished_instances:
-                    print('i am task instance %s of task %s of job %s with running flag %s,' \
-                    'waiting flag %s,started flag %s, reset %s, finished %s, machine %s and cluster %s ' \
-                    'and running time %f and remaining time %f' % (instance.task_instance_index, \
-                    instance.task.task_index, instance.task.job.id, instance.running, instance.waiting, \
-                    instance.started, instance.reset, instance.finished, instance.machine, child.level, \
-                    instance.running_time, instance.duration - instance.running_time))
+        # for child in self.simulation.cluster.child_clusters:
+        #     if len(child.running_task_instances) < 5 and self.env.now > 5000:
+        #         for instance in child.unfinished_instances:
+        #             print('i am task instance %s of task %s of job %s with running flag %s,' \
+        #             'waiting flag %s,started flag %s, reset %s, finished %s, machine %s and cluster %s ' \
+        #             'and running time %f and remaining time %f' % (instance.task_instance_index, \
+        #             instance.task.task_index, instance.task.job.id, instance.running, instance.waiting, \
+        #             instance.started, instance.reset, instance.finished, instance.machine, child.level, \
+        #             instance.running_time, instance.duration - instance.running_time))
         self.df = update_df_with_averages(self.df, self.simulation.cluster, self.env.now)
         overall_averages = calculate_overall_averages(self.df, self.simulation.cluster)
         # print(overall_averages)
@@ -152,7 +153,7 @@ class Episode(object):
         '''
         Here i will call funcs to perform the rl model actions based on the system state!!
         '''
-        # print("Finished with the actions at time " , self.env.now)
+        print("Finished with the actions at time" , self.env.now)
         # yield self.env.timeout(300)
         self.env.pause_event.succeed()  # Trigger the pause
         # print("Pause event triggered")
@@ -162,7 +163,7 @@ class Episode(object):
             # yield self.env.timeout(300)
             # print('The time at the start of the next pause is', self.env.now + 301.0)
             cnt += 1
-            self.env.process(self.trigger_pause_event_after_rl_actions(100, cnt))  # Schedule the pause trigger
+            self.env.process(self.trigger_pause_event_after_rl_actions(50, cnt))  # Schedule the pause trigger
         else:
             if self.method == 1:
                 self.agent.save_model()

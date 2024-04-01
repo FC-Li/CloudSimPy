@@ -6,20 +6,20 @@ class FirstFitAlgorithm(Algorithm):
 
         clock = env.now
         self.env = env
-        time_threshold = 100
+        time_threshold = 50
         div = clock // time_threshold
         if clock == 0:
-            time_threshold = 100
-        elif ((clock % time_threshold) == 0):
-            time_threshold = (div) * time_threshold # ama einai akrivws 300,600 klp tote paw sto pause
+            time_threshold = 50
         else:
             time_threshold = (div+1) * time_threshold # ama einai estw kai 0.1 over tote pausarei sto epomeno checkpoint
 
-        while ((self.env.now) / time_threshold < 1 or self.env.now == 0):
+        while ((self.env.now + 0.6) / time_threshold < 1):
             # if (num_running_instances != len(cluster.running_task_instances))
 
             machines = [machine for node in cluster.nodes for machine in node.machines if machine.num_waiting_instances == 0]
             tasks = cluster.ready_tasks_which_has_waiting_instance
+
+            # print("the time in this allocation attempt is", self.env.now)
 
             for task in tasks:
                 for task_instance in task.unscheduled_task_instances:
@@ -38,11 +38,7 @@ class FirstFitAlgorithm(Algorithm):
                             task_instance.passive_refresh_response_time(self.env.now - task.job.job_config.submit_time)
                         # break
             # num_running_instances = len(cluster.running_task_instances)
-            yield self.env.timeout(1) 
+            yield self.env.timeout(0.5) 
 
-           
-
-
-
-        # print('I just executed the first fit... for cluster', cluster.level)
+        # print('I just executed the first fit... for cluster', cluster.level, 'at time', self.env.now)
         return

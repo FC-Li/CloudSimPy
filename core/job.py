@@ -421,18 +421,18 @@ class TaskInstance(object):
             flag = 0
             self.reset = False
             # print('Task instance %f of task %f of job %f is executing' %(self.task_instance_index, self.task.task_index, self.task.job.id))
-            self.time_threshold = 100
+            self.time_threshold = 50
             div = self.env.now // self.time_threshold
             if ((self.env.now / self.time_threshold) == 0 and self.env.now != 0):
                 yield self.env.timeout(0.01)
-            self.time_threshold = (div+1) * 100 # ama einai estw kai 0.1 over tote pausarei sto epomeno checkpoint
+            self.time_threshold = (div+1) * 50 # ama einai estw kai 0.1 over tote pausarei sto epomeno checkpoint
             while(not self.finished or self.reset):
                 if (((self.env.now + 0.1) / self.time_threshold) > 1 and self.env.now != 0):
                     # print(self.env.now, "with time threshold", self.time_threshold, self.machine)
                     # print('i am task instance %s of task %s of job %s and i am pausing at time %f' \
                     # 'with threshold %f '% (self.task_instance_index, self.task.task_index, \
                     # self.task.job.id, self.env.now, self.time_threshold))
-                    self.time_threshold += 100 # perimenei mono thn prwth fora
+                    self.time_threshold += 50 # perimenei mono thn prwth fora
                     yield self.env.pause_event
                     # yield self.env.timeout(0.001)  # Wait here while the system is paused
                     # print('i am task instance %s of task %s of job %s and i have restarted after pause \
@@ -462,7 +462,7 @@ class TaskInstance(object):
                             if ((self.env.now + 0.1) / self.time_threshold > 1 and self.env.now != 0):
                                 # print('i am task instance %s of task %s of job %s and i am pausing at time %f' \
                                 # % (self.task_instance_index, self.task.task_index, self.task.job.id,self.env.now))
-                                self.time_threshold += 100 # perimenei mono thn prwth fora
+                                self.time_threshold += 50 # perimenei mono thn prwth fora
                                 yield self.env.pause_event
                                 # yield self.env.timeout(0.001)  # Wait here while the system is paused
                                 # print('i am task instance %s of task %s of job %s and i have restarted after pause, '\

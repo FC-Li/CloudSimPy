@@ -13,8 +13,7 @@ class Scheduler(object):
     #     self.cluster = cluster
 
     def make_decision(self):
-        yield from self.algorithm(self.cluster, self.env)
-        # yield self.env.timeout(100)
+        yield from self.algorithm(self.cluster, self.env)        # yield self.env.timeout(100)
         yield self.env.pause_event
 
     def run(self, cluster):

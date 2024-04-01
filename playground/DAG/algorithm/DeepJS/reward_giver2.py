@@ -83,6 +83,7 @@ class RewardGiver():
     def transmit_delays(self):
         len_edge_task_instances = self.cluster.child_clusters[0].len_all_task_instances
         len_cloud_task_instances = self.cluster.child_clusters[2].len_all_task_instances
+        len_far_task_instances = self.cluster.child_clusters[1].len_all_task_instances
         delays = self.cluster.transmit_delays
         if len_edge_task_instances == 0:
             sum1 = 0
@@ -93,8 +94,8 @@ class RewardGiver():
         else:
             sum2 = delays[2] / len_cloud_task_instances
         reward = sum1 - sum2
-        print('edge instances len is %f and cloud job instances len is %f'\
-        % (len_edge_task_instances, len_cloud_task_instances))
+        print('near edge instances len is %f, far edge %f cloud job instances len is %f'\
+        % (len_edge_task_instances, len_far_task_instances, len_cloud_task_instances))
         return reward
     
     def monetary_cost(self):

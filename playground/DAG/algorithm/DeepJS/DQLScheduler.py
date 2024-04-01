@@ -22,7 +22,7 @@ class DQLScheduler:
             self.agent.remember(self.last_state, self.last_action, reward, current_state, False)
         
             if len(self.agent.memory) > batch_size:
-                self.agent.replay(batch_size)
+                self.agent.replay(batch_size, 4)
 
         # Select and apply action for the current pause
         self.last_action = self.agent.act(current_state)
@@ -42,13 +42,13 @@ class DQLScheduler:
         # anomalous_usage = self.cluster.anomalous_usage
         # state.extend(anomalous_usage)
         response_time = self.cluster.overall_response_time
-        response_time = round_to_threshold(response_time, [0, 100, 300, 500, 800, 1000, 3000, 6000, 10000])
+        response_time = round_to_threshold(response_time, [0, 100, 300, 500, 800, 1000, 3000, 5000, 8000, 10000])
         state.extend(response_time)
         active_workloads = self.cluster.separate_len_running_task_instances
         active_workloads = round_to_threshold(active_workloads, [0, 1, 5, 20, 50, 150, 300, 500, 2000])
         state.extend(active_workloads)
         waiting_workloads = self.cluster.separate_len_waiting_task_instances
-        waiting_workloads = round_to_threshold(waiting_workloads, [0, 1, 5, 20, 50, 150, 300, 500, 2000])
+        waiting_workloads = round_to_threshold(waiting_workloads, [0, 1, 5, 20, 50, 150, 300, 500, 2000, 3000 , 4000])
         state.extend(waiting_workloads)
         active_service_workloads = self.cluster.service_running_task_instances
         active_service_workloads = round_to_threshold(active_service_workloads, [0, 1, 5, 20, 50, 150, 300, 500, 2000])
