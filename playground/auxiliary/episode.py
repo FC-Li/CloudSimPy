@@ -4,6 +4,7 @@ import pandas as pd
 import math
 
 from tensorflow.keras.models import load_model
+from tensorflow.keras.losses import MeanSquaredError
 from playground.DAG.utils.csv_reader import CSVReader
 from core.central_cluster import Cluster
 from core.scheduler import Scheduler
@@ -73,14 +74,21 @@ class Episode(object):
             model_dir = 'DAG/algorithm/DeepJS/agents/%s' % jobs_num
             model_path = os.path.join(model_dir, 'model.h5')
             if os.path.exists(model_path):
-                model = load_model(model_path)
-                self.agent = DQLAgent(27, 16, 0.95, jobs_num, model)
+                model = load_model(model_path, custom_objects={'loss': MeanSquaredError()})
+                model.compile(optimizer='adam', loss='mean_squared_error')
+                # model.compile(optimizer='adam', loss='mse')
+                self.agent = DQLAgent(15, 13, 0.7, jobs_num, model)
                 print("i loaded a pre-existing model")
             else:
-                self.agent = DQLAgent(27, 16, 0.95, jobs_num)
+                self.agent = DQLAgent(15, 13, 0.7, jobs_num)
             reward_giver = RewardGiver(cluster)
             self.scheduler = DQLScheduler(self.agent, cluster, reward_giver)
-
+                    # list_states = []
+            self.agent.test_act([[0.0, 0.0, -0.000000000000213, 0.000000000003647367308464056, 0.0026246811594202828, 0.00041104347826087, 0.9090909090909091, 0.9454545454545454, 0.8712121212121212, 0.0, 0.1222298099280305, 0.08618184426703664, 0.0, 0.0, 0.0],
+            [0.4, 0.2, -0.000000000000213, 0.000000000003647367308464056, 0.0026246811594202828, 0.00041104347826087, 0.9090909090909091, 0.9454545454545454, 0.8712121212121212, 0.0, 0.1222298099280305, 0.08618184426703664, 0.0, 0.0, 0.0],
+            [0.6656290000000003, 0.4669128333333329, 0.851532266666666, 0.3508053333333343, 0.9606587083333316, 0.32809027777777783, 0.9090909090909091, 0.9090909090909091, 0.9090909090909091, 0.004645378352490422, 0.004268045371219065, 0.0037719395146685983, 0.04142, 0.04254, 0.05284],
+            [0.9656290000000003, 0.4669128333333329, 0.951532266666666, 0.3508053333333343, 0.9606587083333316, 0.32809027777777783, 0.9090909090909091, 0.9090909090909091, 0.9090909090909091, 0.004645378352490422, 0.004268045371219065, 0.0037719395146685983, 0.04142, 0.04254, 0.05284]])
+        
         # Initialize DataFrame
         columns = ['Time', 'Cluster', 'CPU', 'Memory', 'Disk']
         self.df = pd.DataFrame(columns=columns)
@@ -111,6 +119,9 @@ class Episode(object):
         # Perform required actions here...
 
         if self.method == 1:
+            # list_states = []
+            # self.agent.test_act([[0.0, 0.0, -0.000000000000213, 0.000000000003647367308464056, 0.0026246811594202828, 0.00041104347826087, 0.15, 0.075, 0.39, 0.195, 0.8625, 0.43125, 0.9090909090909091, 0.9454545454545454, 0.8712121212121212, 0.0, 0.1222298099280305, 0.08618184426703664, 0.0, 0.0, 0.0],
+            # [0.9656290000000003, 0.4669128333333329, 0.951532266666666, 0.3508053333333343, 0.9606587083333316, 0.32809027777777783, 0.15, 0.075, 0.375, 0.1875, 0.9, 0.45, 0.9090909090909091, 0.9090909090909091, 0.9090909090909091, 0.004645378352490422, 0.004268045371219065, 0.0037719395146685983, 0.04142, 0.04254, 0.05284]])
             if len(ls) > 0:
                 current_state = self.scheduler.extract_state()
                 print(current_state)

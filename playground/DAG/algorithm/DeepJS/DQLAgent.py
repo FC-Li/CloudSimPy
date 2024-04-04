@@ -2,6 +2,7 @@ import numpy as np
 import os
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
+from tensorflow.keras.losses import MeanSquaredError
 from tensorflow.keras.layers import Dense, Dropout
 from collections import deque
 import random
@@ -69,7 +70,7 @@ class DQLAgent:
         # Output layer
         model.add(Dense(self.action_size, activation='linear'))
         # Compile model
-        model.compile(loss='mse', optimizer=Adam(learning_rate=self.learning_rate))
+        model.compile(loss=MeanSquaredError(), optimizer=Adam(learning_rate=self.learning_rate))
 
         return model
 
@@ -80,11 +81,21 @@ class DQLAgent:
     def act(self, state):
         """Returns action based on a given state, following an epsilon-greedy policy."""
         print("epsilon value is ", self.epsilon)
+        act_values = self.model.predict(state)
+        print(act_values)
         if np.random.rand() <= self.epsilon:
             print("i selected randomly")
             return random.randrange(self.action_size)
-        act_values = self.model.predict(state)
+        
         return np.argmax(act_values[0])
+    
+    def test_act(self, states):
+        print("I am testing the given states")
+        for state in states:
+            current_state = np.array(state, dtype=np.float32)
+            current_state = np.expand_dims(current_state, axis=0)  # Add batch dimension
+            act_values = self.model.predict(current_state)
+            print(act_values)
 
     def replay(self, batch_size):
         """Trains the model using randomly sampled experiences from the replay buffer."""
