@@ -15,7 +15,7 @@ class DQLAgent:
         self.action_size = action_size
         self.memory = deque(maxlen=2000)  # Replay buffer
         self.gamma = gamma  # Discount rate
-        self.epsilon = 0.4  # Exploration rate
+        self.epsilon = 0.5  # Exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.995
         self.learning_rate = 0.001
@@ -58,15 +58,16 @@ class DQLAgent:
         """Builds a deep neural network model with added regularization."""
         model = Sequential()
         # Input layer
-        model.add(Dense(64, input_dim=self.state_size, activation='relu', kernel_regularizer=l2(0.01)))
-        model.add(Dropout(0.2))
+        model.add(Dense(12, input_dim=self.state_size, activation='relu', kernel_regularizer=l2(0.01)))
+        # model.add(Dropout(0.2))
         # Hidden layers
-        model.add(Dense(128, activation='relu', kernel_regularizer=l2(0.01)))
-        model.add(Dropout(0.2))
-        model.add(Dense(128, activation='relu', kernel_regularizer=l2(0.01)))
-        model.add(Dropout(0.2))
-        model.add(Dense(64, activation='relu', kernel_regularizer=l2(0.01)))
-        model.add(Dropout(0.2))
+        model.add(Dense(24, activation='relu'))
+        # model.add(Dropout(0.2))
+        model.add(Dense(24, activation='relu'))
+        # , kernel_regularizer=l2(0.01)
+        # model.add(Dropout(0.2))
+        model.add(Dense(12, activation='relu'))
+        # model.add(Dropout(0.2))
         # Output layer
         model.add(Dense(self.action_size, activation='linear'))
         # Compile model

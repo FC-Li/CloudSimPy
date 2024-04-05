@@ -4,8 +4,10 @@ class RewardGiver():
     def __init__(self, cluster):
         self.cluster = cluster
 
-    def get_overall_reward(self, old_reward):
+    def get_overall_reward(self, old_reward_list):
         reward = 0
+        old_reward = old_reward_list[0]
+        previous_sign = old_reward_list[2]
         util = self.utilization()
         response_times = self.response_time()
         transmit_delays = self.transmit_delays()
@@ -18,12 +20,51 @@ class RewardGiver():
         print('util reward is %f, response_time reward is %f and transmit delays reward is %f '\
         'and monetary cost is %f' % (util, response_times, (0.25 * transmit_delays), monetary_cost))
         print(reward)
-        if (old_reward != 0):
-            print((4 * reward) + (50 * (reward - old_reward)))
-            return reward, (4 * reward) + (50 * (reward - old_reward))
+        a = reward / (reward + old_reward)
+        if old_reward == 0:
+            return reward, +5, "+"
+        if previous_sign == "-":
+            if (reward < old_reward):
+                if a > 0.495:
+                    overall_reward = 0
+                elif a < 0.44:
+                    overall_reward = -20
+                else:
+                    overall_reward = -10
+            else:
+                if a < 0.505:
+                    overall_reward = 0
+                elif a >= 0.52:
+                    overall_reward = 10
+                else:
+                    overall_reward = 5
+        elif previous_sign == "+":
+            if (reward < old_reward):
+                if a > 0.495:
+                    overall_reward = 0
+                elif a < 0.44:
+                    overall_reward = -10
+                else:
+                    overall_reward = -5
+            else:
+                if a < 0.505:
+                    overall_reward = 0
+                elif a >= 0.52:
+                    overall_reward = 20
+                else:
+                    overall_reward = 10
+        if (reward < old_reward):
+            sign = "-"
         else:
-            print(4 * reward)
-            return reward, (4 * reward)
+            sign = "+"
+        print(a, overall_reward, sign)
+        return reward, overall_reward, sign
+        # if (old_reward != 0):
+        #     print((4 * reward) + (50 * (reward - old_reward)))
+        #     return reward, (4 * reward) + (50 * (reward - old_reward))
+        # else:
+        #     print(4 * reward)
+        #     return reward, (4 * reward)
 
     def utilization(self):
         avg_sum = self.cluster.avg_usage  

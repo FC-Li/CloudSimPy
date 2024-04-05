@@ -10,16 +10,16 @@ class DQLScheduler:
         self.cluster = cluster
         self.last_state = None
         self.last_action = None
-        self.old_reward = 0
+        self.old_reward = [0,0,0]
 
     def act_on_pause(self, current_state, batch_size):
 
         # Calculate reward and next state only if update_model is True and there's a last_state
-        self.old_reward, reward = self.reward_giver.get_overall_reward(self.old_reward)  # Implement reward calculation
+        self.old_reward[0], self.old_reward[1], self.old_reward[2] = self.reward_giver.get_overall_reward(self.old_reward)  # Implement reward calculation
         current_state = np.array(current_state, dtype=np.float32)
         current_state = np.expand_dims(current_state, axis=0)  # Add batch dimension
         if self.last_state is not None:
-            self.agent.remember(self.last_state, self.last_action, reward, current_state, False)
+            self.agent.remember(self.last_state, self.last_action, self.old_reward[1], current_state, False)
         
             if len(self.agent.memory) > batch_size:
                 self.agent.replay(batch_size)
@@ -69,20 +69,20 @@ class DQLScheduler:
         # capacities = round_to_threshold(capacities, [0, 10, 30, 50, 100, 200, 300, 500, 1000])
         state.extend(usage)
         # state.extend(capacities)
-        nodes_num_usage = self.cluster.nodes_num_usage
-        nodes_num_usage = min_max_normalize_list(nodes_num_usage, 0 ,1)
-        # nodes_num_usage = round_to_threshold(nodes_num_usage, [0, 0.05, 0.2, 0.4, 0.6, 0.8, 0.9, 1])
-        state.extend(nodes_num_usage)
-        # anomalous_usage = self.cluster.anomalous_usage
-        # state.extend(anomalous_usage)
-        response_time = self.cluster.overall_response_time
-        response_time = min_max_normalize_list(response_time, 0 , 10000)
-        # response_time = round_to_threshold(response_time, [0, 100, 300, 500, 800, 1000, 3000, 5000, 8000, 10000])
-        state.extend(response_time)
-        unfinished_workloads = self.cluster.unfinished_instances
-        unfinished_workloads = min_max_normalize_list(unfinished_workloads, 0 , 10000)
-        # unfinished_workloads = round_to_threshold(unfinished_workloads, [0, 1, 5, 20, 50, 150, 300, 500, 2000, 3000 , 4000, 6000, 8000, 10000])
-        state.extend(unfinished_workloads)
+        # nodes_num_usage = self.cluster.nodes_num_usage
+        # nodes_num_usage = min_max_normalize_list(nodes_num_usage, 0 ,1)
+        # # nodes_num_usage = round_to_threshold(nodes_num_usage, [0, 0.05, 0.2, 0.4, 0.6, 0.8, 0.9, 1])
+        # state.extend(nodes_num_usage)
+        # # anomalous_usage = self.cluster.anomalous_usage
+        # # state.extend(anomalous_usage)
+        # response_time = self.cluster.overall_response_time
+        # response_time = min_max_normalize_list(response_time, 0 , 10000)
+        # # response_time = round_to_threshold(response_time, [0, 100, 300, 500, 800, 1000, 3000, 5000, 8000, 10000])
+        # state.extend(response_time)
+        # unfinished_workloads = self.cluster.unfinished_instances
+        # unfinished_workloads = min_max_normalize_list(unfinished_workloads, 0 , 10000)
+        # # unfinished_workloads = round_to_threshold(unfinished_workloads, [0, 1, 5, 20, 50, 150, 300, 500, 2000, 3000 , 4000, 6000, 8000, 10000])
+        # state.extend(unfinished_workloads)
         # active_service_workloads = self.cluster.service_running_task_instances
         # active_service_workloads = round_to_threshold(active_service_workloads, [0, 1, 5, 20, 50, 150, 300, 500, 2000])
         # state.extend(active_service_workloads)
