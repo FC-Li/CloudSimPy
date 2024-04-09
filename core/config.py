@@ -1,3 +1,5 @@
+import numpy as np
+
 class TaskInstanceConfig(object):
     def __init__(self, task_config):
         self.cpu = task_config.cpu
@@ -19,6 +21,7 @@ class TaskConfig(object):
         self.response_time = response_time
         self.submit_time = submit_time
         self.parent_indices = parent_indices
+        self.response_time_threshold = np.random.uniform(40, 2000)
 
 
 class JobConfig(object):

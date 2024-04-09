@@ -197,11 +197,7 @@ class Node(object):
         cpu = sum(machine.cpu for machine in machines)
         memory = sum(machine.memory for machine in machines)
         # disk = sum(machine.disk for machine in machines)
-        if machines is None:
-            self.cpu = cpu
-            self.memory = memory
-            # self.disk = disk
-        return ((cpu / capacities[0]) + (memory / capacities[1])) / 2
+        return (((cpu / capacities[0]) + (memory / capacities[1])) / 2)
         # return ((cpu / capacities[0]) + (memory / capacities[1]) + (disk / capacities[2])) / 3
 
     def avg_batch_usage(self,machines=None):
@@ -242,7 +238,7 @@ class Node(object):
             machines = self.machines       
         for machine in machines:
             for task_instance in machine.task_instances:
-                if task_instance.waiting:
+                if (task_instance.waiting and not task_instance.finished):
                     ls.append(task_instance)
         return ls
 

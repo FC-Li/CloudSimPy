@@ -58,15 +58,15 @@ class DQLAgent:
         """Builds a deep neural network model with added regularization."""
         model = Sequential()
         # Input layer
-        model.add(Dense(12, input_dim=self.state_size, activation='relu', kernel_regularizer=l2(0.01)))
+        model.add(Dense(24, input_dim=self.state_size, activation='relu', kernel_regularizer=l2(0.01)))
         # model.add(Dropout(0.2))
         # Hidden layers
-        model.add(Dense(24, activation='relu'))
+        model.add(Dense(48, activation='relu'))
         # model.add(Dropout(0.2))
-        model.add(Dense(24, activation='relu'))
+        model.add(Dense(48, activation='relu'))
         # , kernel_regularizer=l2(0.01)
         # model.add(Dropout(0.2))
-        model.add(Dense(12, activation='relu'))
+        model.add(Dense(24, activation='relu'))
         # model.add(Dropout(0.2))
         # Output layer
         model.add(Dense(self.action_size, activation='linear'))
@@ -115,7 +115,8 @@ class DQLAgent:
             self.timestep_since_last_update = 0
 
     def save_model(self):
-        model_dir = 'DAG/algorithm/DeepJS/agents/%s' % self.name
+        model_dir = 'DAG/algorithm/DeepJS/agents/all/%s_%s_%s' % \
+        (self.name, self.state_size, self.action_size)
         if not os.path.isdir(model_dir):
             os.makedirs(model_dir)
         model_path = os.path.join(model_dir, 'model.h5')

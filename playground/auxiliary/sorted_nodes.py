@@ -1,10 +1,8 @@
 import random
 
 def presorted_jobs(cluster, algorithm):
-    jobs = cluster.jobs
-    if len(cluster.unfinished_jobs) <= 0:
-        return random.choice(jobs)
-    elif algorithm == "max_util":
+    jobs = cluster.unfinished_jobs
+    if algorithm == "max_util":
         max_tuple = (0.0,jobs[0])
         for job in jobs:
             usage = job.metrics

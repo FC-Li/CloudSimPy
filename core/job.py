@@ -558,10 +558,10 @@ class TaskInstance(object):
 
     def reset_instance(self):
         if self.finished == True:
-            self.response_time = self.env.now - self.started_timestamp
+            self.response_time = self.env.now - self.task.task_config.submit_time
             self.started = False
             self.finished == False
-            self.machine.task_instances.remove(self)
+            self.machine.remove_task_instance(self)
             self.machine = None
         else:
             self.reset = True

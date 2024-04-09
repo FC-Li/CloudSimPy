@@ -29,7 +29,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = ''
 np.random.seed(41)
 tf.random.set_seed(41)
 # ************************ Parameters Setting Start ************************
-machines_number = [60, 150 , 360] 
+machines_number = [60, 210 , 510] 
 '''
 near_edge_machines_number = 30
 far_edge_machines_number = 40

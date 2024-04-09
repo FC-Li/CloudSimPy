@@ -14,6 +14,7 @@ class Cluster(object):
         self.node_capacity = capacity
         self.level = level  # Optional: Identify the cluster level or type
         self.child_clusters = [] if level is None else None  # Central cluster has child clusters
+        self.deleted_nodes_info = [[],[]]
 
     @property
     def unfinished_jobs(self):
@@ -104,6 +105,27 @@ class Cluster(object):
         return ls
 
     @property
+    def started_task_instances(self):
+        if self.child_clusters is not None:
+            task_instances = []
+            for child in self.child_clusters:
+                task_instances.extend(child.started_task_instances)
+            return task_instances
+        else:
+            task_instances = []
+            for node in self.nodes:
+                task_instances.extend(node.unfinished_task_instances)
+            return task_instances
+    
+    @property
+    def separate_len_started_task_instances(self):
+        if self.child_clusters is not None:
+            task_instances = []
+            for child in self.child_clusters:
+                task_instances.append(len(child.started_task_instances))
+            return task_instances
+
+    @property
     def running_task_instances(self):
         if self.child_clusters is not None:
             task_instances = []
@@ -187,6 +209,14 @@ class Cluster(object):
                 for task in job.tasks:
                     task_instances.extend(task.unscheduled_task_instances)
             return task_instances
+    
+    @property
+    def separate_len_unscheduled_task_instances(self):
+        if self.child_clusters is not None:
+            task_instances = []
+            for child in self.child_clusters:
+                task_instances.append(len(child.not_started_task_instances))
+            return task_instances
 
     @property
     def unfinished_task_instances(self):
@@ -218,6 +248,8 @@ class Cluster(object):
                 ls = node.finished_type_task_instances
                 service_instances.extend(ls[0])
                 batch_instances.extend(ls[1])
+            service_instances.extend(self.deleted_nodes_info[0])
+            batch_instances.extend(self.deleted_nodes_info[1])
             overall_len = len(service_instances) + len(batch_instances)
             if overall_len == 0:
                 return [0,0]
@@ -268,6 +300,17 @@ class Cluster(object):
                 service_instances.extend(ls[0])
                 batch_instances.extend(ls[1])
             return [service_instances, batch_instances] 
+    
+    @property
+    def deleted_nodes_times(self):
+        if self.child_clusters is not None:
+            ls = [[],[]]
+            for child in self.child_clusters:
+                ls[0].extend(child.deleted_nodes_times[0])
+                ls[1].extend(child.deleted_nodes_times[1])
+            return ls
+        else:
+            return self.deleted_nodes_info
 
     @property
     def machines_only_waiting_instances(self):
@@ -353,8 +396,12 @@ class Cluster(object):
             for i in range(num):
                 if len(self.child_clusters[target_cluster].nodes) > 2:
                     node = random.choice(self.child_clusters[target_cluster].nodes)
+                    ls = node.finished_type_task_instances
+                    self.child_clusters[target_cluster].deleted_nodes_info[0].extend(ls[0])
+                    self.child_clusters[target_cluster].deleted_nodes_info[1].extend(ls[1])
                     self.child_clusters[target_cluster].nodes.remove(node)
                     node.delete()
+    
 
     def add_job(self, job):
         if self.child_clusters is not None:
@@ -502,9 +549,9 @@ class Cluster(object):
                             task_instance.response_time = task_instance.env.now - \
                             task_instance.task.task_config.submit_time
                         if (task_instance.task.job.type == 2):
-                            service_times.append(task_instance.response_time)
-                        if (task_instance.task.job.type == 1):
-                            batch_times.append(task_instance.response_time)
+                            service_times.append(task_instance)
+                        elif (task_instance.task.job.type == 1):
+                            batch_times.append(task_instance)
             return service_times, batch_times
 
     @property
