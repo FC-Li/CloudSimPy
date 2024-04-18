@@ -34,7 +34,7 @@ class Broker(object):
                 time_threshold = (div+1) * time_threshold # ama einai estw kai 0.1 over tote pausarei sto epomeno checkpoint
             while(timeout_duration > 0):
                 if ((self.env.now + 0.1)/ time_threshold > 1 and self.env.now != 0):
-                    time_threshold += 301 # perimenei mono thn prwth fora
+                    time_threshold += 50 # perimenei mono thn prwth fora
                     yield self.env.pause_event
                 else:
                     timeout_duration -= 0.1

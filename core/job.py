@@ -403,6 +403,8 @@ class TaskInstance(object):
         self.running = False
         self.started = False
         self.finished = False
+        self.has_finished = False
+        self.has_been_reallocated = False
         self.reset = False
         self.started_timestamp = None
         self.finished_timestamp = None
@@ -418,6 +420,7 @@ class TaskInstance(object):
             # timeout_duration = self.task.task_config.submit_time - self.env.now
             # if timeout_duration > 0:
             #     yield self.env.timeout(timeout_duration)
+            self.response_time = self.config.before_0_response_time + self.env.now - self.task.task_config.submit_time
             flag = 0
             self.reset = False
             # print('Task instance %f of task %f of job %f is executing' %(self.task_instance_index, self.task.task_index, self.task.job.id))
@@ -426,6 +429,8 @@ class TaskInstance(object):
             if ((self.env.now / self.time_threshold) == 0 and self.env.now != 0):
                 yield self.env.timeout(0.01)
             self.time_threshold = (div+1) * 50 # ama einai estw kai 0.1 over tote pausarei sto epomeno checkpoint
+            # if self.has_finished == True:
+            #             print("i got before this", self.finished, self.reset)
             while(not self.finished or self.reset):
                 if (((self.env.now + 0.1) / self.time_threshold) > 1 and self.env.now != 0):
                     # print(self.env.now, "with time threshold", self.time_threshold, self.machine)
@@ -499,6 +504,7 @@ class TaskInstance(object):
             self.finished_timestamp = self.env.now
             self.running = False
             self.finished = True
+            self.has_finished = True
             self.machine.stop_task_instance(self)
             # print('Task instance %f of task %f of job %f has finished in %s time with response_time %s' \
             # %(self.task_instance_index, self.task.task_index, self.task.job.id, self.env.now, self.response_time))
@@ -558,14 +564,17 @@ class TaskInstance(object):
 
     def reset_instance(self):
         if self.finished == True:
-            self.response_time = self.env.now - self.task.task_config.submit_time
+            self.response_time = self.env.now - self.task.task_config.submit_time +\
+            self.config.before_0_response_time
             self.started = False
-            self.finished == False
+            self.finished = False
             self.machine.remove_task_instance(self)
             self.machine = None
+            self.running_time = 0
         else:
             self.reset = True
-            self.response_time = self.response_time + self.running_time
+            self.response_time = self.env.now - self.task.task_config.submit_time +\
+            self.config.before_0_response_time
             self.started = False
             self.running = False
             if self.waiting == False:
@@ -573,6 +582,7 @@ class TaskInstance(object):
             self.waiting = False
             self.machine.remove_task_instance(self)
             self.machine = None
+            self.running_time = 0
         # config = self.alter_task_config
         # self.task.reset_task_instance(self.task_instance_index, config)
 

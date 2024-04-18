@@ -103,6 +103,22 @@ class Cluster(object):
         for job in self.jobs:
             ls.extend(job.finished_tasks)
         return ls
+    
+    @property
+    def finished_task_instances(self):
+        if self.child_clusters is not None:
+            cnt = 0
+            for child in self.child_clusters:
+                cnt += child.finished_task_instances
+            return cnt
+        else:
+            cnt = 0
+            for job in self.jobs:
+                for task in job.tasks:
+                    for task_instance in task.task_instances:
+                        if task_instance.finished:
+                            cnt += 1
+            return cnt
 
     @property
     def started_task_instances(self):
@@ -170,17 +186,28 @@ class Cluster(object):
             task_instances = []
             for node in self.nodes:
                 task_instances.extend(node.waiting_task_instances())
+            return task_instances
+    
+    @property
+    def unscheduled_task_instances(self):
+        if self.child_clusters is not None:
+            task_instances = []
+            for child in self.child_clusters:
+                task_instances.extend(child.unscheduled_task_instances)
+            return task_instances
+        else:
+            task_instances = []
             for job in self.jobs:
                 for task in job.tasks:
                     task_instances.extend(task.unscheduled_task_instances)
             return task_instances
 
     @property
-    def separate_len_waiting_task_instances(self):
+    def separate_len_unscheduled_task_instances(self):
         if self.child_clusters is not None:
             task_instances = []
             for child in self.child_clusters:
-                task_instances.append(len(child.waiting_task_instances))
+                task_instances.append(len(child.unscheduled_task_instances))
             return task_instances
 
     @property
@@ -268,6 +295,12 @@ class Cluster(object):
                 service_len += ls[0][1]
                 batch_instances += ls[1][0]
                 batch_len += ls[1][1]
+            if batch_len == 0:
+                batch_instances = 0
+                batch_len = 1
+            if service_len == 0:
+                service_instances = 0
+                service_len = 1
             return [service_instances / service_len, batch_instances / batch_len]
         else:
             service_instances = 0
@@ -346,6 +379,7 @@ class Cluster(object):
         task_instances = []
         task_instances.extend(self.running_task_instances)
         task_instances.extend(self.waiting_task_instances)
+        task_instances.extend(self.unscheduled_task_instances)
         return len(task_instances)
 
     @property
@@ -386,7 +420,7 @@ class Cluster(object):
                 len(self.child_clusters[target_cluster].nodes))
             for i in range(int(num)):
                 node_id = find_first_missing_integer(self.nodes)
-                machine_configs = [MachineConfig(2, 1, 1, target_cluster, node_id) for _ in range(3)]
+                machine_configs = [MachineConfig(3, 3, 1, target_cluster, node_id) for _ in range(3)]
                 node = Node(node_id, target_cluster)
                 node.add_machines(machine_configs)
                 self.child_clusters[target_cluster].add_nodes([node])
@@ -401,7 +435,6 @@ class Cluster(object):
                     self.child_clusters[target_cluster].deleted_nodes_info[1].extend(ls[1])
                     self.child_clusters[target_cluster].nodes.remove(node)
                     node.delete()
-    
 
     def add_job(self, job):
         if self.child_clusters is not None:
@@ -540,18 +573,22 @@ class Cluster(object):
                 batch_times.extend(l2)
             return service_times, batch_times
         else:
+            cnt = 0
             batch_times = []
             service_times = []
             for job in self.jobs:
-                for task in job.unfinished_tasks:
-                    for task_instance in task.unfinished_task_instances:
-                        if task_instance.started == False:
-                            task_instance.response_time = task_instance.env.now - \
-                            task_instance.task.task_config.submit_time
-                        if (task_instance.task.job.type == 2):
-                            service_times.append(task_instance)
-                        elif (task_instance.task.job.type == 1):
-                            batch_times.append(task_instance)
+                for task in job.tasks:
+                    for task_instance in task.task_instances:
+                        if task_instance.finished == False:
+                            if task_instance.started == False:
+                                task_instance.response_time = task_instance.env.now - \
+                                task_instance.task.task_config.submit_time + \
+                                task_instance.config.before_0_response_time
+                            if (task_instance.task.job.type == 2):
+                                service_times.append(task_instance)
+                            elif (task_instance.task.job.type == 1):
+                                batch_times.append(task_instance)
+            # sum = len(batch_times) + len(service_times)
             return service_times, batch_times
 
     @property
@@ -675,7 +712,7 @@ class Cluster(object):
             return [cnt, len(node.machines)]
 
     @property
-    def overall_response_time(self):
+    def overall_separate_response_times(self):
         if self.child_clusters is not None:
             ls = []
             for child in self.child_clusters:
@@ -692,7 +729,53 @@ class Cluster(object):
                 for task_instance in job.task_instances:
                     avg += task_instance.response_time 
                     cnt += 1
+            for instance in self.deleted_nodes_info[0]:
+                avg += instance.response_time
+                cnt += 1
+            for instance in self.deleted_nodes_info[1]:
+                avg += instance.response_time
+                cnt += 1   
             return avg, cnt
+    
+    @property
+    def overall_response_time(self):
+        if self.child_clusters is not None:
+            avg = cnt = 0
+            for child in self.child_clusters:
+                avg += child.overall_response_time[0]
+                cnt += child.overall_response_time[1]
+            if (cnt == 0):
+                return 0
+            else:
+                return avg / cnt
+        else:
+            cnt = 0
+            avg = 0
+            for job in self.jobs:
+                for task_instance in job.task_instances:
+                    avg += task_instance.response_time 
+                    cnt += 1
+            for instance in self.deleted_nodes_info[0]:
+                avg += instance.response_time
+                cnt += 1
+            for instance in self.deleted_nodes_info[1]:
+                avg += instance.response_time
+                cnt += 1   
+            return [avg, cnt]
+    
+    @property
+    def average_kwh_cost(self):
+        if self.child_clusters is not None:
+            cost = 0
+            for child in self.child_clusters:
+                cost += child.average_kwh_cost
+            return cost
+        else:
+            cost = 0
+            for node in self.nodes:
+                for machine in node.machines:
+                    cost += 1.5 * 0.2327 #kwh * price of kwh
+            return cost
 
     # @property
     # def state(self):

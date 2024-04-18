@@ -8,15 +8,15 @@ jobs_csv = os.path.join("DAG", "jobs_files", "jobs_zero.csv")
 
 jobs_df = pd.read_csv(jobs_csv)
 
-jobs_df['cpu'] = np.random.uniform(0.05, 0.2, size=len(jobs_df))  # Adjust 'size' to match your DataFrame's length
-jobs_df['memory'] = np.random.uniform(0.05, 0.2, size=len(jobs_df))  # Adjust 'size' to match your DataFrame's length
+jobs_df['cpu'] = np.random.uniform(0.2, 0.3, size=len(jobs_df))  # Adjust 'size' to match your DataFrame's length
+jobs_df['memory'] = np.random.uniform(0.2, 0.3, size=len(jobs_df))  # Adjust 'size' to match your DataFrame's length
 
 # Save the modified jobs.csv to a new file
 modified_jobs_csv_path = 'DAG/jobs_files/modified_jobs.csv'
 jobs_df.to_csv(modified_jobs_csv_path, index=False)
 
 # Keep only the first 50 rows
-df_first_50 = jobs_df.head(800)
+df_first_50 = jobs_df.head(1000)
 # Save the modified DataFrame to a new CSV file
 df_first_50.to_csv('DAG/jobs_files/small_modified_jobs.csv', index=False)
 

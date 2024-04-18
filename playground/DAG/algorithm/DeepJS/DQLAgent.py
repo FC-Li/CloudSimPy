@@ -10,9 +10,10 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.regularizers import l2
 
 class DQLAgent:
-    def __init__(self, state_size, action_size, gamma, name, model=None):
+    def __init__(self, state_size, action_size, gamma, name, layers, model=None):
         self.state_size = state_size
         self.action_size = action_size
+        self.layers = layers
         self.memory = deque(maxlen=2000)  # Replay buffer
         self.gamma = gamma  # Discount rate
         self.epsilon = 0.5  # Exploration rate
@@ -63,6 +64,7 @@ class DQLAgent:
         # Hidden layers
         model.add(Dense(48, activation='relu'))
         # model.add(Dropout(0.2))
+        model.add(Dense(96, activation='relu'))
         model.add(Dense(48, activation='relu'))
         # , kernel_regularizer=l2(0.01)
         # model.add(Dropout(0.2))
@@ -115,8 +117,8 @@ class DQLAgent:
             self.timestep_since_last_update = 0
 
     def save_model(self):
-        model_dir = 'DAG/algorithm/DeepJS/agents/all/%s_%s_%s' % \
-        (self.name, self.state_size, self.action_size)
+        model_dir = 'DAG/algorithm/DeepJS/agents/%s/all/%s_%s_%s' % \
+        (self.layers, self.name, self.state_size, self.action_size)
         if not os.path.isdir(model_dir):
             os.makedirs(model_dir)
         model_path = os.path.join(model_dir, 'model.h5')

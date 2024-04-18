@@ -7,6 +7,7 @@ class TaskInstanceConfig(object):
         self.disk = task_config.disk
         self.duration = task_config.duration
         self.response_time = task_config.response_time
+        self.before_0_response_time = np.random.uniform(0, 5000)
 
 
 class TaskConfig(object):
@@ -21,7 +22,7 @@ class TaskConfig(object):
         self.response_time = response_time
         self.submit_time = submit_time
         self.parent_indices = parent_indices
-        self.response_time_threshold = np.random.uniform(40, 2000)
+        # self.response_time_threshold = np.random.uniform(5, 1000)
 
 
 class JobConfig(object):

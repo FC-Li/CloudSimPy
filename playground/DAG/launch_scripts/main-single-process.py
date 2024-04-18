@@ -29,7 +29,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = ''
 np.random.seed(41)
 tf.random.set_seed(41)
 # ************************ Parameters Setting Start ************************
-machines_number = [60, 210 , 510] 
+machines_number = [45, 105 , 180] 
 '''
 near_edge_machines_number = 30
 far_edge_machines_number = 40
@@ -50,7 +50,7 @@ for cluster_index, top_machines_number in enumerate(machines_number):
             machine_groups[key] = []
         # Add machines to the appropriate group identified by the unique key
         machine_groups[key].extend(
-            [MachineConfig(2, 1, 1, cluster_index, node_id) for _ in range(3)]
+            [MachineConfig(3, 3, 1, cluster_index, node_id) for _ in range(3)]
         )
 
 node_configs = [Node(node_id, cluster_index) 

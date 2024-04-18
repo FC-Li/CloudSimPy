@@ -20,6 +20,7 @@ def round_to_threshold(input_list, thresholds):
     return ls
 
 def min_max_normalize_list(input_list, min_value, max_value):
+    input_list = input_list if isinstance(input_list, list) else [input_list]
     flattened_list = [element for sublist in input_list for element in (sublist if isinstance(sublist, list) else [sublist])]
     normalized_values = [(x - min_value) / (max_value - min_value) for x in flattened_list]
     return normalized_values

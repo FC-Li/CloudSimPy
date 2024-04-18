@@ -54,7 +54,7 @@ class Node(object):
                         service_instances.append(task_instance)
                     elif task_instance.task.job.type == 1:
                         batch_instances.append(task_instance)
-            return [service_instances, batch_instances]
+        return [service_instances, batch_instances]
     
     @property
     def unfinished_task_instances(self):
