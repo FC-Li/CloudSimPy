@@ -4,6 +4,7 @@ class RewardGiver():
     def __init__(self, cluster):
         self.cluster = cluster
         self.flag = 1
+        self.first_time = 1
         self.res_flag = 1
         self.last_util = None
         self.response_time_threshold = 2500
@@ -16,13 +17,23 @@ class RewardGiver():
         self.res_flag = 1
         if (len(self.cluster.not_started_task_instances) == 0):
             print("i have no unstarted workloads")
-            self.flag = 0
+            if self.first_time:
+                self.first_time = 0
+            else:
+                self.flag = 0
         else:
             self.flag = 0
+            check = 0
             for sep_len in (self.cluster.separate_len_unscheduled_task_instances):
                 if (sep_len == 0):
-                    self.flag = 1 #only count the util reward if there are not fully used resources
+                    check = 1
+                    if self.first_time:
+                        self.first_time = 0
+                    else:
+                        self.flag = 1 #only count the util reward if there are not fully used resources
                     break
+            if check == 0:
+                self.first_time = 1
 
         if (self.cluster.overall_response_time < (self.response_time_threshold / 2 )):
             self.res_flag = 0
@@ -55,11 +66,11 @@ class RewardGiver():
             response_times = self.last_response_time_reward
             reward += (2.5 * response_times)
             
-        reward += (0.2 * monetary_cost)
+        reward += (0.1 * monetary_cost)
         # reward += self.anomaly()
         # reward += (0.25 * transmit_delays)
         print('util reward is %f, response_time reward is %f and transmit delays reward is %f '\
-        'and monetary reward is %f' % ((0.5 * util), (2.5 * response_times), (0.25 * transmit_delays), (0.2 * monetary_cost)))
+        'and monetary reward is %f' % ((0.5 * util), (2.5 * response_times), (0.25 * transmit_delays), (0.1 * monetary_cost)))
         print(reward)
         a = reward / (reward + old_reward)
 

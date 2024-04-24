@@ -209,6 +209,17 @@ class Cluster(object):
             for child in self.child_clusters:
                 task_instances.append(len(child.unscheduled_task_instances))
             return task_instances
+            
+    @property
+    def separate_len_0_1_unscheduled_task_instances(self):
+        if self.child_clusters is not None:
+            task_instances = []
+            for child in self.child_clusters:
+                if len(child.unscheduled_task_instances) > 0:
+                    task_instances.append(1)
+                else:
+                    task_instances.append(0)
+            return task_instances
 
     @property
     def non_waiting_instances(self):
@@ -428,7 +439,7 @@ class Cluster(object):
     def remove_nodes(self, target_cluster, num):
         if self.child_clusters is not None:
             for i in range(num):
-                if len(self.child_clusters[target_cluster].nodes) > 2:
+                if len(self.child_clusters[target_cluster].nodes) > 1:
                     node = random.choice(self.child_clusters[target_cluster].nodes)
                     ls = node.finished_type_task_instances
                     self.child_clusters[target_cluster].deleted_nodes_info[0].extend(ls[0])
@@ -647,7 +658,13 @@ class Cluster(object):
                 ls.append(child.nodes_num_usage)
             return ls
         else:
-            return (len(self.nodes) / self.node_capacity)
+            if len(self.nodes) == 1:
+                return 0
+            elif len(self.nodes) != self.node_capacity:
+                return 0.5
+            else:
+                return 1
+            # return (len(self.nodes)/ self.node_capacity)
 
     @property
     def anomalous_usage(self):
