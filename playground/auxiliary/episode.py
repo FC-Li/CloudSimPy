@@ -3,7 +3,6 @@ import os
 import pandas as pd
 import math, statistics
 
-from tensorflow.keras.models import load_model
 from tensorflow.keras.losses import MeanSquaredError
 from playground.DAG.utils.csv_reader import CSVReader
 from core.central_cluster import Cluster
@@ -80,14 +79,12 @@ class Episode(object):
             actions_features_num = 13
             layers = 6
             model_dir = 'DAG/algorithm/DeepJS/agents/%s/all/%s_%s_%s' % (layers, jobs_num, state_features_num, actions_features_num)
-            model_path = os.path.join(model_dir, 'model.h5')
+            model_path = os.path.join(model_dir, 'model.pth')  # Change from 'model.h5' to 'model.pth'
             print(model_dir, model_path)
             if os.path.exists(model_path):
-                model = load_model(model_path, custom_objects={'loss': MeanSquaredError()})
-                model.compile(optimizer='adam', loss='mean_squared_error')
-                # model.compile(optimizer='adam', loss='mse')
-                self.agent = DQLAgent(state_features_num, actions_features_num, 0.995, jobs_num, layers, model)
-                print("i loaded a pre-existing model")
+                self.agent = DQLAgent(state_features_num, actions_features_num, 0.995, jobs_num, layers)
+                self.agent.load_model(model_path)
+                print("Loaded a pre-existing model")
             else:
                 self.agent = DQLAgent(state_features_num, actions_features_num, 0.995, jobs_num, layers)
             reward_giver = RewardGiver(cluster)
