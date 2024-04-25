@@ -89,6 +89,14 @@ class DQLAgent:
     def remember(self, state, action, reward, next_state, done):
         """Stores experiences in the replay buffer."""
         self.memory.append((state, action, reward, next_state, done))
+    
+    # def custom_loss(self):
+    #     error = self.action_scores - self.target_values
+    #     abs_loss = tf.abs(error)
+    #     square_loss = 0.5 * tf.pow(error, 2)
+    #     self.huber_loss = tf.where(abs_loss <= self.huber_loss_threshold,
+    #                             square_loss,
+    #                             self.huber_loss_threshold * (abs_loss - 0.5 * self.huber_loss_threshold))
 
     def act(self, state):
         """Returns action based on a given state, following an epsilon-greedy policy."""
