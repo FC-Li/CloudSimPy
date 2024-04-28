@@ -20,8 +20,7 @@ class DQLScheduler:
         current_state = np.expand_dims(current_state, axis=0)  # Add batch dimension
         if self.last_state is not None:
             self.agent.remember(self.last_state, self.last_action, self.old_reward[1], current_state, False)
-            if len(self.agent.memory) >= batch_size:
-                self.agent.replay(batch_size)
+            self.agent.replay(batch_size, False)
 
         # Select and apply action for the current pause
         self.last_action = self.agent.act(current_state)
@@ -40,7 +39,7 @@ class DQLScheduler:
         # state.extend(capacities)
         nodes_num_usage = self.cluster.nodes_num_usage
         # nodes_num_usage = min_max_normalize_list(nodes_num_usage, 0 , 1)
-        # nodes_num_usage = round_to_threshold(nodes_num_usage, [0, 0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 1])
+        # nodes_num_usage = round_to_threshold(nodes_num_usage, [0, 0.1, 0.5, 0.8, 0.9, 1])
         state.extend(nodes_num_usage)
         # # anomalous_usage = self.cluster.anomalous_usage
         # # state.extend(anomalous_usage)
@@ -82,13 +81,6 @@ class DQLScheduler:
             self.cluster.create_nodes(1, 10)
         if action == 3: #cluster 2 - 1 node scale up
             self.cluster.create_nodes(2, 15)
-        if action == 13: #cluster 0 - 1 node scale up
-            self.cluster.create_nodes(0, 5)
-            self.cluster.create_nodes(1, 10)
-            self.cluster.create_nodes(2, 15)
-        if action == 14: #cluster 1 - 1 node scale up
-            self.cluster.create_nodes(1, 10)
-            self.cluster.create_nodes(0, 5)
         """
         SOS here!!!
         i want the actions below to not set the algorithm and call the rl model for the child cluster 
@@ -124,4 +116,13 @@ class DQLScheduler:
             self.cluster.remove_nodes(1, 10)
         if action == 12: #cluster 2 - 1 node scale down
             self.cluster.remove_nodes(2, 15)
-        
+        # if action == 13: #cluster 0 - 1 node scale up
+        #     self.cluster.create_nodes(0, 5)
+        #     self.cluster.create_nodes(1, 10)
+        #     self.cluster.create_nodes(2, 15)
+        # if action == 14: #cluster 1 - 1 node scale up
+        #     self.cluster.create_nodes(1, 10)
+        #     self.cluster.create_nodes(0, 5)
+        # if action == 15: #cluster 1 - 1 node scale up
+        #     self.cluster.create_nodes(1, 10)
+        #     self.cluster.create_nodes(2, 15)

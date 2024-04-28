@@ -11,12 +11,12 @@ import torch.optim as optim
 class QNetwork(nn.Module):
     def __init__(self, state_size, action_size):
         super(QNetwork, self).__init__()
-        self.fc1 = nn.Linear(state_size, 24)
-        self.fc2 = nn.Linear(24, 96)
-        self.fc3 = nn.Linear(96, 192)
-        self.fc4 = nn.Linear(192, 96)
-        self.fc5 = nn.Linear(96, 24)
-        self.fc6 = nn.Linear(24, action_size)
+        self.fc1 = nn.Linear(state_size, 128)
+        self.fc2 = nn.Linear(128, 256)
+        self.fc3 = nn.Linear(256, 512)
+        self.fc4 = nn.Linear(512, 256)
+        self.fc5 = nn.Linear(256, 128)
+        self.fc6 = nn.Linear(128, action_size)
     
     def forward(self, x):
         x = torch.relu(self.fc1(x))
@@ -34,15 +34,15 @@ class DQLAgent:
         self.layers = layers
         self.memory = deque(maxlen=2000)  # Replay buffer
         self.gamma = gamma  # Discount rate
-        self.epsilon = 0.7  # Exploration rate
+        self.epsilon = 0.5  # Exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.995
-        self.learning_rate = 0.001
+        self.learning_rate = 0.0001
         self.learning_rate_decay = 0.9
         self.decay_steps = 2
         self.global_step = 0
         self.name = name
-        self.update_frequency = 4  # Train the model every 4 timesteps
+        self.update_frequency = 2  # Train the model every 4 timesteps
         self.target_update_frequency = 20
         self.timesteps_since_last_target_update = 0  # Counter for timesteps since last training
         self.timesteps_since_last_update = 0
@@ -62,9 +62,9 @@ class DQLAgent:
         print("epsilon value is ", self.epsilon)
         state_tensor = torch.FloatTensor(state)
         q_values = self.model(state_tensor)
-        print("the q values are", q_values)    
+        print("the q values are", q_values.detach().numpy())    
         target_q_values = self.target_model(state_tensor)
-        print("the target network values are", target_q_values)
+        print("the target network values are", target_q_values.detach().numpy())
         if np.random.rand() <= self.epsilon:
             print("i selected randomly")
             return random.randrange(self.action_size)
@@ -75,15 +75,19 @@ class DQLAgent:
         print("I am testing the given states")
         for state in states:
             state_tensor = torch.FloatTensor(state)
+            print(state_tensor)
             q_values = self.model(state_tensor)
-            print(q_values)
+            print(q_values.detach().numpy())
 
-    def replay(self, batch_size):
+    def replay(self, batch_size, print_flag):
         """Trains the model using randomly sampled experiences from the replay buffer."""
         self.timesteps_since_last_update += 1
         self.timesteps_since_last_target_update += 1
         if self.timesteps_since_last_update >= self.update_frequency:
-            minibatch = random.sample(self.memory, batch_size)
+            if len(self.memory) >= batch_size:
+                minibatch = random.sample(self.memory, batch_size)
+            else: 
+                return
             for state, action, reward, next_state, done in minibatch:
                 target = reward
                 if not done:
@@ -92,12 +96,26 @@ class DQLAgent:
                     target = reward + self.gamma * torch.max(target_q_values).item()
                 state_tensor = torch.FloatTensor(state)
                 predicted_q_values = self.model(state_tensor)
+                # Compute the loss only for the selected action
+                if (print_flag):
+                    print(predicted_q_values)
+                    print(f"the action selected is {action} with before value {predicted_q_values[0][action]}"\
+                    f"and new value {target}")
+                    print("the q network values before training are", self.model(state_tensor).detach().numpy())
                 predicted_q_values[0][action] = target
-                self.optimizer.zero_grad()
                 loss = self.criterion(self.model(state_tensor), predicted_q_values)
-                print("loss:", loss.item())
+                if (print_flag):
+                    print("loss:", loss.item())
+                self.optimizer.zero_grad()
                 loss.backward()
+                # for i, q_value in enumerate(predicted_q_values[0]):
+                #     if i != action:
+                #         q_value.grad = None
+                # Clip gradients to prevent explosion
+                nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
                 self.optimizer.step()
+                if (print_flag):
+                    print("the q network values after training are", self.model(state_tensor).detach().numpy())
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
             self.timesteps_since_last_update = 0
@@ -121,11 +139,12 @@ class DQLAgent:
         with open(episode_path, 'wb') as f:
             pickle.dump(self.memory, f)
 
-    def save_model(self):
+    def save_model(self, store_episode_flag):
         model_dir = 'DAG/algorithm/DeepJS/agents/%s/all/%s_%s_%s' % \
         (self.layers, self.name, self.state_size, self.action_size)
-        print(model_dir)
-        self.save_episode()
+        # print(model_dir)
+        if (store_episode_flag):
+            self.save_episode()
         if not os.path.isdir(model_dir):
             os.makedirs(model_dir)
         model_path = os.path.join(model_dir, 'model.pth')
@@ -133,6 +152,7 @@ class DQLAgent:
 
     def load_model(self, model_path):
         checkpoint = torch.load(model_path)
-        self.model.load_state_dict(checkpoint['model_state_dict'])
-        self.model.eval()  # Set the model to evaluation mode
+        self.model.load_state_dict(checkpoint)
+        # self.model.eval()  # Set the model to evaluation mode
+        self.target_model.load_state_dict(self.model.state_dict())
 

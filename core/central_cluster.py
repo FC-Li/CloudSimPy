@@ -660,8 +660,16 @@ class Cluster(object):
         else:
             if len(self.nodes) == 1:
                 return 0
-            elif len(self.nodes) != self.node_capacity:
+            elif (len(self.nodes) / self.node_capacity)< 0.2:
+                return 0.1
+            elif (len(self.nodes) / self.node_capacity)< 0.4:
+                return 0.3
+            elif (len(self.nodes) / self.node_capacity)< 0.7:
                 return 0.5
+            elif (len(self.nodes) / self.node_capacity)< 0.9:
+                return 0.8
+            # elif len(self.nodes) != self.node_capacity:
+            #     return 0.5
             else:
                 return 1
             # return (len(self.nodes)/ self.node_capacity)

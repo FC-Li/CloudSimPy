@@ -90,35 +90,35 @@ class RewardGiver():
                 if a > limits[0]:
                     overall_reward = 0
                 elif a < limits[1]:
-                    overall_reward = -20
+                    overall_reward = -2
                 else:
-                    overall_reward = -10
+                    overall_reward = -1
             else:
                 if a < limits[2]:
                     overall_reward = 0
                 elif a >= limits[4]:
-                    overall_reward = 20
+                    overall_reward = 2
                 elif a >= limits[3]:
-                    overall_reward = 10
+                    overall_reward = 1
                 else:
-                    overall_reward = 5
+                    overall_reward = 0.5
         elif previous_sign == "+":
             if (reward < old_reward):
                 if a > limits[0]:
                     overall_reward = 0
                 elif a < limits[1]:
-                    overall_reward = -10
+                    overall_reward = -1
                 else:
-                    overall_reward = -5
+                    overall_reward = -0.5
             else:
                 if a < limits[2]:
                     overall_reward = 0
                 elif a >= limits[4]:
-                    overall_reward = 30
+                    overall_reward = 3
                 elif a >= limits[3]:
-                    overall_reward = 20
+                    overall_reward = 2
                 else:
-                    overall_reward = 10
+                    overall_reward = 1
         if (reward < old_reward):
             sign = "-"
         else:

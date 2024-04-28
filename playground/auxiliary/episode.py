@@ -74,7 +74,7 @@ class Episode(object):
         self.simulation = Simulation(self.env, cluster, task_broker, near_scheduler, far_scheduler, cloud_scheduler, event_file)
 
         if self.method == 1:
-            jobs_num = 86
+            jobs_num = 100
             state_features_num = 10
             actions_features_num = 13
             layers = 6
@@ -82,25 +82,26 @@ class Episode(object):
             model_path = os.path.join(model_dir, 'model.pth')  # Change from 'model.h5' to 'model.pth'
             print(model_dir, model_path)
             if os.path.exists(model_path):
-                self.agent = DQLAgent(state_features_num, actions_features_num, 0.995, jobs_num, layers)
+                self.agent = DQLAgent(state_features_num, actions_features_num, 0.9, jobs_num, layers)
                 self.agent.load_model(model_path)
                 print("Loaded a pre-existing model")
             else:
-                self.agent = DQLAgent(state_features_num, actions_features_num, 0.995, jobs_num, layers)
+                self.agent = DQLAgent(state_features_num, actions_features_num, 0.9, jobs_num, layers)
             reward_giver = RewardGiver(cluster)
             self.scheduler = DQLScheduler(self.agent, cluster, reward_giver)
 
-            self.agent.test_act([[0.5, 0.5, 0.5, 1, 0, 0, 0, 0, 0, 0],
-            [0.5, 1, 0.5, 1, 0, 0.1, 0, 0, 0, 0],
-            [0.5, 1, 0.5, 1, 0, 0, 0.001, 0, 0, 1],
-            [0.5, 0.5, 0.5, 1, 0.5, 0.001, 0, 1, 1, 0],
-            [0.5, 0.5, 0.5, 1, 0, 0.02, 0, 0, 1, 0],
-            [0.5, 0.5, 0.5, 1, 0, 0, 0.02, 0, 0, 0],
-            [0.5, 0.5, 0.5, 1, 0.02, 0.1, 0.1, 1, 1, 1],
-            [0.5, 0.5, 0.5, 0, 0.02, 0.1, 0.1, 1, 1, 1],
-            [1, 0.5, 0.5, 0, 0.02, 0.1, 0.1, 1, 1, 1],
-            [0.5, 0.5, 1, 0, 0.02, 0.1, 0.1, 1, 1, 1],
-            [0.5, 0.5, 1, 1, 0.02, 0.1, 0.1, 1, 1, 1],
+            self.agent.test_act([[0.5, 0.5, 0.1, 1, 0, 0, 0, 0, 0, 0],
+            [0.8, 1, 0.1, 1, 0, 0.1, 0, 0, 0, 0],
+            [0.3, 1, 0.5, 1, 0, 0, 0.001, 0, 0, 1],
+            [0.3, 1, 0, 1, 0, 0, 0.001, 0, 0, 0],
+            [0.8, 0.5, 0.5, 1, 0.5, 0.001, 0, 1, 1, 0],
+            [0.5, 1, 0.3, 1, 0, 0.02, 0, 0, 1, 0],
+            [0.5, 0.8, 0.3, 1, 0, 0, 0.02, 0, 0, 0],
+            [0.5, 0.8, 0.5, 1, 0.02, 0.1, 0.1, 1, 1, 1],
+            [0.5, 0.3, 0.5, 0, 0.02, 0.1, 0.1, 1, 1, 1],
+            [1, 0, 0.1, 0, 0.02, 0.1, 0.1, 1, 1, 1],
+            [0.5, 0, 0, 0, 0.02, 0.1, 0.1, 1, 1, 1],
+            [0.5, 0.3, 1, 1, 0.02, 0.1, 0.1, 1, 1, 1],
             [0.5, 1, 1, 1, 0.02, 0.1, 0.1, 1, 1, 1]]) 
             # self.agent.test_act([[0.0, 0.0, 0.0, 0.0, 0.003479990740740741, 0.00019905555555555432, 0.9, 0.35714285714285715, 1.0, 0.125, 0.05473672979687258, 0.0, 0.0, 0.0003, 0.0, 0.0, 0.0],
             # [0.0, 0.0, 0.7412052888888888, 0.7318317333333334, 0.0, 0.0, 0.9, 0.35714285714285715, 0.016, 0.125, 0.125, 0.0, 0.0657, 0.0, 0.0, 0.0641, 0.0],
@@ -196,7 +197,7 @@ class Episode(object):
             self.env.process(self.trigger_pause_event_after_rl_actions(50, cnt))  # Schedule the pause trigger
         else:
             if self.method == 1:
-                self.agent.save_model()
+                self.agent.save_model(True)
             print(self.env.now)
             # After collecting all data
             overall_averages = calculate_overall_averages(self.df, self.simulation.cluster)
