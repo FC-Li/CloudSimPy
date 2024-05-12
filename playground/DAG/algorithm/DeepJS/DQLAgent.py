@@ -34,7 +34,7 @@ class DQLAgent:
         self.layers = layers
         self.memory = deque(maxlen=2000)  # Replay buffer
         self.gamma = gamma  # Discount rate
-        self.epsilon = 0.5  # Exploration rate
+        self.epsilon = 0.8  # Exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.995
         self.learning_rate = 0.0001
@@ -68,7 +68,8 @@ class DQLAgent:
         if np.random.rand() <= self.epsilon:
             print("i selected randomly")
             return random.randrange(self.action_size)
-        
+        if torch.argmax(q_values).item() == 3:
+            return 0
         return torch.argmax(q_values).item()
     
     def test_act(self, states):
@@ -126,7 +127,7 @@ class DQLAgent:
     
     def save_episode(self):
         # Create directory for episodes if it doesn't exist
-        episodes_dir = 'DAG/algorithm/DeepJS/episodes'
+        episodes_dir = 'DAG/algorithm/DeepJS/episodes/more_state_options'
         if not os.path.exists(episodes_dir):
             os.makedirs(episodes_dir) 
         # Find the first available episode number

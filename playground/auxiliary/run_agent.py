@@ -8,7 +8,7 @@ from playground.DAG.algorithm.DeepJS.DQLAgent import DQLAgent
 from playground.DAG.algorithm.DeepJS.DQLScheduler import DQLScheduler
 from playground.DAG.algorithm.DeepJS.reward_giver2 import RewardGiver
 
-jobs_num = 90
+jobs_num = 92
 state_features_num = 10
 actions_features_num = 13
 layers = 6
@@ -36,7 +36,7 @@ agent.test_act([[0.5, 0.5, 0.5, 1, 0, 0, 0, 0, 0, 0],
 [0.5, 1, 1, 1, 0.02, 0.1, 0.1, 1, 1, 1]]) 
 
 
-episodes_dir = 'DAG/algorithm/DeepJS/episodes'
+episodes_dir = 'DAG/algorithm/DeepJS/episodes/more_state_options'
 if not os.path.exists(episodes_dir):
     print("no existing directory")
 # Find the first available episode number
@@ -45,6 +45,7 @@ files = os.listdir(episodes_dir)
 num_files = len(files)
 # num_files = 20
 for i in range(1, num_files):
+    i += 68
     all_tuples = []
     episode_filename = f'episode_{i}.pkl'
     episode_path = os.path.join(episodes_dir, episode_filename)

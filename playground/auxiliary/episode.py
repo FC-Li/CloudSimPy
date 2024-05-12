@@ -74,7 +74,7 @@ class Episode(object):
         self.simulation = Simulation(self.env, cluster, task_broker, near_scheduler, far_scheduler, cloud_scheduler, event_file)
 
         if self.method == 1:
-            jobs_num = 100
+            jobs_num = 92
             state_features_num = 10
             actions_features_num = 13
             layers = 6
