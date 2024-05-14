@@ -28,16 +28,16 @@ class QNetwork(nn.Module):
         return x
 
 class DQLAgent:
-    def __init__(self, state_size, action_size, gamma, name, layers):
+    def __init__(self, state_size, action_size, gamma, name, layers, train_flag=None):
         self.state_size = state_size
         self.action_size = action_size
         self.layers = layers
         self.memory = deque(maxlen=2000)  # Replay buffer
         self.gamma = gamma  # Discount rate
-        self.epsilon = 0.8  # Exploration rate
+        self.epsilon = 0.4  # Exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.995
-        self.learning_rate = 0.0001
+        self.learning_rate = 0.00001
         self.learning_rate_decay = 0.9
         self.decay_steps = 2
         self.global_step = 0
@@ -49,6 +49,7 @@ class DQLAgent:
         self.model = QNetwork(state_size, action_size)
         self.target_model = QNetwork(state_size, action_size)
         self.target_model.load_state_dict(self.model.state_dict())
+        self.train_flag = train_flag if train_flag is not None else True
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
         self.criterion = nn.MSELoss()
@@ -65,11 +66,11 @@ class DQLAgent:
         print("the q values are", q_values.detach().numpy())    
         target_q_values = self.target_model(state_tensor)
         print("the target network values are", target_q_values.detach().numpy())
-        if np.random.rand() <= self.epsilon:
+        if (np.random.rand() <= self.epsilon and self.train_flag):
             print("i selected randomly")
             return random.randrange(self.action_size)
-        if torch.argmax(q_values).item() == 3:
-            return 0
+        # if torch.argmax(q_values).item() == 11 or torch.argmax(q_values).item() == 12:
+        #     return 0
         return torch.argmax(q_values).item()
     
     def test_act(self, states):
@@ -141,8 +142,8 @@ class DQLAgent:
             pickle.dump(self.memory, f)
 
     def save_model(self, store_episode_flag):
-        model_dir = 'DAG/algorithm/DeepJS/agents/%s/all/%s_%s_%s' % \
-        (self.layers, self.name, self.state_size, self.action_size)
+        model_dir = 'DAG/algorithm/DeepJS/agents/%s/all/%s_%s_%s_%s' % \
+        (self.layers, self.learning_rate, self.name, self.state_size, self.action_size)
         # print(model_dir)
         if (store_episode_flag):
             self.save_episode()
@@ -150,6 +151,7 @@ class DQLAgent:
             os.makedirs(model_dir)
         model_path = os.path.join(model_dir, 'model.pth')
         torch.save(self.model.state_dict(), model_path)
+        # print("i saved the model")
 
     def load_model(self, model_path):
         checkpoint = torch.load(model_path)

@@ -25,7 +25,7 @@ class Episode(object):
     def __init__(self, machine_groups, machines_number, node_configs, \
     jobs_csv, algorithm, event_file):
         self.env = simpy.Environment()
-        self.method = 1
+        self.method = 0
         # Initialize DataFrame
         columns = ['Time', 'Cluster', 'CPU', 'Memory', 'Disk']
         self.df = pd.DataFrame(columns=columns)
@@ -78,19 +78,25 @@ class Episode(object):
             state_features_num = 10
             actions_features_num = 13
             layers = 6
-            model_dir = 'DAG/algorithm/DeepJS/agents/%s/all/%s_%s_%s' % (layers, jobs_num, state_features_num, actions_features_num)
+            learning_rate = 0.00001
+            train_flag = False
+            model_dir = 'DAG/algorithm/DeepJS/agents/%s/all/%s_%s_%s_%s' % (layers, learning_rate, jobs_num, state_features_num, actions_features_num)
             model_path = os.path.join(model_dir, 'model.pth')  # Change from 'model.h5' to 'model.pth'
             print(model_dir, model_path)
             if os.path.exists(model_path):
-                self.agent = DQLAgent(state_features_num, actions_features_num, 0.9, jobs_num, layers)
+                self.agent = DQLAgent(state_features_num, actions_features_num, 0.9, jobs_num, layers, train_flag)
                 self.agent.load_model(model_path)
                 print("Loaded a pre-existing model")
             else:
-                self.agent = DQLAgent(state_features_num, actions_features_num, 0.9, jobs_num, layers)
+                self.agent = DQLAgent(state_features_num, actions_features_num, 0.9, jobs_num, layers, train_flag)
             reward_giver = RewardGiver(cluster)
             self.scheduler = DQLScheduler(self.agent, cluster, reward_giver)
+            # for i in range(10):
+            #     cluster.create_nodes(1, 10)
+            #     cluster.create_nodes(2, 15)
 
             self.agent.test_act([[0.5, 0.5, 0.1, 1, 0, 0, 0, 0, 0, 0],
+            [0.5, 0.5, 0.5, 1, 0, 0, 0, 0, 0, 0],
             [0.8, 1, 0.1, 1, 0, 0.1, 0, 0, 0, 0],
             [0.3, 1, 0.5, 1, 0, 0, 0.001, 0, 0, 1],
             [0.3, 1, 0, 1, 0, 0, 0.001, 0, 0, 0],
@@ -101,6 +107,7 @@ class Episode(object):
             [0.5, 0.3, 0.5, 0, 0.02, 0.1, 0.1, 1, 1, 1],
             [1, 0, 0.1, 0, 0.02, 0.1, 0.1, 1, 1, 1],
             [0.5, 0, 0, 0, 0.02, 0.1, 0.1, 1, 1, 1],
+            [0.5, 0.3, 0.5, 1, 0.02, 0.1, 0.1, 1, 1, 1],
             [0.5, 0.3, 1, 1, 0.02, 0.1, 0.1, 1, 1, 1],
             [0.5, 1, 1, 1, 0.02, 0.1, 0.1, 1, 1, 1]]) 
             # self.agent.test_act([[0.0, 0.0, 0.0, 0.0, 0.003479990740740741, 0.00019905555555555432, 0.9, 0.35714285714285715, 1.0, 0.125, 0.05473672979687258, 0.0, 0.0, 0.0003, 0.0, 0.0, 0.0],

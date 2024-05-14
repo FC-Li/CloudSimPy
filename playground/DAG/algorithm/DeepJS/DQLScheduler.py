@@ -18,7 +18,7 @@ class DQLScheduler:
         self.old_reward[0], self.old_reward[1], self.old_reward[2] = self.reward_giver.get_overall_reward(self.old_reward)  # Implement reward calculation
         current_state = np.array(current_state, dtype=np.float32)
         current_state = np.expand_dims(current_state, axis=0)  # Add batch dimension
-        if self.last_state is not None:
+        if self.last_state is not None and self.agent.train_flag:
             self.agent.remember(self.last_state, self.last_action, self.old_reward[1], current_state, False)
             self.agent.replay(batch_size, False)
 
@@ -46,7 +46,7 @@ class DQLScheduler:
         response_time_threshold = [2500]
         response_time = self.cluster.overall_response_time
         if response_time > response_time_threshold[0] / 2:
-            response_time =[1]
+            response_time = [1]
         else:
             response_time = [0]
         # response_time = min_max_normalize_list(response_time, 0 , 10000)
