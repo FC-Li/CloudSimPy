@@ -146,6 +146,16 @@ class Node(object):
             batch_times += task_instance.response_time
             batch_len += 1
         return [[service_times, service_len], [batch_times, batch_len]]
+    
+    def overall_finished_response_times(self, machines=None):  
+        service_times = 0
+        len_instances = 0
+        if machines is None:
+            machines = self.machines
+        for task_instance in self.finished_task_instances:
+            service_times += task_instance.response_time
+            len_instances += 1
+        return [service_times, len_instances]
         
     def remaining_time(self, machines=None):
         avg_time = 0.0

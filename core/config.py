@@ -7,12 +7,13 @@ class TaskInstanceConfig(object):
         self.disk = task_config.disk
         self.duration = task_config.duration
         self.response_time = task_config.response_time
-        self.before_0_response_time = np.random.uniform(0, 5000)
+        self.before_0_response_time = 5000
+        # self.before_0_response_time = np.random.uniform(0, 5000)
 
 
 class TaskConfig(object):
     def __init__(self, task_index, instances_number, cpu, memory, disk, \
-    duration, response_time, submit_time, parent_indices=None):
+    duration, response_time, submit_time, cnt_all_instances, parent_indices=None):
         self.task_index = task_index
         self.instances_number = instances_number
         self.cpu = cpu
@@ -22,6 +23,7 @@ class TaskConfig(object):
         self.response_time = response_time
         self.submit_time = submit_time
         self.parent_indices = parent_indices
+        self.cnt_all_instances = cnt_all_instances
         # self.response_time_threshold = np.random.uniform(5, 1000)
 
 

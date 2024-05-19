@@ -327,6 +327,27 @@ class Cluster(object):
             return [[service_instances, service_len], [batch_instances, batch_len]] 
         
     @property
+    def overall_finished_response_times(self):
+        if self.child_clusters is not None:
+            instances = 0
+            len_instances = 0
+            for child in self.child_clusters:
+                ls = child.overall_finished_response_times
+                instances += ls[0]
+                len_instances += ls[1]
+            if len_instances == 0:
+                instances = 0
+                len_instances = 1
+            return [instances / len_instances]
+        else:
+            instances = 0
+            len_instances = 0
+            for node in self.nodes:
+                ls = node.overall_finished_response_times()
+                instances += ls[0]
+                len_instances += ls[1]
+            return [instances, len_instances] 
+    @property
     def finished_type_response_times(self):
         if self.child_clusters is not None:
             service_instances = []

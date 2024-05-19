@@ -57,6 +57,7 @@ class RewardGiver():
                 self.last_util = self.utilization()
             util = self.last_util
             reward += (0.5 * util)
+        # self.res_flag = 1
         if self.res_flag:
             response_times = self.last_response_time_reward = self.response_time()
             reward += (2.5 * response_times)
@@ -72,6 +73,8 @@ class RewardGiver():
         print('util reward is %f, response_time reward is %f and transmit delays reward is %f '\
         'and monetary reward is %f' % ((0.5 * util), (2.5 * response_times), (0.25 * transmit_delays), (0.1 * monetary_cost)))
         print(reward)
+        if reward == 0 and old_reward == 0:
+            a = 0
         a = reward / (reward + old_reward)
 
         if self.crossed_time_threshold == 1:

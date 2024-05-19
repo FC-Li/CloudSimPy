@@ -392,6 +392,8 @@ class TaskInstance(object):
         self.disk = task_instance_config.disk
         self.duration = task_instance_config.duration
         self.response_time = task_instance_config.response_time
+        self.before_0_response_time = self.config.before_0_response_time * \
+        ((self.task.task_config.cnt_all_instances + self.task_instance_index) / 28216)
 
         self.running_time = 0.0
 

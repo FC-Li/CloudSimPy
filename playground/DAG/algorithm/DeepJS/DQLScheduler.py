@@ -18,7 +18,7 @@ class DQLScheduler:
         self.old_reward[0], self.old_reward[1], self.old_reward[2] = self.reward_giver.get_overall_reward(self.old_reward)  # Implement reward calculation
         current_state = np.array(current_state, dtype=np.float32)
         current_state = np.expand_dims(current_state, axis=0)  # Add batch dimension
-        if self.last_state is not None and self.agent.train_flag:
+        if (self.last_state is not None and self.agent.train_flag):
             self.agent.remember(self.last_state, self.last_action, self.old_reward[1], current_state, False)
             self.agent.replay(batch_size, False)
 
@@ -87,22 +87,22 @@ class DQLScheduler:
         to decide on the algorithm
         """
         if action == 4: #transfer 2 jobs Near -> Far Edge
-            jobs = extract_jobs(self.cluster.child_clusters[0], "max_util", 10)
+            jobs = extract_jobs(self.cluster.child_clusters[0], "remaining_time", 10)
             receive_jobs(self.cluster.child_clusters[1], "max_util", jobs)
         if action == 5: #transfer 2 jobs Near -> Cloud
-            jobs = extract_jobs(self.cluster.child_clusters[0], "max_util", 10)
+            jobs = extract_jobs(self.cluster.child_clusters[0], "remaining_time", 10)
             receive_jobs(self.cluster.child_clusters[2], "max_util", jobs)
         if action == 6: #transfer 2 jobs Cloud -> Far Edge
-            jobs = extract_jobs(self.cluster.child_clusters[2], "max_util", 10)
+            jobs = extract_jobs(self.cluster.child_clusters[2], "remaining_time", 10)
             receive_jobs(self.cluster.child_clusters[1], "max_util", jobs)
         if action == 7: #transfer 2 jobs Far -> Near Edge
-            jobs = extract_jobs(self.cluster.child_clusters[1], "max_util", 10)
+            jobs = extract_jobs(self.cluster.child_clusters[1], "remaining_time", 10)
             receive_jobs(self.cluster.child_clusters[0], "max_util", jobs)
         if action == 8: #transfer 2 jobs Far -> Cloud
-            jobs = extract_jobs(self.cluster.child_clusters[1], "max_util", 10)
+            jobs = extract_jobs(self.cluster.child_clusters[1], "remaining_time", 10)
             receive_jobs(self.cluster.child_clusters[2], "max_util", jobs)
         if action == 9: #transfer 2 jobs Cloud -> Near Edge
-            jobs = extract_jobs(self.cluster.child_clusters[2], "max_util", 10)
+            jobs = extract_jobs(self.cluster.child_clusters[2], "remaining_time", 10)
             receive_jobs(self.cluster.child_clusters[0], "max_util", jobs)
         # if action == 10: #reallocate 5 workloads inside Near Edge
         #     reallocate_cluster_workloads(self.cluster.child_clusters[0], "max_util", 10)

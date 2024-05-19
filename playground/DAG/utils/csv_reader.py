@@ -22,6 +22,8 @@ class CSVReader(object):
         # Calculate the total number of unique jobs
         self.total_jobs = df.job_id.nunique()
 
+        cnt_all_instances = 0
+
         for i in range(len(df)):
             series = df.iloc[i]
             job_id = series.job_id
@@ -37,11 +39,13 @@ class CSVReader(object):
 
             task_configs = job_task_map.setdefault(job_id, [])
             task_configs.append(TaskConfig(task_id, instances_num, cpu, memory, disk, duration, \
-            response_time , submit_time, parent_indices))
+            response_time , submit_time, cnt_all_instances, parent_indices))
             task_configs.sort(key=attrgetter('submit_time'))
             job_submit_time_map[job_id] = submit_time
             job_response_time_map[job_id] = response_time
-            job_type[job_id] = type
+            job_type[job_id] = type   
+
+            cnt_all_instances += instances_num
 
         job_configs = []
         for job_id, task_configs in job_task_map.items():
@@ -51,6 +55,7 @@ class CSVReader(object):
         self.job_configs = job_configs
         # for job in job_configs:
         #     print(job.submit_time)
+        # print("the total number of instances is ", cnt_all_instances)
 
     # Method to access the total number of jobs
     def get_total_jobs(self):

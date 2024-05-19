@@ -179,6 +179,11 @@ class Machine(object):
     @property
     def capacity(self):
         return [self.cpu_capacity, self.memory_capacity, self.disk_capacity]
+    
+    def capacity_difference(self, task_instance):
+        diff = (self.cpu - task_instance.cpu) + (self.memory - task_instance.memory) + \
+        (self.disk - task_instance.disk)
+        return diff
 
     @property
     def usage(self):

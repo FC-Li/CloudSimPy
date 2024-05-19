@@ -23,9 +23,10 @@ class Episode(object):
     broker_cls = Broker
 
     def __init__(self, machine_groups, machines_number, node_configs, \
-    jobs_csv, algorithm, event_file):
+    jobs_csv, method, algorithm, name, learning_rate, layers, loss_func, activ_func, event_file):
         self.env = simpy.Environment()
-        self.method = 0
+        self.method = method
+        self.algorithm = algorithm
         # Initialize DataFrame
         columns = ['Time', 'Cluster', 'CPU', 'Memory', 'Disk']
         self.df = pd.DataFrame(columns=columns)
@@ -47,6 +48,7 @@ class Episode(object):
             # Round up to the closest integer
             nodes = math.ceil(nodes)
             nodes_cap.append(nodes)
+        print(nodes_cap, "the nodes cap is this")
     
         cluster = Cluster()
         cluster.child_clusters.append(Cluster(0, nodes_cap[0]))
@@ -67,44 +69,57 @@ class Episode(object):
 
         task_broker = Episode.broker_cls(self.env, jobs_configs)
 
-        near_scheduler = Scheduler(self.env, algorithm, 0)
-        far_scheduler = Scheduler(self.env, algorithm, 1)
-        cloud_scheduler = Scheduler(self.env, algorithm, 2)
+        near_scheduler = Scheduler(self.env, self.algorithm, 0)
+        far_scheduler = Scheduler(self.env, self.algorithm, 1)
+        cloud_scheduler = Scheduler(self.env, self.algorithm, 2)
 
         self.simulation = Simulation(self.env, cluster, task_broker, near_scheduler, far_scheduler, cloud_scheduler, event_file)
 
         if self.method == 1:
             jobs_num = 92
+            # loss_func = loss
+            # activ_func = activation
             state_features_num = 10
             actions_features_num = 13
-            layers = 6
-            learning_rate = 0.00001
+            # layers = 6
+            # learning_rate = 0.00001
             train_flag = False
-            model_dir = 'DAG/algorithm/DeepJS/agents/%s/all/%s_%s_%s_%s' % (layers, learning_rate, jobs_num, state_features_num, actions_features_num)
+            # name = "all"
+            model_dir = 'DAG/algorithm/DeepJS/agents/%s/%s/%s/%s_%s/%s_%s_%s' % (name, layers, learning_rate,
+            loss_func, activ_func, jobs_num, state_features_num, actions_features_num)
+            self.model_dir = model_dir
             model_path = os.path.join(model_dir, 'model.pth')  # Change from 'model.h5' to 'model.pth'
             print(model_dir, model_path)
             if os.path.exists(model_path):
-                self.agent = DQLAgent(state_features_num, actions_features_num, 0.9, jobs_num, layers, train_flag)
+                self.agent = DQLAgent(state_features_num, actions_features_num, 0.9, name, jobs_num, layers, learning_rate, loss_func, activ_func, train_flag)
                 self.agent.load_model(model_path)
                 print("Loaded a pre-existing model")
             else:
-                self.agent = DQLAgent(state_features_num, actions_features_num, 0.9, jobs_num, layers, train_flag)
+                self.agent = DQLAgent(state_features_num, actions_features_num, 0.9, name, jobs_num, layers, learning_rate, loss_func, activ_func, train_flag)
             reward_giver = RewardGiver(cluster)
             self.scheduler = DQLScheduler(self.agent, cluster, reward_giver)
             # for i in range(10):
-            #     cluster.create_nodes(1, 10)
+            #     # cluster.create_nodes(1, 10)
             #     cluster.create_nodes(2, 15)
+            #     cluster.create_nodes(0, 5)
 
             self.agent.test_act([[0.5, 0.5, 0.1, 1, 0, 0, 0, 0, 0, 0],
             [0.5, 0.5, 0.5, 1, 0, 0, 0, 0, 0, 0],
             [0.8, 1, 0.1, 1, 0, 0.1, 0, 0, 0, 0],
             [0.3, 1, 0.5, 1, 0, 0, 0.001, 0, 0, 1],
+            [0.8, 0.8, 1, 1, 0, 0.1, 0.1, 0, 1, 0],
+            [0.8, 0.8, 1, 1, 0.02, 0.1, 0.1, 1, 0, 0],
             [0.3, 1, 0, 1, 0, 0, 0.001, 0, 0, 0],
             [0.8, 0.5, 0.5, 1, 0.5, 0.001, 0, 1, 1, 0],
+            [0.8, 0.5, 0.5, 1, 0.5, 0.001, 0, 1, 0, 0],
+            [0.8, 0.5, 0.8, 1, 0.5, 0, 0, 1, 0, 0],
             [0.5, 1, 0.3, 1, 0, 0.02, 0, 0, 1, 0],
             [0.5, 0.8, 0.3, 1, 0, 0, 0.02, 0, 0, 0],
             [0.5, 0.8, 0.5, 1, 0.02, 0.1, 0.1, 1, 1, 1],
             [0.5, 0.3, 0.5, 0, 0.02, 0.1, 0.1, 1, 1, 1],
+            [0.5, 0.5, 0, 1, 0, 0, 0, 0, 0, 0],
+            [1, 0.1, 0, 1, 0.001, 0, 0, 1, 0, 0],
+            [1, 0.1, 0, 1, 0.001, 0, 0, 0, 1, 0],
             [1, 0, 0.1, 0, 0.02, 0.1, 0.1, 1, 1, 1],
             [0.5, 0, 0, 0, 0.02, 0.1, 0.1, 1, 1, 1],
             [0.5, 0.3, 0.5, 1, 0.02, 0.1, 0.1, 1, 1, 1],
@@ -152,9 +167,9 @@ class Episode(object):
             if len(ls) > 0:
                 current_state = self.scheduler.extract_state()
                 print(current_state)
-                self.scheduler.act_on_pause(current_state, 2)
+                self.scheduler.act_on_pause(current_state, 5)
 
-                generate_task_instance_configs(self.simulation.cluster.non_waiting_instances)
+                generate_task_instance_configs(self.simulation.cluster.non_waiting_instances, self.env.now)
 
                 for machine in self.simulation.cluster.cluster_machines:
                     machine.check_machine_usage()
@@ -211,7 +226,11 @@ class Episode(object):
             print(overall_averages)
             average_type_instances_df(self.simulation.cluster)
             anomaly_2_step_occurancies_df(self.simulation.cluster)
-            type_instances_response_times_df(self.simulation.cluster)
+            response_times = instances_response_times_df(self.simulation.cluster)
             print("Mean cost of energy consumption:", statistics.mean(self.kwh_cost))
             print("Overall cost of energy consumption:", sum(self.kwh_cost), "$")
-
+            if self.method == 1:
+                list = [self.model_dir[28:], self.env.now, statistics.mean(self.kwh_cost), sum(self.kwh_cost), response_times]
+            else:
+                list = [self.algorithm, self.env.now, statistics.mean(self.kwh_cost), sum(self.kwh_cost), response_times]
+            create_and_update_dataframe(list)

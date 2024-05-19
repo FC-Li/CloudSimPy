@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import os
 import pandas as pd
 
 def update_df_with_averages(df, cluster, time):
@@ -78,6 +79,19 @@ def type_instances_response_times_df(cluster):
     print(df)
     return
 
+def instances_response_times_df(cluster):
+    new_rows = []  # Initialize an empty list to hold dictionaries of new row data
+    ls = cluster.overall_finished_response_times
+    if cluster.child_clusters is not None:
+        new_row = {
+            'Task_Instances_avg_response_times': ls[0],
+        }
+        new_rows.append(new_row)
+    # Convert new_rows to a DataFrame
+    df = pd.DataFrame(new_rows)
+    print(df)
+    return ls[0]
+
 def anomaly_2_step_occurancies_df(cluster):
     new_rows = []  # Initialize an empty list to hold dictionaries of new row data
     ls = cluster.continuous_anomaly
@@ -91,3 +105,34 @@ def anomaly_2_step_occurancies_df(cluster):
     df = pd.DataFrame(new_rows)
     print(df)
     return
+
+def create_and_update_dataframe(values):
+
+    filename = 'data.csv'
+    columns = ['System_specs', 'Total_runtime', 'Avg energy consumption cost of machines in $',
+    'Overall energy consumption cost of machines in $', 'Avg response time of completed task instances']
+    # Create directory if it doesn't exist
+    data_dir = '/Users/aris/Documents/GitHub/CloudSimPy/playground/DAG/extracted_data'
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+
+    filepath = os.path.join(data_dir, filename)
+
+    try:
+        # Try to load existing DataFrame from file
+        df = pd.read_csv(filepath)
+    except FileNotFoundError:
+        # If file doesn't exist, create an empty DataFrame
+        df = pd.DataFrame(columns=columns)
+
+    lst = []
+    lst.append(df)
+    # Append new data to the DataFrame
+    new_data = pd.DataFrame([values], columns=columns)
+    lst.append(new_data)
+    df = pd.concat(lst, ignore_index=True)
+
+    df.to_csv(filepath, index=False)
+    print(df)
+
+    return 

@@ -14,9 +14,15 @@ def extract_jobs(cluster, algorithm, num_jobs): #synartisi mono gia extraction
     algorithm = algorithm #select which algo from sorted_nodes.py
     if num_jobs > len(unfinished_jobs):
         num_jobs = len(unfinished_jobs)
-    if num_jobs < 5:
+    # if num_jobs < 5:
+    #     return None
+    if (cluster.unfinished_instances) < 200:
         return None
-    print((num_jobs))
+    if (cluster.level == 2 and num_jobs < 18):
+        return None
+    if num_jobs < 15 and num_jobs > 10:
+        num_jobs = 5
+    # print((num_jobs))
     for i in range(num_jobs):
         job = presorted_jobs(cluster, algorithm)
         for task_instance in job.task_instances:

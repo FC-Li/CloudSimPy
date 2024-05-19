@@ -9,50 +9,83 @@ import torch.nn as nn
 import torch.optim as optim
 
 class QNetwork(nn.Module):
-    def __init__(self, state_size, action_size):
+    def __init__(self, state_size, action_size, layers, activation='ReLU', loss='MSE'):
         super(QNetwork, self).__init__()
-        self.fc1 = nn.Linear(state_size, 128)
-        self.fc2 = nn.Linear(128, 256)
-        self.fc3 = nn.Linear(256, 512)
-        self.fc4 = nn.Linear(512, 256)
-        self.fc5 = nn.Linear(256, 128)
-        self.fc6 = nn.Linear(128, action_size)
+        if layers == 5:
+            self.fc1 = nn.Linear(state_size, 32)
+            self.fc2 = nn.Linear(32, 64)
+            self.fc3 = nn.Linear(64, 128)
+            self.fc4 = nn.Linear(128, 32)
+            self.fc5 = nn.Linear(32, action_size)
+        if layers == 6:
+            self.fc1 = nn.Linear(state_size, 128)
+            self.fc2 = nn.Linear(128, 256)
+            self.fc3 = nn.Linear(256, 512)
+            self.fc4 = nn.Linear(512, 256)
+            self.fc5 = nn.Linear(256, 128)
+            self.fc6 = nn.Linear(128, action_size)
+
+    
+        self.activation_func = self.get_activation_function(activation)
+        self.loss_func = self.get_loss_function(loss)
     
     def forward(self, x):
-        x = torch.relu(self.fc1(x))
-        x = torch.relu(self.fc2(x))
-        x = torch.relu(self.fc3(x))
-        x = torch.relu(self.fc4(x))
-        x = torch.relu(self.fc5(x))
-        x = self.fc6(x)
+        x = self.activation_func(self.fc1(x))
+        x = self.activation_func(self.fc2(x))
+        x = self.activation_func(self.fc3(x))
+        x = self.activation_func(self.fc4(x))
+        if hasattr(self, 'fc6'):
+            x = self.activation_func(self.fc5(x))
+            x = self.fc6(x)
+        else:
+            x = self.fc5(x)
         return x
 
+    def get_activation_function(self, activation):
+        if activation == 'ReLU':
+            return torch.relu
+        elif activation == 'LeakyReLU':
+            return nn.LeakyReLU(negative_slope=0.01)
+        else:
+            raise ValueError("Unknown activation function type: {}".format(activation))
+
+    def get_loss_function(self, loss):
+        if loss == 'MSE':
+            return nn.MSELoss()
+        elif loss == 'Huber':
+            return nn.SmoothL1Loss()
+        else:
+            raise ValueError("Unknown loss function type: {}".format(loss))
+
 class DQLAgent:
-    def __init__(self, state_size, action_size, gamma, name, layers, train_flag=None):
+    def __init__(self, state_size, action_size, gamma, name, jobs_num, layers, learning_rate, loss, activation, train_flag=None):
         self.state_size = state_size
         self.action_size = action_size
         self.layers = layers
         self.memory = deque(maxlen=2000)  # Replay buffer
         self.gamma = gamma  # Discount rate
-        self.epsilon = 0.4  # Exploration rate
+        self.epsilon = 0.5  # Exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.995
-        self.learning_rate = 0.00001
+        self.learning_rate = learning_rate
         self.learning_rate_decay = 0.9
         self.decay_steps = 2
         self.global_step = 0
         self.name = name
+        self.jobs_num = jobs_num
+        self.loss = loss
+        self.activation = activation
         self.update_frequency = 2  # Train the model every 4 timesteps
-        self.target_update_frequency = 20
+        self.target_update_frequency = 10
         self.timesteps_since_last_target_update = 0  # Counter for timesteps since last training
         self.timesteps_since_last_update = 0
-        self.model = QNetwork(state_size, action_size)
-        self.target_model = QNetwork(state_size, action_size)
+        self.model = QNetwork(state_size, action_size, layers, activation, loss)
+        self.target_model = QNetwork(state_size, action_size, layers, activation, loss)
         self.target_model.load_state_dict(self.model.state_dict())
         self.train_flag = train_flag if train_flag is not None else True
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
-        self.criterion = nn.MSELoss()
+        self.criterion = self.model.loss_func
 
     def remember(self, state, action, reward, next_state, done):
         """Stores experiences in the replay buffer."""
@@ -128,7 +161,7 @@ class DQLAgent:
     
     def save_episode(self):
         # Create directory for episodes if it doesn't exist
-        episodes_dir = 'DAG/algorithm/DeepJS/episodes/more_state_options'
+        episodes_dir = 'DAG/algorithm/DeepJS/episodes/%s' % (self.name)
         if not os.path.exists(episodes_dir):
             os.makedirs(episodes_dir) 
         # Find the first available episode number
@@ -142,16 +175,17 @@ class DQLAgent:
             pickle.dump(self.memory, f)
 
     def save_model(self, store_episode_flag):
-        model_dir = 'DAG/algorithm/DeepJS/agents/%s/all/%s_%s_%s_%s' % \
-        (self.layers, self.learning_rate, self.name, self.state_size, self.action_size)
+        model_dir = 'DAG/algorithm/DeepJS/agents/%s/%s/%s/%s_%s/%s_%s_%s' % (self.name, self.layers, self.learning_rate,
+        self.loss, self.activation, self.jobs_num, self.state_size, self.action_size)
         # print(model_dir)
-        if (store_episode_flag):
+        if store_episode_flag:
             self.save_episode()
-        if not os.path.isdir(model_dir):
-            os.makedirs(model_dir)
-        model_path = os.path.join(model_dir, 'model.pth')
-        torch.save(self.model.state_dict(), model_path)
-        # print("i saved the model")
+        if self.train_flag:
+            if not os.path.isdir(model_dir):
+                os.makedirs(model_dir)
+            model_path = os.path.join(model_dir, 'model.pth')
+            torch.save(self.model.state_dict(), model_path)
+            # print("i saved the model")
 
     def load_model(self, model_path):
         checkpoint = torch.load(model_path)
