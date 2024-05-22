@@ -83,7 +83,7 @@ class Episode(object):
             actions_features_num = 13
             # layers = 6
             # learning_rate = 0.00001
-            train_flag = False
+            train_flag = True
             # name = "all"
             model_dir = 'DAG/algorithm/DeepJS/agents/%s/%s/%s/%s_%s/%s_%s_%s' % (name, layers, learning_rate,
             loss_func, activ_func, jobs_num, state_features_num, actions_features_num)
@@ -99,9 +99,9 @@ class Episode(object):
             reward_giver = RewardGiver(cluster)
             self.scheduler = DQLScheduler(self.agent, cluster, reward_giver)
             # for i in range(10):
-            #     # cluster.create_nodes(1, 10)
+            #     cluster.create_nodes(1, 10)
             #     cluster.create_nodes(2, 15)
-            #     cluster.create_nodes(0, 5)
+                # cluster.create_nodes(0, 5)
 
             self.agent.test_act([[0.5, 0.5, 0.1, 1, 0, 0, 0, 0, 0, 0],
             [0.5, 0.5, 0.5, 1, 0, 0, 0, 0, 0, 0],
@@ -160,6 +160,14 @@ class Episode(object):
 
         # Perform required actions here...
 
+        for instance in self.simulation.cluster.running_task_instances:
+            if instance.machine.node.topology == 0:
+                instance.response_time += 10
+            if instance.machine.node.topology == 1:
+                instance.response_time += 20
+            if instance.machine.node.topology == 2:
+                instance.response_time += 50
+
         if self.method == 1:
             # list_states = []
             # self.agent.test_act([[0.0, 0.0, -0.000000000000213, 0.000000000003647367308464056, 0.0026246811594202828, 0.00041104347826087, 0.15, 0.075, 0.39, 0.195, 0.8625, 0.43125, 0.9090909090909091, 0.9454545454545454, 0.8712121212121212, 0.0, 0.1222298099280305, 0.08618184426703664, 0.0, 0.0, 0.0],
@@ -169,7 +177,7 @@ class Episode(object):
                 print(current_state)
                 self.scheduler.act_on_pause(current_state, 5)
 
-                generate_task_instance_configs(self.simulation.cluster.non_waiting_instances, self.env.now)
+                # generate_task_instance_configs(self.simulation.cluster.non_waiting_instances, self.env.now)
 
                 for machine in self.simulation.cluster.cluster_machines:
                     machine.check_machine_usage()
@@ -188,6 +196,7 @@ class Episode(object):
         #             instance.task.task_index, instance.task.job.id, instance.running, instance.waiting, \
         #             instance.started, instance.reset, instance.finished, instance.machine, child.level, \
         #             instance.running_time, instance.duration - instance.running_time))
+
         self.df = update_df_with_averages(self.df, self.simulation.cluster, self.env.now)
         overall_averages = calculate_overall_averages(self.df, self.simulation.cluster)
         self.kwh_cost.append(self.simulation.cluster.average_kwh_cost)
@@ -229,8 +238,8 @@ class Episode(object):
             response_times = instances_response_times_df(self.simulation.cluster)
             print("Mean cost of energy consumption:", statistics.mean(self.kwh_cost))
             print("Overall cost of energy consumption:", sum(self.kwh_cost), "$")
-            if self.method == 1:
-                list = [self.model_dir[28:], self.env.now, statistics.mean(self.kwh_cost), sum(self.kwh_cost), response_times]
-            else:
-                list = [self.algorithm, self.env.now, statistics.mean(self.kwh_cost), sum(self.kwh_cost), response_times]
-            create_and_update_dataframe(list)
+            # if self.method == 1:
+            #     list = [self.model_dir[28:], self.env.now, statistics.mean(self.kwh_cost), sum(self.kwh_cost), response_times]
+            # else:
+            #     list = [self.algorithm, self.env.now, statistics.mean(self.kwh_cost), sum(self.kwh_cost), response_times]
+            # create_and_update_dataframe(list)

@@ -64,7 +64,7 @@ class DQLAgent:
         self.layers = layers
         self.memory = deque(maxlen=2000)  # Replay buffer
         self.gamma = gamma  # Discount rate
-        self.epsilon = 0.5  # Exploration rate
+        self.epsilon = 0.3  # Exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.995
         self.learning_rate = learning_rate
@@ -101,8 +101,14 @@ class DQLAgent:
         print("the target network values are", target_q_values.detach().numpy())
         if (np.random.rand() <= self.epsilon and self.train_flag):
             print("i selected randomly")
-            return random.randrange(self.action_size)
+            a = random.randrange(self.action_size)
+            # if a == 11 or a == 12:
+            #     return 0
+            return a
+            # return random.randrange(self.action_size)
         # if torch.argmax(q_values).item() == 11 or torch.argmax(q_values).item() == 12:
+        #     return 0
+        # if torch.argmax(q_values).item() == 10:
         #     return 0
         return torch.argmax(q_values).item()
     

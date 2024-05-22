@@ -4,17 +4,21 @@ class RewardGiver():
     def __init__(self, cluster):
         self.cluster = cluster
         self.flag = 1
+        self.cost_flag = 1
         self.first_time = 1
         self.res_flag = 1
         self.last_util = None
-        self.response_time_threshold = 2500
+        self.last_cost = None
+        self.response_time_threshold = 4000
+        self.last_cnt_running = 0
         self.last_response_time_reward = None
         self.crossed_time_threshold = False
 
     def get_overall_reward(self, old_reward_list):
         cnt = 0
-        self.flag = 1
+        self.flag = 0
         self.res_flag = 1
+        self.cost_flag = 0
         if (len(self.cluster.not_started_task_instances) == 0):
             print("i have no unstarted workloads")
             if self.first_time:
@@ -22,11 +26,12 @@ class RewardGiver():
             else:
                 self.flag = 0
         else:
-            self.flag = 0
+            new_flag = self.flag
             check = 0
             for sep_len in (self.cluster.separate_len_unscheduled_task_instances):
                 if (sep_len == 0):
                     check = 1
+                    self.cost_flag = 1
                     if self.first_time:
                         self.first_time = 0
                     else:
@@ -34,6 +39,19 @@ class RewardGiver():
                     break
             if check == 0:
                 self.first_time = 1
+            # if (self.first_time and new_flag):
+            #     self.flag = 1
+        list_unfinished = self.cluster.separate_len_0_05_1_unscheduled_task_instances
+        list_capacities = self.cluster.nodes_num_usage
+        if (list_unfinished[0] == 0.5 and self.first_time == 0):
+            if list_capacities[0] != 1:
+                self.flag = 0
+            elif (list_unfinished[1] == 0.5):
+                if list_capacities[1] != 1:
+                    self.flag = 0
+                # elif (list_unfinished[2] == 0.5):
+                #     if list_capacities[2] != 1:
+                #         self.flag = 0
 
         if (self.cluster.overall_response_time < (self.response_time_threshold / 2 )):
             self.res_flag = 0
@@ -48,30 +66,38 @@ class RewardGiver():
         old_reward = old_reward_list[0]
         previous_sign = old_reward_list[2]
         transmit_delays = self.transmit_delays()
-        monetary_cost = self.monetary_cost()
         if (self.flag == 1):
             util = self.last_util = self.utilization()
-            reward += (0.5 * util)      
+            reward += (0.2 * util)      
         else:
             if (self.last_util == None):
                 self.last_util = self.utilization()
             util = self.last_util
-            reward += (0.5 * util)
+            reward += (0.2 * util)
         # self.res_flag = 1
         if self.res_flag:
             response_times = self.last_response_time_reward = self.response_time()
-            reward += (2.5 * response_times)
+            reward += (1.5 * response_times)
         else:
             if (self.last_response_time_reward == None):
                 self.last_response_time_reward = self.response_time()
             response_times = self.last_response_time_reward
-            reward += (2.5 * response_times)
+            reward += (1.5 * response_times)
+        # if (self.cost_flag == 1):
+        #     cost = self.last_cost = self.monetary_cost()
+        #     reward += (0.15 * cost)      
+        # else:
+        #     if (self.last_cost == None):
+        #         self.last_cost = self.monetary_cost()
+        #     cost = self.last_cost
+        #     reward += (0.15 * cost)
             
+        monetary_cost = self.monetary_cost()
         reward += (0.1 * monetary_cost)
         # reward += self.anomaly()
         # reward += (0.25 * transmit_delays)
         print('util reward is %f, response_time reward is %f and transmit delays reward is %f '\
-        'and monetary reward is %f' % ((0.5 * util), (2.5 * response_times), (0.25 * transmit_delays), (0.1 * monetary_cost)))
+        'and monetary reward is %f' % ((0.5 * util), (2.5 * response_times), (0.1 * transmit_delays), (0.1 * monetary_cost)))
         print(reward)
         if reward == 0 and old_reward == 0:
             a = 0
@@ -144,8 +170,8 @@ class RewardGiver():
         RTmin = 0
         RTmax_batch = self.response_time_threshold
         RTmax_service = self.response_time_threshold
-        sum1 = sum2 = 0
-        cnt = cnt_running = 0
+        sum1 = sum2 = sum3 = 0
+        cnt = cnt_running = cnt_waiting = 0
       
         service_response_instances, batch_response_instances = self.cluster.response_times
         for instance in service_response_instances:
@@ -153,7 +179,6 @@ class RewardGiver():
             instance_rew = 0
             if (instance.running == True and instance.has_finished == False):
                 flag = 1
-            if instance.running:
                 cnt_running += 1
             if instance.has_finished:
                 cnt += 1
@@ -165,18 +190,26 @@ class RewardGiver():
                 instance_rew = math.exp(-((rt - RTmax_batch) / RTmax_batch))
                 if instance_rew < 0:
                     instance_rew = 0
-            if flag == 1:
-                instance_rew *= 2.5
-            sum1 += instance_rew
+            if (flag == 1 and (instance.machine.node.topology == 0)):
+                instance_rew *= 8
+                sum3 += instance_rew
+            elif (flag == 1 and (instance.machine.node.topology == 1)):
+                instance_rew *= 4
+                sum3 += instance_rew
+            elif (flag == 1 and (instance.machine.node.topology == 2)):
+                instance_rew *= 2
+                sum3 += instance_rew
+            else:
+                sum1 += instance_rew
+                cnt_waiting += 1
         for instance in batch_response_instances:
             flag = 0
             instance_rew = 0
             if (instance.running == True and instance.has_finished == False):
                 flag = 1
+                cnt_running += 1
             if instance.has_finished:
                 cnt += 1
-            if instance.running:
-                cnt_running += 1
             rt = instance.response_time
             if (RTmin <= rt and RTmax_batch > rt):
                 instance_rew = 1
@@ -184,14 +217,29 @@ class RewardGiver():
                 instance_rew = math.exp(-((rt - RTmax_batch) / RTmax_batch))
                 if instance_rew < 0:
                     instance_rew = 0
-            if flag == 1:
-                instance_rew *= 2.5
-            sum1 += instance_rew
+            if (flag == 1 and (instance.machine.node.topology == 0)):
+                instance_rew *= 8
+                sum3 += instance_rew
+            elif (flag == 1 and (instance.machine.node.topology == 1)):
+                instance_rew *= 4
+                sum3 += instance_rew
+            elif (flag == 1 and (instance.machine.node.topology == 2)):
+                instance_rew *= 2
+                sum3 += instance_rew
+            else:
+                sum1 += instance_rew
+                cnt_waiting += 1
         unfinished_len = len(service_response_instances) + len(batch_response_instances)
         if unfinished_len == 0:
             reward1 = 0
         else:
-            reward1 = sum1 / unfinished_len
+            if self.last_cnt_running == 0:
+                reward1 = sum1 / unfinished_len
+            else:
+                # print(f"The last unfinished instances were {self.last_unfinished_len}"\
+                # f"and now they are {unfinished_len}")
+                reward1 = ((sum3 +  sum1) / (self.last_cnt_running + cnt_waiting))
+        self.last_cnt_running = cnt_running
 
         service_finished_instances, batch_finished_instances = self.cluster.finished_type_response_times
         # print(len(service_finished_instances))
@@ -268,7 +316,8 @@ class RewardGiver():
         return reward
     
     def monetary_cost(self):
-        pricing = [0.056, 0.054, 0.052]
+        # pricing = [0.056, 0.054, 0.052]
+        pricing = [0.1, 0.05, 0.02]
         max_machines = [105, 270, 690]  # Max machines for each level
         bill = []
         machines = 0

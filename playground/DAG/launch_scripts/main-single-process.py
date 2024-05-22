@@ -35,7 +35,7 @@ def main(method, algorithm, name, learning_rate, layers, loss, activation):
     np.random.seed(41)
     tf.random.set_seed(41)
     # ************************ Parameters Setting Start ************************
-    machines_number = [45, 105 , 180] 
+    machines_number = [70, 95 , 140] 
     '''
     near_edge_machines_number = 30
     far_edge_machines_number = 40

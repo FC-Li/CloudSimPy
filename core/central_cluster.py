@@ -220,6 +220,19 @@ class Cluster(object):
                 else:
                     task_instances.append(0)
             return task_instances
+    
+    @property
+    def separate_len_0_05_1_unscheduled_task_instances(self):
+        if self.child_clusters is not None:
+            task_instances = []
+            for child in self.child_clusters:
+                if len(child.unscheduled_task_instances) > len(child.running_task_instances):
+                    task_instances.append(1)
+                elif len(child.unscheduled_task_instances) > 0:
+                    task_instances.append(0.5)
+                else:
+                    task_instances.append(0)
+            return task_instances
 
     @property
     def non_waiting_instances(self):
