@@ -43,7 +43,7 @@ class DQLScheduler:
         state.extend(nodes_num_usage)
         # # anomalous_usage = self.cluster.anomalous_usage
         # # state.extend(anomalous_usage)
-        response_time_threshold = [4000]
+        response_time_threshold = [6000]
         response_time = self.cluster.overall_response_time
         if response_time > response_time_threshold[0] / 2:
             response_time = [1]

@@ -14,8 +14,8 @@ class QNetwork(nn.Module):
         if layers == 5:
             self.fc1 = nn.Linear(state_size, 32)
             self.fc2 = nn.Linear(32, 64)
-            self.fc3 = nn.Linear(64, 128)
-            self.fc4 = nn.Linear(128, 32)
+            self.fc3 = nn.Linear(64, 64)
+            self.fc4 = nn.Linear(64, 32)
             self.fc5 = nn.Linear(32, action_size)
         if layers == 6:
             self.fc1 = nn.Linear(state_size, 128)
@@ -24,6 +24,14 @@ class QNetwork(nn.Module):
             self.fc4 = nn.Linear(512, 256)
             self.fc5 = nn.Linear(256, 128)
             self.fc6 = nn.Linear(128, action_size)
+        if layers == 7:
+            self.fc1 = nn.Linear(state_size, 128)
+            self.fc2 = nn.Linear(128, 256)
+            self.fc3 = nn.Linear(256, 512)
+            self.fc4 = nn.Linear(512,1024)
+            self.fc5 = nn.Linear(1024, 256)
+            self.fc6 = nn.Linear(256, 128)
+            self.fc7 = nn.Linear(128, action_size)
 
     
         self.activation_func = self.get_activation_function(activation)
@@ -34,11 +42,16 @@ class QNetwork(nn.Module):
         x = self.activation_func(self.fc2(x))
         x = self.activation_func(self.fc3(x))
         x = self.activation_func(self.fc4(x))
-        if hasattr(self, 'fc6'):
+        if hasattr(self, 'fc7'):
             x = self.activation_func(self.fc5(x))
-            x = self.fc6(x)
+            x = self.activation_func(self.fc6(x))
+            x = self.fc7(x)
         else:
-            x = self.fc5(x)
+            if hasattr(self, 'fc6'):
+                x = self.activation_func(self.fc5(x))
+                x = self.fc6(x)
+            else:
+                x = self.fc5(x)
         return x
 
     def get_activation_function(self, activation):
@@ -64,7 +77,7 @@ class DQLAgent:
         self.layers = layers
         self.memory = deque(maxlen=2000)  # Replay buffer
         self.gamma = gamma  # Discount rate
-        self.epsilon = 0.3  # Exploration rate
+        self.epsilon = 0.2  # Exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.995
         self.learning_rate = learning_rate
@@ -102,13 +115,13 @@ class DQLAgent:
         if (np.random.rand() <= self.epsilon and self.train_flag):
             print("i selected randomly")
             a = random.randrange(self.action_size)
-            # if a == 11 or a == 12:
+            # if a == 11 or a == 10:
             #     return 0
             return a
             # return random.randrange(self.action_size)
-        # if torch.argmax(q_values).item() == 11 or torch.argmax(q_values).item() == 12:
+        # if torch.argmax(q_values).item() == 2:
         #     return 0
-        # if torch.argmax(q_values).item() == 10:
+        # if torch.argmax(q_values).item() == 10 or torch.argmax(q_values).item() == 11:
         #     return 0
         return torch.argmax(q_values).item()
     

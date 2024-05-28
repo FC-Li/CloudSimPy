@@ -76,8 +76,12 @@ def main(method, algorithm, name, learning_rate, layers, loss, activation):
     episode = Episode(machine_groups, machines_number, node_configs, jobs_csv, method, algorithm, name, learning_rate, layers, \
     loss, activation, None)
     episode.run()
-    print('BestFitAlgorithm')
+    if algorithm == 'FirstFit':
+        print('FirstFitAlgorithm')
+    elif algorithm == 'BestFit':
+        print('BestFitAlgorithm')
 
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run DeepJS with specified learning rate and number of layers.')
     parser.add_argument('method', type=int, help='Select the method of your testing env')
