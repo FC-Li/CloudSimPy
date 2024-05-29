@@ -63,7 +63,7 @@ def main(name, learning_rate, layers, loss, activation):
     files = os.listdir(episodes_dir)
     num_files = len(files)
     # for i in range(70, num_files):
-    for i in range(80, num_files):
+    for i in range(90, num_files):
         all_tuples = []
         episode_filename = f'episode_{i}.pkl'
         episode_path = os.path.join(episodes_dir, episode_filename)
