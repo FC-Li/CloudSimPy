@@ -12,16 +12,8 @@ sys.path.append('..')
 
 from core.machine import MachineConfig
 from core.node import Node
-from playground.DAG.algorithm.heuristics.random_algorithm import RandomAlgorithm
-from playground.DAG.algorithm.heuristics.tetris import Tetris
 from playground.DAG.algorithm.heuristics.first_fit import FirstFitAlgorithm
 from playground.DAG.algorithm.heuristics.best_fit import BestFitAlgorithm
-from playground.DAG.algorithm.heuristics.max_weight import MaxWeightAlgorithm
-
-from playground.DAG.algorithm.DeepJS.DRL import RLAlgorithm
-from playground.DAG.algorithm.DeepJS.agent import Agent
-from playground.DAG.algorithm.DeepJS.brain import BrainSmall
-from playground.DAG.algorithm.DeepJS.reward_giver import MakespanRewardGiver
 
 from playground.DAG.utils.csv_reader import CSVReader
 from playground.DAG.utils.feature_functions import features_extract_func_ac, features_normalize_func_ac
