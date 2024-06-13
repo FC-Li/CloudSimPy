@@ -77,7 +77,7 @@ class DQLAgent:
         self.layers = layers
         self.memory = deque(maxlen=2000)  # Replay buffer
         self.gamma = gamma  # Discount rate
-        self.epsilon = 0.2  # Exploration rate
+        self.epsilon = 0.4  # Exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.995
         self.learning_rate = learning_rate
@@ -89,7 +89,7 @@ class DQLAgent:
         self.loss = loss
         self.activation = activation
         self.update_frequency = 2  # Train the model every 4 timesteps
-        self.target_update_frequency = 10
+        self.target_update_frequency = 8
         self.timesteps_since_last_target_update = 0  # Counter for timesteps since last training
         self.timesteps_since_last_update = 0
         self.model = QNetwork(state_size, action_size, layers, activation, loss)

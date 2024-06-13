@@ -12,7 +12,8 @@ def update_df_with_averages(df, cluster, time):
                 'Time': time,
                 'Cluster': child.level,
                 'CPU': averages[child.level][0],
-                'Memory': averages[child.level][1]
+                'Memory': averages[child.level][1],
+                'Usage': averages[child.level][0] + averages[child.level][1]
                 # 'Disk': averages[child.level][2]
             }
             new_rows.append(new_row)
@@ -29,14 +30,18 @@ def update_df_with_averages(df, cluster, time):
 def calculate_overall_averages(df, cluster):
     averages_df = df.groupby('Cluster').mean()
     capacities = cluster.capacities
+    ls = []
     for i in range(len(cluster.child_clusters)):
         # Divide by the respective capacities
-        averages_df.loc[i, 'CPU'] /= capacities[i][0]
-        averages_df.loc[i, 'Memory'] /= capacities[i][1]
+        averages_df.loc[i, 'Usage'] /= (capacities[i][0] + capacities[i][1])
+        ls.append(averages_df.loc[i, 'Usage'])
+        # averages_df.loc[i, 'CPU'] /= capacities[i][0]
+        # averages_df.loc[i, 'Memory'] /= capacities[i][1]
         # averages_df.loc[i, 'Disk'] /= capacities[i][2]
 
-    # return averages_df[['CPU', 'Memory', 'Disk']]
-    return averages_df[['CPU', 'Memory']]
+    # return averages_df[['CPU', 'Memory']]
+    # print(averages_df[['Usage']])
+    return ls
 
 def plot_cpu(df):
     for cluster_name in df['Cluster'].unique():
@@ -61,7 +66,7 @@ def average_type_instances_df(cluster):
             new_rows.append(new_row)
     # Convert new_rows to a DataFrame
     df = pd.DataFrame(new_rows)
-    print(df)
+    # print(df)
     return
 
 def type_instances_response_times_df(cluster):
@@ -76,7 +81,7 @@ def type_instances_response_times_df(cluster):
             new_rows.append(new_row)
     # Convert new_rows to a DataFrame
     df = pd.DataFrame(new_rows)
-    print(df)
+    # print(df)
     return
 
 def instances_response_times_df(cluster):
@@ -91,6 +96,21 @@ def instances_response_times_df(cluster):
     df = pd.DataFrame(new_rows)
     print(df)
     return ls[0]
+
+def clusters_response_times_df(cluster):
+    new_rows = []  # Initialize an empty list to hold dictionaries of new row data
+    ls = cluster.overall_separate_response_times
+    if cluster.child_clusters is not None:
+        new_row = {
+            'Near_Edge_avg_response_times': ls[0],
+            'Far_Edge_avg_response_times': ls[1],
+            'Cloud_avg_response_times': ls[2],
+        }
+        new_rows.append(new_row)
+    # Convert new_rows to a DataFrame
+    df = pd.DataFrame(new_rows)
+    print(df)
+    return ls
 
 def anomaly_2_step_occurancies_df(cluster):
     new_rows = []  # Initialize an empty list to hold dictionaries of new row data
@@ -110,7 +130,8 @@ def create_and_update_dataframe(values):
 
     filename = 'data.csv'
     columns = ['System_specs', 'Total_runtime', 'Avg energy consumption cost of machines in $',
-    'Overall energy consumption cost of machines in $', 'Avg response time of completed task instances']
+    'Overall energy consumption cost of machines in $', 'Avg util of each cluster', 
+    'Avg response time of completed task instances', 'Avg response time of each cluster']
     # Create directory if it doesn't exist
     data_dir = '/Users/aris/Documents/GitHub/CloudSimPy/playground/DAG/extracted_data'
     if not os.path.exists(data_dir):

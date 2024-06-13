@@ -486,6 +486,18 @@ class Cluster(object):
             # Central cluster randomly chooses a child cluster for the job
             random.choice(self.child_clusters).add_job(job) # i can add any algorithm i want
         else:
+            if self.level == 0:
+                for instance in job.task_instances:
+                    instance.response_time += 5
+                    instance.clusters_response_times[self.level] += 5
+            elif self.level == 1:
+                for instance in job.task_instances:
+                    instance.response_time += 30
+                    instance.clusters_response_times[self.level] += 30
+            elif self.level == 2:
+                for instance in job.task_instances:
+                    instance.response_time += 80
+                    instance.clusters_response_times[self.level] += 80
             self.jobs.append(job)
 
     @property
@@ -786,13 +798,13 @@ class Cluster(object):
             avg = 0
             for job in self.jobs:
                 for task_instance in job.task_instances:
-                    avg += task_instance.response_time 
+                    avg += task_instance.clusters_response_times[self.level] 
                     cnt += 1
             for instance in self.deleted_nodes_info[0]:
-                avg += instance.response_time
+                avg += instance.clusters_response_times[self.level]
                 cnt += 1
             for instance in self.deleted_nodes_info[1]:
-                avg += instance.response_time
+                avg += instance.clusters_response_times[self.level]
                 cnt += 1   
             return avg, cnt
     

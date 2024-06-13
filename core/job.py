@@ -412,6 +412,8 @@ class TaskInstance(object):
         self.finished_timestamp = None
         self.time_threshold = None
 
+        self.clusters_response_times = [0,0,0]
+
     @property
     def id(self):
         return str(self.task.id) + '-' + str(self.task_instance_index)
@@ -481,6 +483,7 @@ class TaskInstance(object):
                                 if (not self.machine.accommodate(self) and not self.reset):
                                     yield self.env.timeout(0.1)
                                     self.response_time += 0.1
+                                    self.clusters_response_times[self.machine.topology] += 0.1
                             except AttributeError:
                                 # Handle the case where self.machine is None or doesn't have the accommodate method
                                 print('i am task instance %s of task %s of job %s and i dont have a machine at time %f and machine %s ' \
@@ -507,6 +510,15 @@ class TaskInstance(object):
             self.running = False
             self.finished = True
             self.has_finished = True
+            if self.machine.topology == 0:
+                self.response_time += 2
+                self.clusters_response_times[self.machine.topology] += 2
+            elif self.machine.topology == 1:
+                self.response_time += 10
+                self.clusters_response_times[self.machine.topology] += 10
+            elif self.machine.topology == 2:
+                self.response_time += 30
+                self.clusters_response_times[self.machine.topology] += 30
             self.machine.stop_task_instance(self)
             # print('Task instance %f of task %f of job %f has finished in %s time with response_time %s' \
             # %(self.task_instance_index, self.task.task_index, self.task.job.id, self.env.now, self.response_time))
@@ -594,6 +606,15 @@ class TaskInstance(object):
         self.started_timestamp = self.env.now
         self.machine = machine
         self.machine.run_task_instance(self)
+        if self.machine.topology == 0:
+            self.response_time += 2
+            self.clusters_response_times[self.machine.topology] += 2
+        elif self.machine.topology == 1:
+            self.response_time += 10
+            self.clusters_response_times[self.machine.topology] += 10
+        elif self.machine.topology == 2:
+            self.response_time += 30
+            self.clusters_response_times[self.machine.topology] += 30
         self.process = self.env.process(self.do_work())
     
     # def alter_task_config(self):

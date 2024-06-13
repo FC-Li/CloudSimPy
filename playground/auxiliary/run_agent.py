@@ -21,11 +21,11 @@ def main(name, learning_rate, layers, loss, activation):
     model_path = os.path.join(model_dir, 'model.pth')
     print(model_dir, model_path)
     if os.path.exists(model_path):
-        agent = DQLAgent(state_features_num, actions_features_num, 0.9, name, jobs_num, layers, learning_rate, loss_func, activ_func)
+        agent = DQLAgent(state_features_num, actions_features_num, 0.5, name, jobs_num, layers, learning_rate, loss_func, activ_func)
         agent.load_model(model_path)
         print("Loaded a pre-existing model")
     else:
-        agent = DQLAgent(state_features_num, actions_features_num, 0.9, name, jobs_num, layers, learning_rate, loss_func, activ_func)
+        agent = DQLAgent(state_features_num, actions_features_num, 0.5, name, jobs_num, layers, learning_rate, loss_func, activ_func)
 
     # agent.test_act([[0.5, 0.5, 0.5, 1, 0, 0, 0, 0, 0, 0],
     # [0.5, 0.5, 0, 1, 0, 0, 0, 0, 0, 0],
@@ -63,7 +63,7 @@ def main(name, learning_rate, layers, loss, activation):
     files = os.listdir(episodes_dir)
     num_files = len(files)
     # for i in range(70, num_files):
-    for i in range(90, num_files):
+    for i in range(40, 110):
         all_tuples = []
         episode_filename = f'episode_{i}.pkl'
         episode_path = os.path.join(episodes_dir, episode_filename)
@@ -75,9 +75,9 @@ def main(name, learning_rate, layers, loss, activation):
             print(f"File '{episode_filename}' not found.")
         for state, action, reward, next_state, done in all_tuples:
             agent.remember(state, action, reward, next_state, done)
-            agent.replay(20, False)
-        if (i % 5 == 0):
-            agent.memory.clear()
+            agent.replay(16, False)
+        # if (i % 3 == 0):
+        agent.memory.clear()
     agent.save_model(False)
 
     agent.test_act([[0.5, 0.5, 0.5, 1, 0, 0, 0, 0, 0, 0],

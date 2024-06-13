@@ -28,7 +28,7 @@ class Episode(object):
         self.method = method
         self.algorithm = algorithm
         # Initialize DataFrame
-        columns = ['Time', 'Cluster', 'CPU', 'Memory', 'Disk']
+        columns = ['Time', 'Cluster', 'CPU', 'Memory', 'Disk', 'Usage']
         self.df = pd.DataFrame(columns=columns)
         self.kwh_cost = []
 
@@ -91,11 +91,11 @@ class Episode(object):
             model_path = os.path.join(model_dir, 'model.pth')  # Change from 'model.h5' to 'model.pth'
             print(model_dir, model_path)
             if os.path.exists(model_path):
-                self.agent = DQLAgent(state_features_num, actions_features_num, 0.9, name, jobs_num, layers, learning_rate, loss_func, activ_func, train_flag)
+                self.agent = DQLAgent(state_features_num, actions_features_num, 0.5, name, jobs_num, layers, learning_rate, loss_func, activ_func, train_flag)
                 self.agent.load_model(model_path)
                 print("Loaded a pre-existing model")
             else:
-                self.agent = DQLAgent(state_features_num, actions_features_num, 0.9, name, jobs_num, layers, learning_rate, loss_func, activ_func, train_flag)
+                self.agent = DQLAgent(state_features_num, actions_features_num, 0.5, name, jobs_num, layers, learning_rate, loss_func, activ_func, train_flag)
             reward_giver = RewardGiver(cluster)
             self.scheduler = DQLScheduler(self.agent, cluster, reward_giver)
             # for i in range(10):
@@ -107,14 +107,15 @@ class Episode(object):
             self.agent.test_act([[0.5, 0.5, 0.5, 1, 0, 0, 0, 0, 0, 0],
             [0.5, 0.5, 0, 1, 0, 0, 0, 0, 0, 0],
             [0.5, 0, 0.5, 1, 0, 0, 0, 0, 0, 0],
+            [0.8, 0.8, 1, 1, 0.02, 0, 0, 0, 0, 0],
             [0.5, 1, 0.5, 1, 0, 0.1, 0, 0, 0, 0],
             [0.5, 1, 0.5, 1, 0, 0, 0.001, 0, 0, 1],
             [0.5, 0, 0.5, 1, 0, 0, 0.001, 0, 0, 1],
             [0.8, 0.8, 1, 1, 0, 0.1, 0.1, 0, 1, 0],
             [0.8, 0.8, 1, 1, 0.02, 0.1, 0.1, 1, 0, 0],
-            [0.5, 0.5, 0.5, 1, 0.5, 0.001, 0, 1, 1, 0],
-            [0.5, 1, 0.5, 1, 0.5, 0.001, 0, 1, 1, 0],
-            [1, 1, 0.5, 1, 0.5, 0.001, 0, 1, 1, 0],
+            [0.5, 0.5, 0.5, 1, 0.1, 0.1, 0, 1, 1, 0],
+            [0.5, 1, 0.5, 1, 0.1, 0.1, 0, 1, 1, 0],
+            [1, 1, 0.5, 1, 0.1, 0.1, 0, 1, 1, 0],
             [0.5, 0.5, 0.5, 1, 0, 0.02, 0, 0, 1, 0],
             [0.5, 0.5, 0, 1, 0, 0.02, 0, 0, 1, 0],
             [0.5, 0.5, 0.5, 1, 0, 0, 0.02, 0, 0, 0],
@@ -167,14 +168,6 @@ class Episode(object):
 
         # Perform required actions here...
 
-        for instance in self.simulation.cluster.running_task_instances:
-            if instance.machine.node.topology == 0:
-                instance.response_time += 10
-            if instance.machine.node.topology == 1:
-                instance.response_time += 20
-            if instance.machine.node.topology == 2:
-                instance.response_time += 50
-
         if self.method == 1:
             # list_states = []
             # self.agent.test_act([[0.0, 0.0, -0.000000000000213, 0.000000000003647367308464056, 0.0026246811594202828, 0.00041104347826087, 0.15, 0.075, 0.39, 0.195, 0.8625, 0.43125, 0.9090909090909091, 0.9454545454545454, 0.8712121212121212, 0.0, 0.1222298099280305, 0.08618184426703664, 0.0, 0.0, 0.0],
@@ -182,7 +175,7 @@ class Episode(object):
             if len(ls) > 0:
                 current_state = self.scheduler.extract_state()
                 print(current_state)
-                self.scheduler.act_on_pause(current_state, 5)
+                self.scheduler.act_on_pause(current_state, 16)
 
                 # generate_task_instance_configs(self.simulation.cluster.non_waiting_instances, self.env.now)
 
@@ -238,15 +231,15 @@ class Episode(object):
                 self.agent.save_model(True)
             print(self.env.now)
             # After collecting all data
-            overall_averages = calculate_overall_averages(self.df, self.simulation.cluster)
-            print(overall_averages)
+            cluster_utils = calculate_overall_averages(self.df, self.simulation.cluster)
             average_type_instances_df(self.simulation.cluster)
             anomaly_2_step_occurancies_df(self.simulation.cluster)
             response_times = instances_response_times_df(self.simulation.cluster)
+            separate_response_times = clusters_response_times_df(self.simulation.cluster)
             print("Mean cost of energy consumption:", statistics.mean(self.kwh_cost))
             print("Overall cost of energy consumption:", sum(self.kwh_cost), "$")
-            # if self.method == 1:
-            #     list = [self.model_dir[28:], self.env.now, statistics.mean(self.kwh_cost), sum(self.kwh_cost), response_times]
-            # else:
-            #     list = [self.algorithm, self.env.now, statistics.mean(self.kwh_cost), sum(self.kwh_cost), response_times]
-            # create_and_update_dataframe(list)
+            if self.method == 1:
+                list = [self.model_dir[28:], self.env.now, statistics.mean(self.kwh_cost), sum(self.kwh_cost), cluster_utils, response_times, separate_response_times]
+            else:
+                list = [self.algorithm, self.env.now, statistics.mean(self.kwh_cost), sum(self.kwh_cost), cluster_utils, response_times, separate_response_times]
+            create_and_update_dataframe(list)

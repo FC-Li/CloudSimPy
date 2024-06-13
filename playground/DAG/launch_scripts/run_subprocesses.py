@@ -9,8 +9,9 @@ scripts_directory = '/Users/aris/Documents/GitHub/CloudSimPy/playground/auxiliar
 script_path = os.path.join(scripts_directory, script)
 
 # # Arguments to pass to the Python scripts
-# # script_arguments = [
-# #     ['all', '0.0001', '6', 'MSE', 'ReLU'],  # Arguments for script1.py
+# script_arguments = [
+#     ['all', '0.00001', '6', 'MSE', 'ReLU'],  # Arguments for script1.py
+# ]
 # #     ['all', '0.00001', '6', 'MSE', 'ReLU'],
 # #     ['all', '0.000005', '6', 'MSE', 'ReLU'],
 # #     ['all', '0.0001', '5', 'MSE', 'ReLU'],
@@ -42,7 +43,7 @@ script_path = os.path.join(scripts_directory, script)
 # for args in script_arguments:
 # # for script, args in zip(scripts_to_run, script_arguments):
     
-#     for i in range(5):
+#     for i in range(10):
 #         # Execute the script using subprocess
 #         print(f"Running script: {script} with arguments: {args}")
 #         subprocess.run([script_path, args[0], args[1], args[2], args[3], args[4]])
@@ -57,8 +58,9 @@ script_path2 = os.path.join(scripts_directory2, script2)
 
 # Arguments to pass to the Python scripts
 script_arguments2 = [
-    ['1', 'FirstFit', 'all_updated', '0.00001', '6', 'MSE', 'ReLU']
-    # ['1', 'FirstFit', 'all', '0.00001', '6', 'MSE', 'ReLU'],
+    # ['0', 'FirstFit', 'all', '0.00001', '6', 'MSE', 'ReLU'],
+    # ['0', 'BestFit', 'all', '0.00001', '6', 'MSE', 'ReLU'],
+    ['1', 'FirstFit', 'all_updated_0.4_e', '0.00001', '6', 'MSE', 'ReLU']
     # ['1', 'FirstFit', 'all', '0.00001', '6', 'MSE', 'LeakyReLU']]
     # ['1', 'FirstFit', 'util', '0.00001', '6', 'MSE', 'ReLU'],
     # ['1', 'FirstFit', 'util', '0.00001', '6', 'MSE', 'LeakyReLU'],
@@ -70,7 +72,7 @@ script_arguments2 = [
 for args in script_arguments2:
 # for script, args in zip(scripts_to_run, script_arguments):
 
-    for _ in range(15):
+    for _ in range(100):
         
         # Execute the script using subprocess
         print(f"Running script: {script2} with arguments: {args}")

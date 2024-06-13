@@ -22,6 +22,9 @@ class DQLScheduler:
             self.agent.remember(self.last_state, self.last_action, self.old_reward[1], current_state, False)
             self.agent.replay(batch_size, False)
 
+        # if (self.last_state == 1 and self.cluster.overall_response_time < 3000):
+        #     self.cluster.remove_nodes(0,10)
+
         # Select and apply action for the current pause
         self.last_action = self.agent.act(current_state)
         self.apply_action(self.last_action)
