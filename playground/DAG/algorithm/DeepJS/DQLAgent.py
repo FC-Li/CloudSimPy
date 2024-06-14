@@ -71,15 +71,15 @@ class QNetwork(nn.Module):
             raise ValueError("Unknown loss function type: {}".format(loss))
 
 class DQLAgent:
-    def __init__(self, state_size, action_size, gamma, name, jobs_num, layers, learning_rate, loss, activation, train_flag=None):
+    def __init__(self, state_size, action_size, gamma, name, jobs_num, layers, learning_rate, loss, activation, exploration, train_flag=None):
         self.state_size = state_size
         self.action_size = action_size
         self.layers = layers
         self.memory = deque(maxlen=2000)  # Replay buffer
         self.gamma = gamma  # Discount rate
-        self.epsilon = 0.4  # Exploration rate
+        self.epsilon = exploration  # Exploration rate
         self.epsilon_min = 0.01
-        self.epsilon_decay = 0.995
+        self.epsilon_decay = 1
         self.learning_rate = learning_rate
         self.learning_rate_decay = 0.9
         self.decay_steps = 2

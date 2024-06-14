@@ -20,7 +20,7 @@ from playground.DAG.utils.feature_functions import features_extract_func_ac, fea
 from playground.auxiliary.tools import average_completion, average_slowdown
 from playground.DAG.adapter.episode import Episode
 
-def main(method, algorithm, name, learning_rate, layers, loss, activation):
+def main(method, algorithm, name, learning_rate, layers, loss, activation, exploration):
 
     os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
@@ -66,7 +66,7 @@ def main(method, algorithm, name, learning_rate, layers, loss, activation):
         algorithm = BestFitAlgorithm()
     
     episode = Episode(machine_groups, machines_number, node_configs, jobs_csv, method, algorithm, name, learning_rate, layers, \
-    loss, activation, None)
+    loss, activation, exploration, None)
     episode.run()
     if algorithm == 'FirstFit':
         print('FirstFitAlgorithm')
@@ -83,6 +83,7 @@ if __name__ == "__main__":
     parser.add_argument('layers', type=int, help='Number of layers for the neural network.')
     parser.add_argument('loss', type=str, help='Loss function for the neural network.')
     parser.add_argument('activation', type=str, help='Activation function for the neural network.')
+    parser.add_argument('exploration', type=float, help='Exploration rate for the neural network.')
     args = parser.parse_args()
 
-    main(args.method, args.algorithm, args.name, args.learning_rate, args.layers, args.loss, args.activation)
+    main(args.method, args.algorithm, args.name, args.learning_rate, args.layers, args.loss, args.activation, args.exploration)

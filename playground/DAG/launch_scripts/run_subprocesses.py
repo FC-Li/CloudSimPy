@@ -60,7 +60,12 @@ script_path2 = os.path.join(scripts_directory2, script2)
 script_arguments2 = [
     # ['0', 'FirstFit', 'all', '0.00001', '6', 'MSE', 'ReLU'],
     # ['0', 'BestFit', 'all', '0.00001', '6', 'MSE', 'ReLU'],
-    ['1', 'FirstFit', 'all_updated_0.4_e', '0.00001', '6', 'MSE', 'ReLU']
+    ['1', 'FirstFit', 'all_updated_var_e', '0.00001', '6', 'MSE', 'ReLU', '0.8'],
+    ['1', 'FirstFit', 'all_updated_var_e', '0.00001', '6', 'MSE', 'ReLU', '0.7'],
+    ['1', 'FirstFit', 'all_updated_var_e', '0.00001', '6', 'MSE', 'ReLU', '0.5'],
+    ['1', 'FirstFit', 'all_updated_var_e', '0.00001', '6', 'MSE', 'ReLU', '0.4'],
+    ['1', 'FirstFit', 'all_updated_var_e', '0.00001', '6', 'MSE', 'ReLU', '0.3'],
+    ['1', 'FirstFit', 'all_updated_var_e', '0.00001', '6', 'MSE', 'ReLU', '0.2']
     # ['1', 'FirstFit', 'all', '0.00001', '6', 'MSE', 'LeakyReLU']]
     # ['1', 'FirstFit', 'util', '0.00001', '6', 'MSE', 'ReLU'],
     # ['1', 'FirstFit', 'util', '0.00001', '6', 'MSE', 'LeakyReLU'],
@@ -69,13 +74,20 @@ script_arguments2 = [
 ]
 
 # Iterate over each script and run it
+cnt = 0
 for args in script_arguments2:
 # for script, args in zip(scripts_to_run, script_arguments):
 
-    for _ in range(100):
+    for _ in range(25):
         
+        if args[7] == '0.8':
+            if cnt == 9:
+                break
+            print("yes")
+            cnt += 1
+            
         # Execute the script using subprocess
         print(f"Running script: {script2} with arguments: {args}")
-        subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6]])
+        subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]])
 
 print("All testing scripts have been executed.")

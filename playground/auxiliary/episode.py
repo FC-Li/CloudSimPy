@@ -23,7 +23,7 @@ class Episode(object):
     broker_cls = Broker
 
     def __init__(self, machine_groups, machines_number, node_configs, \
-    jobs_csv, method, algorithm, name, learning_rate, layers, loss_func, activ_func, event_file):
+    jobs_csv, method, algorithm, name, learning_rate, layers, loss_func, activ_func, exploration, event_file):
         self.env = simpy.Environment()
         self.method = method
         self.algorithm = algorithm
@@ -91,11 +91,11 @@ class Episode(object):
             model_path = os.path.join(model_dir, 'model.pth')  # Change from 'model.h5' to 'model.pth'
             print(model_dir, model_path)
             if os.path.exists(model_path):
-                self.agent = DQLAgent(state_features_num, actions_features_num, 0.5, name, jobs_num, layers, learning_rate, loss_func, activ_func, train_flag)
+                self.agent = DQLAgent(state_features_num, actions_features_num, 0.5, name, jobs_num, layers, learning_rate, loss_func, activ_func, exploration, train_flag)
                 self.agent.load_model(model_path)
                 print("Loaded a pre-existing model")
             else:
-                self.agent = DQLAgent(state_features_num, actions_features_num, 0.5, name, jobs_num, layers, learning_rate, loss_func, activ_func, train_flag)
+                self.agent = DQLAgent(state_features_num, actions_features_num, 0.5, name, jobs_num, layers, learning_rate, loss_func, activ_func, exploration, train_flag)
             reward_giver = RewardGiver(cluster)
             self.scheduler = DQLScheduler(self.agent, cluster, reward_giver)
             # for i in range(10):
