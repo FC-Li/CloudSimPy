@@ -2,7 +2,7 @@ import random
 
 from playground.auxiliary.sorted_nodes import *
 
-def extract_jobs(cluster, algorithm, num_jobs): #synartisi mono gia extraction
+def extract_jobs(overall_cluster, cluster, algorithm, num_jobs): #synartisi mono gia extraction
     machines = cluster.cluster_machines
     jobs = cluster.jobs
     selected_jobs = []
@@ -22,6 +22,15 @@ def extract_jobs(cluster, algorithm, num_jobs): #synartisi mono gia extraction
     #     return None
     if num_jobs < 15 and num_jobs > 10:
         num_jobs = 5
+    check = 0
+    for sep_len in (overall_cluster.separate_len_unscheduled_task_instances):
+        if (sep_len == 0):
+            check += 1
+    if check >= 2:
+        if num_jobs > 10:
+            num_jobs = 5
+        else:
+            num_jobs = 2
     # print((num_jobs))
     for i in range(num_jobs):
         job = presorted_jobs(cluster, algorithm)
@@ -68,16 +77,16 @@ def receive_jobs(cluster, algorithm, jobs): #synartisi gia apodoxi workloads apo
         cluster.jobs.append(job)
         if cluster.level == 0:
             for instance in job.task_instances:
-                instance.response_time += 5
-                instance.clusters_response_times[cluster.level] += 5
+                instance.response_time += 40
+                instance.clusters_response_times[cluster.level] += 40
         elif cluster.level == 1:
             for instance in job.task_instances:
-                instance.response_time += 30
-                instance.clusters_response_times[cluster.level] += 30
+                instance.response_time += 200
+                instance.clusters_response_times[cluster.level] += 200
         elif cluster.level == 2:
             for instance in job.task_instances:
-                instance.response_time += 80
-                instance.clusters_response_times[cluster.level] += 80
+                instance.response_time += 600
+                instance.clusters_response_times[cluster.level] += 600
         workloads.extend(job.task_instances)
 
     # if len(nodes) == 0:

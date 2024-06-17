@@ -7,7 +7,7 @@ class TaskInstanceConfig(object):
         self.disk = task_config.disk
         self.duration = task_config.duration
         self.response_time = task_config.response_time
-        self.before_0_response_time = 5000
+        self.before_0_response_time = 1000
         # self.before_0_response_time = np.random.uniform(0, 5000)
 
 

@@ -18,7 +18,7 @@ class DQLScheduler:
         self.old_reward[0], self.old_reward[1], self.old_reward[2] = self.reward_giver.get_overall_reward(self.old_reward)  # Implement reward calculation
         current_state = np.array(current_state, dtype=np.float32)
         current_state = np.expand_dims(current_state, axis=0)  # Add batch dimension
-        if (self.last_state is not None and self.agent.train_flag):
+        if (self.last_state is not None and self.agent.train_flag == 'True'):
             self.agent.remember(self.last_state, self.last_action, self.old_reward[1], current_state, False)
             self.agent.replay(batch_size, False)
 
@@ -30,7 +30,7 @@ class DQLScheduler:
         self.apply_action(self.last_action)
         self.last_state = current_state  # Store current state for the next call
 
-    def extract_state(self):
+    def extract_state(self, time_threshold):
         state = []
         # usage = self.cluster.usage
         # usage = min_max_normalize_list(usage, 0 ,1)
@@ -46,7 +46,7 @@ class DQLScheduler:
         state.extend(nodes_num_usage)
         # # anomalous_usage = self.cluster.anomalous_usage
         # # state.extend(anomalous_usage)
-        response_time_threshold = [6000]
+        response_time_threshold = [time_threshold]
         response_time = self.cluster.overall_response_time
         if response_time > response_time_threshold[0] / 2:
             response_time = [1]
@@ -61,7 +61,7 @@ class DQLScheduler:
         started_task_instances = min_max_normalize_list(started_task_instances, 0 , 10000)
         started_task_instances = round_to_threshold(started_task_instances, [0, 0.001, 0.02, 0.1, 0.5, 1])
         state.extend(started_task_instances)
-        waiting_task_instances = self.cluster.separate_len_0_05_1_unscheduled_task_instances
+        waiting_task_instances = self.cluster.separate_len_0_1_unscheduled_task_instances
         # waiting_task_instances = min_max_normalize_list(waiting_task_instances, 0 , 10000)
         # waiting_task_instances = round_to_threshold(waiting_task_instances, [0, 0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1])
         state.extend(waiting_task_instances)
@@ -90,22 +90,22 @@ class DQLScheduler:
         to decide on the algorithm
         """
         if action == 4: #transfer 2 jobs Near -> Far Edge
-            jobs = extract_jobs(self.cluster.child_clusters[0], "max_util", 10)
+            jobs = extract_jobs(self.cluster, self.cluster.child_clusters[0], "max_util", 10)
             receive_jobs(self.cluster.child_clusters[1], "max_util", jobs)
         if action == 5: #transfer 2 jobs Near -> Cloud
-            jobs = extract_jobs(self.cluster.child_clusters[0], "max_util", 10)
+            jobs = extract_jobs(self.cluster, self.cluster.child_clusters[0], "max_util", 10)
             receive_jobs(self.cluster.child_clusters[2], "max_util", jobs)
         if action == 6: #transfer 2 jobs Cloud -> Far Edge
-            jobs = extract_jobs(self.cluster.child_clusters[2], "max_util", 10)
+            jobs = extract_jobs(self.cluster, self.cluster.child_clusters[2], "max_util", 10)
             receive_jobs(self.cluster.child_clusters[1], "max_util", jobs)
         if action == 7: #transfer 2 jobs Far -> Near Edge
-            jobs = extract_jobs(self.cluster.child_clusters[1], "max_util", 10)
+            jobs = extract_jobs(self.cluster, self.cluster.child_clusters[1], "max_util", 10)
             receive_jobs(self.cluster.child_clusters[0], "max_util", jobs)
         if action == 8: #transfer 2 jobs Far -> Cloud
-            jobs = extract_jobs(self.cluster.child_clusters[1], "max_util", 10)
+            jobs = extract_jobs(self.cluster, self.cluster.child_clusters[1], "max_util", 10)
             receive_jobs(self.cluster.child_clusters[2], "max_util", jobs)
         if action == 9: #transfer 2 jobs Cloud -> Near Edge
-            jobs = extract_jobs(self.cluster.child_clusters[2], "max_util", 10)
+            jobs = extract_jobs(self.cluster, self.cluster.child_clusters[2], "max_util", 10)
             receive_jobs(self.cluster.child_clusters[0], "max_util", jobs)
         # if action == 10: #reallocate 5 workloads inside Near Edge
         #     reallocate_cluster_workloads(self.cluster.child_clusters[0], "max_util", 10)
@@ -114,9 +114,9 @@ class DQLScheduler:
         # if action == 12: #reallocate 5 workloads inside Cloud 
         #     reallocate_cluster_workloads(self.cluster.child_clusters[2], "max_util", 10)
         if action == 10: #cluster 0 - 1 node scale down
-            self.cluster.remove_nodes(0, 10)
+            self.cluster.remove_nodes(0, 2)
         if action == 11: #cluster 1 - 1 node scale down
-            self.cluster.remove_nodes(1, 10)
+            self.cluster.remove_nodes(1, 5)
         if action == 12: #cluster 2 - 1 node scale down
             self.cluster.remove_nodes(2, 10)
         # if action == 13: #cluster 0 - 1 node scale up

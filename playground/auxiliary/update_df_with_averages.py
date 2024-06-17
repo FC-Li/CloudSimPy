@@ -13,7 +13,7 @@ def update_df_with_averages(df, cluster, time):
                 'Cluster': child.level,
                 'CPU': averages[child.level][0],
                 'Memory': averages[child.level][1],
-                'Usage': averages[child.level][0] + averages[child.level][1]
+                'Usage': (averages[child.level][0] + averages[child.level][1])/ 2
                 # 'Disk': averages[child.level][2]
             }
             new_rows.append(new_row)
@@ -24,16 +24,14 @@ def update_df_with_averages(df, cluster, time):
     # Use pandas.concat to add the new rows to the original DataFrame
     if not new_rows_df.empty:
         df = pd.concat([df, new_rows_df], ignore_index=True)
-    # print(df)
+        
     return df
 
 def calculate_overall_averages(df, cluster):
     averages_df = df.groupby('Cluster').mean()
-    capacities = cluster.capacities
     ls = []
     for i in range(len(cluster.child_clusters)):
         # Divide by the respective capacities
-        averages_df.loc[i, 'Usage'] /= (capacities[i][0] + capacities[i][1])
         ls.append(averages_df.loc[i, 'Usage'])
         # averages_df.loc[i, 'CPU'] /= capacities[i][0]
         # averages_df.loc[i, 'Memory'] /= capacities[i][1]

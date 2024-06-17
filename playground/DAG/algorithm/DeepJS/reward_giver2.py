@@ -9,7 +9,7 @@ class RewardGiver():
         self.res_flag = 1
         self.last_util = None
         self.last_cost = None
-        self.response_time_threshold = 6000
+        self.response_time_threshold = 2000
         self.last_cnt_running = 0
         self.last_response_time_reward = None
         self.crossed_time_threshold = False
@@ -125,7 +125,7 @@ class RewardGiver():
             else:
                 if a < limits[2]:
                     overall_reward = 0
-                elif a >= limits[4]:
+                elif a >= limits[5]:
                     overall_reward = 3    
                 elif a >= limits[4]:
                     overall_reward = 2
@@ -144,7 +144,7 @@ class RewardGiver():
             else:
                 if a < limits[2]:
                     overall_reward = 0
-                elif a >= limits[4]:
+                elif a >= limits[5]:
                     overall_reward = 5  
                 elif a >= limits[4]:
                     overall_reward = 3

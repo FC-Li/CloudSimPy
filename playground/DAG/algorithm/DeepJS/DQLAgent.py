@@ -71,7 +71,7 @@ class QNetwork(nn.Module):
             raise ValueError("Unknown loss function type: {}".format(loss))
 
 class DQLAgent:
-    def __init__(self, state_size, action_size, gamma, name, jobs_num, layers, learning_rate, loss, activation, exploration, train_flag=None):
+    def __init__(self, state_size, action_size, gamma, name, jobs_num, layers, learning_rate, loss, activation, exploration, train_flag):
         self.state_size = state_size
         self.action_size = action_size
         self.layers = layers
@@ -95,7 +95,7 @@ class DQLAgent:
         self.model = QNetwork(state_size, action_size, layers, activation, loss)
         self.target_model = QNetwork(state_size, action_size, layers, activation, loss)
         self.target_model.load_state_dict(self.model.state_dict())
-        self.train_flag = train_flag if train_flag is not None else True
+        self.train_flag = train_flag
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
         self.criterion = self.model.loss_func
@@ -112,7 +112,7 @@ class DQLAgent:
         print("the q values are", q_values.detach().numpy())    
         target_q_values = self.target_model(state_tensor)
         print("the target network values are", target_q_values.detach().numpy())
-        if (np.random.rand() <= self.epsilon and self.train_flag):
+        if (np.random.rand() <= self.epsilon and self.train_flag == 'True'):
             print("i selected randomly")
             a = random.randrange(self.action_size)
             # if a == 11 or a == 10:
@@ -193,17 +193,16 @@ class DQLAgent:
         with open(episode_path, 'wb') as f:
             pickle.dump(self.memory, f)
 
-    def save_model(self, store_episode_flag):
+    def save_model(self, episode_flag):
         model_dir = 'DAG/algorithm/DeepJS/agents/%s/%s/%s/%s_%s/%s_%s_%s' % (self.name, self.layers, self.learning_rate,
         self.loss, self.activation, self.jobs_num, self.state_size, self.action_size)
         # print(model_dir)
-        if store_episode_flag:
+        if not os.path.isdir(model_dir):
+            os.makedirs(model_dir)
+        model_path = os.path.join(model_dir, 'model.pth')
+        torch.save(self.model.state_dict(), model_path)
+        if episode_flag == 'True':
             self.save_episode()
-        if self.train_flag:
-            if not os.path.isdir(model_dir):
-                os.makedirs(model_dir)
-            model_path = os.path.join(model_dir, 'model.pth')
-            torch.save(self.model.state_dict(), model_path)
             # print("i saved the model")
 
     def load_model(self, model_path):

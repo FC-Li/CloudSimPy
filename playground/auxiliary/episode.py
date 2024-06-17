@@ -23,14 +23,16 @@ class Episode(object):
     broker_cls = Broker
 
     def __init__(self, machine_groups, machines_number, node_configs, \
-    jobs_csv, method, algorithm, name, learning_rate, layers, loss_func, activ_func, exploration, event_file):
+    jobs_csv, method, algorithm, name, learning_rate, layers, loss_func, activ_func, exploration, train_flag, response_time_threshold, event_file):
         self.env = simpy.Environment()
         self.method = method
         self.algorithm = algorithm
+        self.response_time_threshold = response_time_threshold
         # Initialize DataFrame
         columns = ['Time', 'Cluster', 'CPU', 'Memory', 'Disk', 'Usage']
         self.df = pd.DataFrame(columns=columns)
         self.kwh_cost = []
+        self.train_flag = train_flag
 
         csv_reader = CSVReader(jobs_csv, self.env.now)
         jobs_num = csv_reader.get_total_jobs()
@@ -83,7 +85,6 @@ class Episode(object):
             actions_features_num = 13
             # layers = 6
             # learning_rate = 0.00001
-            train_flag = True
             # name = "all"
             model_dir = 'DAG/algorithm/DeepJS/agents/%s/%s/%s/%s_%s/%s_%s_%s' % (name, layers, learning_rate,
             loss_func, activ_func, jobs_num, state_features_num, actions_features_num)
@@ -91,11 +92,11 @@ class Episode(object):
             model_path = os.path.join(model_dir, 'model.pth')  # Change from 'model.h5' to 'model.pth'
             print(model_dir, model_path)
             if os.path.exists(model_path):
-                self.agent = DQLAgent(state_features_num, actions_features_num, 0.5, name, jobs_num, layers, learning_rate, loss_func, activ_func, exploration, train_flag)
+                self.agent = DQLAgent(state_features_num, actions_features_num, 0.2, name, jobs_num, layers, learning_rate, loss_func, activ_func, exploration, train_flag)
                 self.agent.load_model(model_path)
                 print("Loaded a pre-existing model")
             else:
-                self.agent = DQLAgent(state_features_num, actions_features_num, 0.5, name, jobs_num, layers, learning_rate, loss_func, activ_func, exploration, train_flag)
+                self.agent = DQLAgent(state_features_num, actions_features_num, 0.2, name, jobs_num, layers, learning_rate, loss_func, activ_func, exploration, train_flag)
             reward_giver = RewardGiver(cluster)
             self.scheduler = DQLScheduler(self.agent, cluster, reward_giver)
             # for i in range(10):
@@ -173,7 +174,7 @@ class Episode(object):
             # self.agent.test_act([[0.0, 0.0, -0.000000000000213, 0.000000000003647367308464056, 0.0026246811594202828, 0.00041104347826087, 0.15, 0.075, 0.39, 0.195, 0.8625, 0.43125, 0.9090909090909091, 0.9454545454545454, 0.8712121212121212, 0.0, 0.1222298099280305, 0.08618184426703664, 0.0, 0.0, 0.0],
             # [0.9656290000000003, 0.4669128333333329, 0.951532266666666, 0.3508053333333343, 0.9606587083333316, 0.32809027777777783, 0.15, 0.075, 0.375, 0.1875, 0.9, 0.45, 0.9090909090909091, 0.9090909090909091, 0.9090909090909091, 0.004645378352490422, 0.004268045371219065, 0.0037719395146685983, 0.04142, 0.04254, 0.05284]])
             if len(ls) > 0:
-                current_state = self.scheduler.extract_state()
+                current_state = self.scheduler.extract_state(self.response_time_threshold)
                 print(current_state)
                 self.scheduler.act_on_pause(current_state, 16)
 
@@ -199,6 +200,7 @@ class Episode(object):
 
         self.df = update_df_with_averages(self.df, self.simulation.cluster, self.env.now)
         overall_averages = calculate_overall_averages(self.df, self.simulation.cluster)
+        print(overall_averages)
         self.kwh_cost.append(self.simulation.cluster.average_kwh_cost)
 
         if self.method == 0:
@@ -224,11 +226,14 @@ class Episode(object):
         if (not self.simulation.finished):
             # yield self.env.timeout(300)
             # print('The time at the start of the next pause is', self.env.now + 301.0)
-            cnt += 1
-            self.env.process(self.trigger_pause_event_after_rl_actions(50, cnt))  # Schedule the pause trigger
+            if self.env.now > 12000:
+                self.simulation.finished == True
+            else:
+                cnt += 1
+                self.env.process(self.trigger_pause_event_after_rl_actions(50, cnt))  # Schedule the pause trigger
         else:
-            if self.method == 1:
-                self.agent.save_model(True)
+            if self.method == 1 and self.train_flag == 'True':
+                self.agent.save_model(self.train_flag)
             print(self.env.now)
             # After collecting all data
             cluster_utils = calculate_overall_averages(self.df, self.simulation.cluster)
@@ -239,7 +244,9 @@ class Episode(object):
             print("Mean cost of energy consumption:", statistics.mean(self.kwh_cost))
             print("Overall cost of energy consumption:", sum(self.kwh_cost), "$")
             if self.method == 1:
-                list = [self.model_dir[28:], self.env.now, statistics.mean(self.kwh_cost), sum(self.kwh_cost), cluster_utils, response_times, separate_response_times]
+                if self.train_flag == 'False':
+                    list = [self.model_dir[28:], self.env.now, statistics.mean(self.kwh_cost), sum(self.kwh_cost), cluster_utils, response_times, separate_response_times]
+                    create_and_update_dataframe(list)
             else:
                 list = [self.algorithm, self.env.now, statistics.mean(self.kwh_cost), sum(self.kwh_cost), cluster_utils, response_times, separate_response_times]
-            create_and_update_dataframe(list)
+                create_and_update_dataframe(list)

@@ -511,14 +511,14 @@ class TaskInstance(object):
             self.finished = True
             self.has_finished = True
             if self.machine.topology == 0:
-                self.response_time += 2
-                self.clusters_response_times[self.machine.topology] += 2
+                self.response_time += 20
+                self.clusters_response_times[self.machine.topology] += 20
             elif self.machine.topology == 1:
-                self.response_time += 10
-                self.clusters_response_times[self.machine.topology] += 10
+                self.response_time += 100
+                self.clusters_response_times[self.machine.topology] += 100
             elif self.machine.topology == 2:
-                self.response_time += 30
-                self.clusters_response_times[self.machine.topology] += 30
+                self.response_time += 300
+                self.clusters_response_times[self.machine.topology] += 300
             self.machine.stop_task_instance(self)
             # print('Task instance %f of task %f of job %f has finished in %s time with response_time %s' \
             # %(self.task_instance_index, self.task.task_index, self.task.job.id, self.env.now, self.response_time))
@@ -607,14 +607,14 @@ class TaskInstance(object):
         self.machine = machine
         self.machine.run_task_instance(self)
         if self.machine.topology == 0:
-            self.response_time += 2
-            self.clusters_response_times[self.machine.topology] += 2
+            self.response_time += 20
+            self.clusters_response_times[self.machine.topology] += 20
         elif self.machine.topology == 1:
-            self.response_time += 10
-            self.clusters_response_times[self.machine.topology] += 10
+            self.response_time += 100
+            self.clusters_response_times[self.machine.topology] += 100
         elif self.machine.topology == 2:
-            self.response_time += 30
-            self.clusters_response_times[self.machine.topology] += 30
+            self.response_time += 300
+            self.clusters_response_times[self.machine.topology] += 300
         self.process = self.env.process(self.do_work())
     
     # def alter_task_config(self):

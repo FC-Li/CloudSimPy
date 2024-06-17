@@ -488,16 +488,16 @@ class Cluster(object):
         else:
             if self.level == 0:
                 for instance in job.task_instances:
-                    instance.response_time += 5
-                    instance.clusters_response_times[self.level] += 5
+                    instance.response_time += 40
+                    instance.clusters_response_times[self.level] += 40
             elif self.level == 1:
                 for instance in job.task_instances:
-                    instance.response_time += 30
-                    instance.clusters_response_times[self.level] += 30
+                    instance.response_time += 200
+                    instance.clusters_response_times[self.level] += 200
             elif self.level == 2:
                 for instance in job.task_instances:
-                    instance.response_time += 80
-                    instance.clusters_response_times[self.level] += 80
+                    instance.response_time += 600
+                    instance.clusters_response_times[self.level] += 600
             self.jobs.append(job)
 
     @property
@@ -540,7 +540,7 @@ class Cluster(object):
                 ls.append(child.cpu_capacity)
             return ls
         else:
-            return sum(machine.cpu_capacity for node in self.nodes for machine in node.machines)
+            return 3 * 3 * self.node_capacity
         
 
     @property
@@ -551,7 +551,7 @@ class Cluster(object):
                 ls.append(child.memory_capacity)
             return ls
         else:
-            return sum(machine.memory_capacity for node in self.nodes for machine in node.machines)
+            return 3 * 3 * self.node_capacity
         
 
     @property
@@ -562,7 +562,7 @@ class Cluster(object):
                 ls.append(child.disk_capacity)
             return ls
         else:
-            return sum(machine.disk_capacity for node in self.nodes for machine in node.machines)
+            return 1 * 1 * self.node_capacity
 
     @property
     def usage(self):
@@ -586,14 +586,13 @@ class Cluster(object):
                 ls.append(child.usage)
             return ls
         else:
-            ls = [0,0,0]
+            ls = [0,0]
             num = len(self.nodes)
             if num > 0:
                 for node in self.nodes:
                     metrics = node.usage()
                     ls[0] += metrics[0]
                     ls[1] += metrics[1]
-                    ls[2] += metrics[2]
                 # Divide each element by the constant
                 ls = [element / num for element in ls]
             return ls
