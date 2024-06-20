@@ -1,0 +1,3 @@
+Number of episodes,Total_runtime,Avg energy consumption cost of machines in €,Overall energy consumption cost of machines in €,Avg response time of completed task instances,Avg util of Near Edge cluster,Avg util of Far Edge cluster,Avg util of Cloud cluster,Avg response time of Near Edge cluster, Avg response time of Far Edge cluster, Avg response time of Cloud cluster
+FirstFit,360,104.71499999999972,7539.479999999993,219.9356917726334,0.3607621613822834, 0.2947140230545343, 0.16724816280767626,243.41884073911133, 219.499898275528, 197.05708929788684
+BestFit,320,104.71499999999972,6701.76567802,212.4986867290515,0.37656909791174153, 0.32876058362268523, 0.2093382601457841,209.9098202247191, 218.4253734356076, 199.81054421768708

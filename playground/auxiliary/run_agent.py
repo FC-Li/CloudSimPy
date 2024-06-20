@@ -36,9 +36,9 @@ def main(name, learning_rate, layers, loss, activation, lower_bound, train_flag)
 
     files = os.listdir(episodes_dir)
     num_files = len(files)
-    upper_bound = lower_bound + 25
+    upper_bound = lower_bound + 50
     # for i in range(70, num_files):
-    for i in range(75, 110):
+    for i in range(lower_bound, upper_bound):
         all_tuples = []
         episode_filename = f'episode_{i}.pkl'
         episode_path = os.path.join(episodes_dir, episode_filename)
@@ -72,10 +72,10 @@ def main(name, learning_rate, layers, loss, activation, lower_bound, train_flag)
     [0.5, 0.5, 0, 1, 0, 0, 0.02, 0, 0, 1],
     [1, 0.3, 0.1, 1, 0.1, 0, 0, 1, 0, 0],
     [1, 0.5, 0.5, 1, 0.1, 0, 0, 1, 0, 0],
-    [0.5, 0, 1, 0, 0.1, 0.1, 0.1, 1, 1, 1],
-    [0, 0.5, 1, 0, 0.1, 0.1, 0.1, 1, 1, 1],
-    [0, 0, 0.5, 0, 0.1, 0.1, 0.1, 1, 1, 1],
-    [0, 0.5, 0.5, 0, 0.1, 0.1, 0.1, 1, 1, 1],
+    [0.5, 0, 1, 0, 0.1, 0.01, 0.1, 1, 1, 1],
+    [0, 0.5, 1, 0, 0.01, 0.1, 0.1, 1, 1, 1],
+    [0, 0, 0.5, 0, 0.01, 0.01, 0.1, 1, 1, 1],
+    [0, 0.5, 0.5, 0, 0.001, 0.1, 0.1, 1, 1, 1],
     [0.5, 0.5, 0.5, 0, 0.1, 0.1, 0.1, 1, 1, 1],
     [0.5, 0.3, 0.5, 1, 0.1, 0.1, 0.1, 1, 1, 1],
     [0.5, 1, 0.5, 1, 0.1, 0.1, 0.1, 1, 1, 1],

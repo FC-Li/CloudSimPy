@@ -14,33 +14,95 @@ scripts_directory2 = '/Users/aris/Documents/GitHub/CloudSimPy/playground/DAG/lau
 script_path2 = os.path.join(scripts_directory2, script2)
 
 script_arguments3 = [
+    ['1', 'FirstFit', 'all_updated_0.4_e', '0.00001', '6', 'MSE', 'ReLU', '0.4', 'True'],
+]
+
+script_arguments = [
     ['1', 'FirstFit', 'all_updated_var_e', '0.00001', '6', 'MSE', 'ReLU', '0.4', 'True'],
 ]
 
-lower_bound = 151
+script_arguments10 = [
+    ['0', 'BestFit', 'all_updated', '0.00001', '6', 'MSE', 'ReLU', '0.4', 'False']
+]
+
+lower_bound = 26
+
+# for args in script_arguments:
+
+
+    # for _ in range(15):
+
+    #     # Execute the script using subprocess
+    #     print(f"Running script: {script2} with arguments: {args}")
+    #     subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]])
+
+    # for i in range(5):
+    #     # Execute the script using subprocess
+    #     print(f"Running script: {script} with arguments: {args}")
+    #     subprocess.run([script_path, args[2], args[3], args[4], args[5], args[6], str(lower_bound), 'False'])
+
+    # subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False', '2000', '10'])
+
+#     # lower_bound += 25
+
+#     subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False', '4000', '10'])
+
+#     subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False', '0', '10'])
+
+# for args in script_arguments10:
+
+# #     subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False', '0', '10'])
+
+#     subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False', '0', '10'])
+
+
+lower_bound = 173
 
 for args in script_arguments3:
-
     for _ in range(1):
-
-        # for _ in range(15):
-
+        
+        # for _ in range(25):
         #     # Execute the script using subprocess
         #     print(f"Running script: {script2} with arguments: {args}")
-        #     subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]])
+        #     subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], '2500', '1'])
+    # for i in range(4):
+        # Execute the script using subprocess
+        print(f"Running script: {script} with arguments: {args}")
+        subprocess.run([script_path, args[2], args[3], args[4], args[5], args[6], str(lower_bound), 'False'])
 
-        # for i in range(4):
-        #     # Execute the script using subprocess
-        #     print(f"Running script: {script} with arguments: {args}")
-        #     subprocess.run([script_path, args[2], args[3], args[4], args[5], args[6], str(lower_bound), 'False'])
+        lower_bound += 25
 
-        # subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False', '2000'])
+        # subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False', '2000', '10'])
 
-        # lower_bound += 25
+        # subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False', '4000', '10'])
 
-        # subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False', '4000'])
+        # subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False', '0', '10'])
 
-        subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False', '0'])
+print("All testing scripts have been executed for constant e.")
+
+lower_bound = 177
+
+for args in script_arguments:
+    for _ in range(1):
+        
+        for _ in range(25):
+            # Execute the script using subprocess
+            print(f"Running script: {script2} with arguments: {args}")
+            subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], '2500', '1'])
+        for i in range(2):
+            # Execute the script using subprocess
+            print(f"Running script: {script} with arguments: {args}")
+            subprocess.run([script_path, args[2], args[3], args[4], args[5], args[6], str(lower_bound), 'False'])
+
+        lower_bound += 25
+
+        # subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False', '2000', '10'])
+
+        # subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False', '4000', '10'])
+
+        # subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False', '0', '10'])
+
+print("All testing scripts have been executed for constant e.")
 
 # lower_bound = 51
 
@@ -77,29 +139,6 @@ for args in script_arguments3:
 # script_arguments3 = [
 #     ['1', 'FirstFit', 'all_updated_0.4_e', '0.00001', '6', 'MSE', 'ReLU', '0.4', 'True'],
 # ]
-
-# lower_bound = 116
-
-# for args in script_arguments3:
-
-#     for _ in range(4):
-
-        # for _ in range(15):
-
-        #     # Execute the script using subprocess
-        #     print(f"Running script: {script2} with arguments: {args}")
-        #     subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]])
-
-        # for i in range(15):
-#             # Execute the script using subprocess
-#             print(f"Running script: {script} with arguments: {args}")
-#             subprocess.run([script_path, args[2], args[3], args[4], args[5], args[6], str(lower_bound), 'False'])
-
-#         lower_bound += 15
-
-#         subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False'])
-
-# print("All testing scripts have been executed for constant e.")
 
 # # Arguments to pass to the Python scripts
 # script_arguments = [

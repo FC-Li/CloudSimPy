@@ -9,10 +9,10 @@ class RewardGiver():
         self.res_flag = 1
         self.last_util = None
         self.last_cost = None
-        self.response_time_threshold = 2000
+        self.response_time_threshold = 2500
         self.last_cnt_running = 0
         self.last_response_time_reward = None
-        self.crossed_time_threshold = False
+        self.crossed_time_threshold = 0
 
     def get_overall_reward(self, old_reward_list):
         cnt = 0
@@ -54,6 +54,7 @@ class RewardGiver():
                 #         self.flag = 0
 
         if (self.cluster.overall_response_time < (self.response_time_threshold / 2 )):
+            print("yes")
             self.res_flag = 0
             self.crossed_time_threshold = 0
         else:
@@ -75,7 +76,7 @@ class RewardGiver():
             util = self.last_util
             reward += (0.2 * util)
         # self.res_flag = 1
-        if self.res_flag:
+        if self.res_flag == 1:
             response_times = self.last_response_time_reward = self.response_time()
             reward += (1.5 * response_times)
         else:
@@ -97,7 +98,7 @@ class RewardGiver():
         # reward += self.anomaly()
         # reward += (0.25 * transmit_delays)
         print('util reward is %f, response_time reward is %f and transmit delays reward is %f '\
-        'and monetary reward is %f' % ((0.5 * util), (2.5 * response_times), (0.1 * transmit_delays), (0.1 * monetary_cost)))
+        'and monetary reward is %f' % ((0.5 * util), (1.5 * response_times), (0.1 * transmit_delays), (0.1 * monetary_cost)))
         print(reward)
         if reward == 0 and old_reward == 0:
             a = 0

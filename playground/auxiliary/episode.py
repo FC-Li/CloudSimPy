@@ -23,7 +23,8 @@ class Episode(object):
     broker_cls = Broker
 
     def __init__(self, machine_groups, machines_number, node_configs, \
-    jobs_csv, method, algorithm, name, learning_rate, layers, loss_func, activ_func, exploration, train_flag, response_time_threshold, event_file):
+    jobs_csv, method, algorithm, name, learning_rate, layers, loss_func, \
+    activ_func, exploration, train_flag, response_time_threshold, response_time_rtt, event_file):
         self.env = simpy.Environment()
         self.method = method
         self.algorithm = algorithm
@@ -34,7 +35,7 @@ class Episode(object):
         self.kwh_cost = []
         self.train_flag = train_flag
 
-        csv_reader = CSVReader(jobs_csv, self.env.now)
+        csv_reader = CSVReader(jobs_csv, self.env.now, response_time_rtt)
         jobs_num = csv_reader.get_total_jobs()
         jobs_configs = csv_reader.generate(0, jobs_num)
         
@@ -118,15 +119,15 @@ class Episode(object):
             [0.5, 1, 0.5, 1, 0.1, 0.1, 0, 1, 1, 0],
             [1, 1, 0.5, 1, 0.1, 0.1, 0, 1, 1, 0],
             [0.5, 0.5, 0.5, 1, 0, 0.02, 0, 0, 1, 0],
-            [0.5, 0.5, 0, 1, 0, 0.02, 0, 0, 1, 0],
+            [0.5, 0.5, 0, 1, 0, 0.1, 0, 0, 1, 0],
             [0.5, 0.5, 0.5, 1, 0, 0, 0.02, 0, 0, 0],
             [0.5, 0.5, 0, 1, 0, 0, 0.02, 0, 0, 1],
             [1, 0.3, 0.1, 1, 0.1, 0, 0, 1, 0, 0],
             [1, 0.5, 0.5, 1, 0.1, 0, 0, 1, 0, 0],
-            [0.5, 0, 1, 0, 0.1, 0.1, 0.1, 1, 1, 1],
-            [0, 0.5, 1, 0, 0.1, 0.1, 0.1, 1, 1, 1],
-            [0, 0, 0.5, 0, 0.1, 0.1, 0.1, 1, 1, 1],
-            [0, 0.5, 0.5, 0, 0.1, 0.1, 0.1, 1, 1, 1],
+            [0.5, 0, 1, 0, 0.1, 0.001, 0.1, 1, 1, 1],
+            [0, 0.5, 1, 0, 0.001, 0.1, 0.1, 1, 1, 1],
+            [0, 0, 0.5, 0, 0.001, 0.001, 0.1, 1, 1, 1],
+            [0, 0.5, 0.5, 0, 0.001, 0.1, 0.1, 1, 1, 1],
             [0.5, 0.5, 0.5, 0, 0.1, 0.1, 0.1, 1, 1, 1],
             [0.5, 0.3, 0.5, 1, 0.1, 0.1, 0.1, 1, 1, 1],
             [0.5, 1, 0.5, 1, 0.1, 0.1, 0.1, 1, 1, 1],

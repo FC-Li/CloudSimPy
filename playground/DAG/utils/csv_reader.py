@@ -7,7 +7,7 @@ from playground.DAG.utils.feature_synthesize import father_task_indices
 
 
 class CSVReader(object):
-    def __init__(self, filename, clock):
+    def __init__(self, filename, clock, response_time_rtt):
         self.filename = filename
         df = pd.read_csv(self.filename)
 
@@ -50,7 +50,7 @@ class CSVReader(object):
         job_configs = []
         for job_id, task_configs in job_task_map.items():
             job_configs.append(JobConfig(job_id, job_submit_time_map[job_id], job_response_time_map[job_id], \
-            job_type[job_id], task_configs))
+            job_type[job_id], response_time_rtt, task_configs))
         job_configs.sort(key=attrgetter('submit_time'))
         self.job_configs = job_configs
         # for job in job_configs:

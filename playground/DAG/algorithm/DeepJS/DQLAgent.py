@@ -170,8 +170,8 @@ class DQLAgent:
                 self.optimizer.step()
                 if (print_flag):
                     print("the q network values after training are", self.model(state_tensor).detach().numpy())
-            if self.epsilon > self.epsilon_min:
-                self.epsilon *= self.epsilon_decay
+            # if self.epsilon > self.epsilon_min:
+                # self.epsilon *= self.epsilon_decay
             self.timesteps_since_last_update = 0
 
         if self.timesteps_since_last_target_update >= self.target_update_frequency:

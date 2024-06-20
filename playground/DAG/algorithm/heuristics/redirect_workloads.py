@@ -77,16 +77,16 @@ def receive_jobs(cluster, algorithm, jobs): #synartisi gia apodoxi workloads apo
         cluster.jobs.append(job)
         if cluster.level == 0:
             for instance in job.task_instances:
-                instance.response_time += 40
-                instance.clusters_response_times[cluster.level] += 40
+                instance.response_time += 4 * instance.task.job.job_config.response_time_rtt
+                instance.clusters_response_times[cluster.level] += 4 * instance.task.job.job_config.response_time_rtt
         elif cluster.level == 1:
             for instance in job.task_instances:
-                instance.response_time += 200
-                instance.clusters_response_times[cluster.level] += 200
+                instance.response_time += 30 * instance.task.job.job_config.response_time_rtt
+                instance.clusters_response_times[cluster.level] += 30 * instance.task.job.job_config.response_time_rtt
         elif cluster.level == 2:
             for instance in job.task_instances:
-                instance.response_time += 600
-                instance.clusters_response_times[cluster.level] += 600
+                instance.response_time += 80 * instance.task.job.job_config.response_time_rtt
+                instance.clusters_response_times[cluster.level] += 80 * instance.task.job.job_config.response_time_rtt
         workloads.extend(job.task_instances)
 
     # if len(nodes) == 0:

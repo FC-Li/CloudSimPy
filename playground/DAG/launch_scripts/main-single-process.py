@@ -20,7 +20,8 @@ from playground.DAG.utils.feature_functions import features_extract_func_ac, fea
 from playground.auxiliary.tools import average_completion, average_slowdown
 from playground.DAG.adapter.episode import Episode
 
-def main(method, algorithm, name, learning_rate, layers, loss, activation, exploration, train_flag, response_time_threshold):
+def main(method, algorithm, name, learning_rate, layers, loss, activation, \
+exploration, train_flag, response_time_threshold, response_time_rtt):
 
     os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
@@ -66,7 +67,7 @@ def main(method, algorithm, name, learning_rate, layers, loss, activation, explo
         algorithm = BestFitAlgorithm()
     
     episode = Episode(machine_groups, machines_number, node_configs, jobs_csv, method, algorithm, name, learning_rate, layers, \
-    loss, activation, exploration, train_flag, response_time_threshold, None)
+    loss, activation, exploration, train_flag, response_time_threshold, response_time_rtt, None)
     episode.run()
     if algorithm == 'FirstFit':
         print('FirstFitAlgorithm')
@@ -86,7 +87,9 @@ if __name__ == "__main__":
     parser.add_argument('exploration', type=float, help='Exploration rate for the neural network.')
     parser.add_argument('train_flag', type=str, help='Flag for decision for training or testing of the DRL model')
     parser.add_argument('response_time_threshold', type=int, help='Response time threshold')
+    parser.add_argument('response_time_rtt', type=int, help='Response time rtt time for the model')
 
     args = parser.parse_args()
 
-    main(args.method, args.algorithm, args.name, args.learning_rate, args.layers, args.loss, args.activation, args.exploration, args.train_flag, args.response_time_threshold)
+    main(args.method, args.algorithm, args.name, args.learning_rate, args.layers, args.loss, args.activation, args.exploration, \
+    args.train_flag, args.response_time_threshold, args.response_time_rtt)
