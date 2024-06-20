@@ -492,8 +492,8 @@ class Cluster(object):
                     instance.clusters_response_times[self.level] += 4 * instance.task.job.job_config.response_time_rtt
             elif self.level == 1:
                 for instance in job.task_instances:
-                    instance.response_time += 30 * instance.task.job.job_config.response_time_rtt
-                    instance.clusters_response_times[self.level] += 30 * instance.task.job.job_config.response_time_rtt
+                    instance.response_time += 40 * instance.task.job.job_config.response_time_rtt
+                    instance.clusters_response_times[self.level] += 40 * instance.task.job.job_config.response_time_rtt
             elif self.level == 2:
                 for instance in job.task_instances:
                     instance.response_time += 80 * instance.task.job.job_config.response_time_rtt

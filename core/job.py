@@ -515,7 +515,7 @@ class TaskInstance(object):
                 self.clusters_response_times[self.machine.topology] += 2 * self.task.job.job_config.response_time_rtt
             elif self.machine.topology == 1:
                 self.response_time += 15 * self.task.job.job_config.response_time_rtt
-                self.clusters_response_times[self.machine.topology] += 15 * self.task.job.job_config.response_time_rtt
+                self.clusters_response_times[self.machine.topology] += 20 * self.task.job.job_config.response_time_rtt
             elif self.machine.topology == 2:
                 self.response_time += 40 * self.task.job.job_config.response_time_rtt
                 self.clusters_response_times[self.machine.topology] += 40 * self.task.job.job_config.response_time_rtt
@@ -611,7 +611,7 @@ class TaskInstance(object):
             self.clusters_response_times[self.machine.topology] += 2 * self.task.job.job_config.response_time_rtt
         elif self.machine.topology == 1:
             self.response_time += 15 * self.task.job.job_config.response_time_rtt
-            self.clusters_response_times[self.machine.topology] += 15 * self.task.job.job_config.response_time_rtt
+            self.clusters_response_times[self.machine.topology] += 20 * self.task.job.job_config.response_time_rtt
         elif self.machine.topology == 2:
             self.response_time += 40 * self.task.job.job_config.response_time_rtt
             self.clusters_response_times[self.machine.topology] += 40 * self.task.job.job_config.response_time_rtt

@@ -321,8 +321,9 @@ class RewardGiver():
         return reward
     
     def monetary_cost(self):
-        # pricing = [0.056, 0.054, 0.052]
+        # pricing = [0.305, 0.24, 0.1645]
         pricing = [0.1, 0.05, 0.02]
+        # max_machines = [141, 192, 282]  # Max machines for each level
         max_machines = [105, 270, 690]  # Max machines for each level
         bill = []
         machines = 0

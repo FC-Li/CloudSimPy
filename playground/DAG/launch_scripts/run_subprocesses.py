@@ -67,16 +67,16 @@ for args in script_arguments3:
         #     subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], '2500', '1'])
     # for i in range(4):
         # Execute the script using subprocess
-        print(f"Running script: {script} with arguments: {args}")
-        subprocess.run([script_path, args[2], args[3], args[4], args[5], args[6], str(lower_bound), 'False'])
+        # print(f"Running script: {script} with arguments: {args}")
+        # subprocess.run([script_path, args[2], args[3], args[4], args[5], args[6], str(lower_bound), 'False'])
 
-        lower_bound += 25
+        # lower_bound += 25
 
-        # subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False', '2000', '10'])
+        subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False', '2000', '10'])
 
-        # subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False', '4000', '10'])
+        subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False', '4000', '10'])
 
-        # subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False', '0', '10'])
+        subprocess.run([script_path2, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 'False', '0', '10'])
 
 print("All testing scripts have been executed for constant e.")
 

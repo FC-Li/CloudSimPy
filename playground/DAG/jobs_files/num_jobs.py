@@ -16,7 +16,7 @@ modified_jobs_csv_path = 'DAG/jobs_files/modified_jobs.csv'
 jobs_df.to_csv(modified_jobs_csv_path, index=False)
 
 # Keep only the first 50 rows
-df_first_50 = jobs_df.head(1500)
+df_first_50 = jobs_df.head(1000)
 # Save the modified DataFrame to a new CSV file
 df_first_50.to_csv('DAG/jobs_files/small_modified_jobs.csv', index=False)
 

@@ -23,6 +23,14 @@ class Node(object):
         self.memory += machine.memory_capacity
         self.disk += machine.disk_capacity
 
+    def remove_machine_capacities(self, machine):
+        self.cpu_capacity -= machine.cpu_capacity
+        self.memory_capacity -= machine.memory_capacity
+        self.disk_capacity -= machine.disk_capacity
+        self.cpu -= machine.cpu_capacity
+        self.memory -= machine.memory_capacity
+        self.disk -= machine.disk_capacity
+
     def running_task_instances(self, machines=None):
         ls = []
         if machines == None:
@@ -97,6 +105,7 @@ class Node(object):
         for machine in self.machines:
             self.machines.remove(machine)
             machine.stop_machine()
+            self.remove_machine_capacities(machine)
 
     def scheduled_time(self, machines=None):  
         avg_time = 0.0
