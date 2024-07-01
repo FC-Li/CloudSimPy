@@ -1,7 +1,0 @@
-,task_id,instances_num,task_type,job_id,status,start_time,end_time,cpu,memory,duration,disk,submit_time
-0,1,1,A,1,Terminated,157297,157325,1.0,0,100,0,0
-1,2_1,1,A,1,Terminated,157329,157376,1.0,0,100,0,0
-2,3_1,1,A,1,Terminated,157322,157328,1.0,0,100,0,0
-3,4_1,1,A,1,Terminated,157331,157376,1.0,0,100,0,0
-4,5_3_4,1,A,1,Terminated,157213,157295,1.0,0,100,0,0
-5,6_2_5,1,A,1,Terminated,157376,157381,1.0,0,100,0,0

@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
-tf.enable_eager_execution()
+# tf.enable_eager_execution()
 
 
 class Node(object):
@@ -10,7 +10,6 @@ class Node(object):
         self.action = action
         self.reward = reward
         self.clock = clock
-
 
 class RLAlgorithm(object):
     def __init__(self, agent, reward_giver, features_normalize_func, features_extract_func):

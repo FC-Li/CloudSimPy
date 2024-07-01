@@ -1,6 +1,3 @@
-from core.machine import Machine
-
-
 class Cluster(object):
     def __init__(self):
         self.machines = []
@@ -69,6 +66,12 @@ class Cluster(object):
             machine = Machine(machine_config)
             self.machines.append(machine)
             machine.attach(self)
+
+    def remove_machines(self, machine_configs):
+        for machine_config in machine_configs:
+            machine = Machine(machine_config)
+            if machine in self.machines:
+                self.machines.remove(machine)
 
     def add_job(self, job):
         self.jobs.append(job)
