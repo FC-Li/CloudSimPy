@@ -1,5 +1,6 @@
-from core.job import Job
+import random
 
+from core.job import Job
 
 class Broker(object):
     job_cls = Job
@@ -16,10 +17,30 @@ class Broker(object):
         self.cluster = simulation.cluster
 
     def run(self):
+        time_threshold = 301
+        starting_time = self.env.now
+        print("broker_runs with starting time", starting_time)
         for job_config in self.job_configs:
-            assert job_config.submit_time >= self.env.now
-            yield self.env.timeout(job_config.submit_time - self.env.now)
+            # print(job_config.submit_time,self.env.now, job_config.id)
+            # assert job_config.submit_time >= self.env.now
+            if job_config.submit_time >= self.env.now:
+                timeout_duration = job_config.submit_time - self.env.now
+            else: 
+                timeout_duration = 0
+            div = self.env.now // time_threshold
+            if ((self.env.now % time_threshold) == 0 and self.env.now != 0):
+                time_threshold = (div) * time_threshold # ama einai akrivws 300,600 klp tote paw sto pause
+            else:
+                time_threshold = (div+1) * time_threshold # ama einai estw kai 0.1 over tote pausarei sto epomeno checkpoint
+            while(timeout_duration > 0):
+                if ((self.env.now + 0.1)/ time_threshold > 1 and self.env.now != 0):
+                    time_threshold += 50 # perimenei mono thn prwth fora
+                    yield self.env.pause_event
+                else:
+                    timeout_duration -= 0.1
+                    yield self.env.timeout(0.1) 
+                    
             job = Broker.job_cls(self.env, job_config)
-            # print('a task arrived at time %f' % self.env.now)
-            self.cluster.add_job(job)
+            # print('job %s arrived at time %f with the broker that started at %s' % (job.id, self.env.now, starting_time))
+            random.choice(self.cluster.child_clusters).add_job(job)
         self.destroyed = True
